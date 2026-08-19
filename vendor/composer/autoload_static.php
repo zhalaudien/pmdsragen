@@ -102,6 +102,12 @@ class ComposerStaticInitf5cce40800fa5dae1504b9364f585e6a
     public static $classMap = array (
         'App\\Controllers\\BaseController' => __DIR__ . '/../..' . '/app/Controllers/BaseController.php',
         'App\\Controllers\\Home' => __DIR__ . '/../..' . '/app/Controllers/Home.php',
+        'App\\Database\\Seeds\\DatabaseSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/DatabaseSeeder.php',
+        'App\\Database\\Seeds\\EducationLevelSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/EducationLevelSeeder.php',
+        'App\\Database\\Seeds\\InterestSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/InterestSeeder.php',
+        'App\\Database\\Seeds\\JobStatusSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/JobStatusSeeder.php',
+        'App\\Database\\Seeds\\SkillSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/SkillSeeder.php',
+        'App\\Database\\Seeds\\UserRoleSeeder' => __DIR__ . '/../..' . '/app/Database/Seeds/UserRoleSeeder.php',
         'CodeIgniter\\API\\ApiException' => __DIR__ . '/..' . '/codeigniter4/framework/system/API/ApiException.php',
         'CodeIgniter\\API\\BaseTransformer' => __DIR__ . '/..' . '/codeigniter4/framework/system/API/BaseTransformer.php',
         'CodeIgniter\\API\\ResponseTrait' => __DIR__ . '/..' . '/codeigniter4/framework/system/API/ResponseTrait.php',

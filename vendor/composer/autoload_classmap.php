@@ -8,6 +8,12 @@ $baseDir = dirname($vendorDir);
 return array(
     'App\\Controllers\\BaseController' => $baseDir . '/app/Controllers/BaseController.php',
     'App\\Controllers\\Home' => $baseDir . '/app/Controllers/Home.php',
+    'App\\Database\\Seeds\\DatabaseSeeder' => $baseDir . '/app/Database/Seeds/DatabaseSeeder.php',
+    'App\\Database\\Seeds\\EducationLevelSeeder' => $baseDir . '/app/Database/Seeds/EducationLevelSeeder.php',
+    'App\\Database\\Seeds\\InterestSeeder' => $baseDir . '/app/Database/Seeds/InterestSeeder.php',
+    'App\\Database\\Seeds\\JobStatusSeeder' => $baseDir . '/app/Database/Seeds/JobStatusSeeder.php',
+    'App\\Database\\Seeds\\SkillSeeder' => $baseDir . '/app/Database/Seeds/SkillSeeder.php',
+    'App\\Database\\Seeds\\UserRoleSeeder' => $baseDir . '/app/Database/Seeds/UserRoleSeeder.php',
     'CodeIgniter\\API\\ApiException' => $vendorDir . '/codeigniter4/framework/system/API/ApiException.php',
     'CodeIgniter\\API\\BaseTransformer' => $vendorDir . '/codeigniter4/framework/system/API/BaseTransformer.php',
     'CodeIgniter\\API\\ResponseTrait' => $vendorDir . '/codeigniter4/framework/system/API/ResponseTrait.php',
