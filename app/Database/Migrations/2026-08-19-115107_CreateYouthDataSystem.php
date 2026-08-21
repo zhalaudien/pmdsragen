@@ -45,7 +45,7 @@ class CreateYouthDataSystem extends Migration
 
         /*
         |--------------------------------------------------------------------------
-        | 2. USERS
+        | 2. WILAYAH
         |--------------------------------------------------------------------------
         */
         $this->forge->addField([
@@ -54,9 +54,94 @@ class CreateYouthDataSystem extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'cabang_id' => [
+            'code' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+            ],
+            'name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
+            ],
+            'description' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'created_at' => [
+                'type'    => 'DATETIME',
+                'default' => new \CodeIgniter\Database\RawSql('CURRENT_TIMESTAMP'),
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+
+        $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('code');
+        $this->forge->createTable('wilayah', true);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. CABANG
+        |--------------------------------------------------------------------------
+        */
+        $this->forge->addField([
+            'id' => [
+                'type'           => 'INT',
+                'unsigned'       => true,
+                'auto_increment' => true,
+            ],
+            'wilayah_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+            ],
+            'code' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'name' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+            ],
+            'description' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'created_at' => [
+                'type'    => 'DATETIME',
+                'default' => new \CodeIgniter\Database\RawSql('CURRENT_TIMESTAMP'),
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+
+        $this->forge->addKey('id', true);
+        $this->forge->addKey('wilayah_id');
+        $this->forge->addForeignKey(
+            'wilayah_id',
+            'wilayah',
+            'id',
+            'RESTRICT',
+            'CASCADE'
+        );
+
+        $this->forge->createTable('cabang', true);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. USERS
+        |--------------------------------------------------------------------------
+        */
+        $this->forge->addField([
+            'id' => [
+                'type'           => 'INT',
+                'unsigned'       => true,
+                'auto_increment' => true,
             ],
             'name' => [
                 'type'       => 'VARCHAR',
@@ -77,6 +162,16 @@ class CreateYouthDataSystem extends Migration
             'role_id' => [
                 'type'     => 'INT',
                 'unsigned' => true,
+            ],
+            'wilayah_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+                'null'     => true,
+            ],
+            'cabang_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+                'null'     => true,
             ],
             'last_login' => [
                 'type' => 'DATETIME',
@@ -101,11 +196,28 @@ class CreateYouthDataSystem extends Migration
         $this->forge->addUniqueKey('email');
         $this->forge->addUniqueKey('username');
         $this->forge->addKey('role_id');
+        $this->forge->addKey('wilayah_id');
+        $this->forge->addKey('cabang_id');
+
         $this->forge->addForeignKey(
             'role_id',
             'user_roles',
             'id',
             'RESTRICT',
+            'CASCADE'
+        );
+        $this->forge->addForeignKey(
+            'wilayah_id',
+            'wilayah',
+            'id',
+            'SET NULL',
+            'CASCADE'
+        );
+        $this->forge->addForeignKey(
+            'cabang_id',
+            'cabang',
+            'id',
+            'SET NULL',
             'CASCADE'
         );
 
@@ -359,14 +471,13 @@ class CreateYouthDataSystem extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
+            'cabang_id' => [
+                'type'     => 'INT',
+                'unsigned' => true,
+            ],
             'registration_number' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 30,
-            ],
-            'nik' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 20,
-                'null'       => true,
             ],
             'name' => [
                 'type'       => 'VARCHAR',
@@ -422,11 +533,19 @@ class CreateYouthDataSystem extends Migration
 
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('registration_number');
-        $this->forge->addUniqueKey('nik');
+        $this->forge->addKey('cabang_id');
         $this->forge->addKey('name');
         $this->forge->addKey('gender');
         $this->forge->addKey('status_verifikasi');
         $this->forge->addKey('status_data');
+
+        $this->forge->addForeignKey(
+            'cabang_id',
+            'cabang',
+            'id',
+            'RESTRICT',
+            'CASCADE'
+        );
 
         $this->forge->addForeignKey(
             'created_by',
@@ -1093,6 +1212,8 @@ class CreateYouthDataSystem extends Migration
             'regencies',
             'provinces',
             'users',
+            'cabang',
+            'wilayah',
             'user_roles',
         ];
 

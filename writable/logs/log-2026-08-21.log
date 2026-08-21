@@ -1,0 +1,130 @@
+ERROR - 2026-08-21 15:03:44 --> Error connecting to the database: mysqli_sql_exception: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:201
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(201): mysqli->real_connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(1706): CodeIgniter\Database\BaseConnection->query()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(1726): CodeIgniter\Database\BaseConnection->listTables()
+#5 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(821): CodeIgniter\Database\BaseConnection->tableExists()
+#6 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(699): CodeIgniter\Database\MigrationRunner->ensureTable()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Commands/Database/MigrateStatus.php(115): CodeIgniter\Database\MigrationRunner->getHistory()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CLI/Commands.php(72): CodeIgniter\Commands\Database\MigrateStatus->run()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CLI/Console.php(47): CodeIgniter\CLI\Commands->run()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(444): CodeIgniter\CLI\Console->run()
+#11 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(166): CodeIgniter\Boot::runCommand()
+#12 /home/kira/pmdsragen/spark(87): CodeIgniter\Boot::bootSpark()
+#13 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:231
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(1706): CodeIgniter\Database\BaseConnection->query()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(1726): CodeIgniter\Database\BaseConnection->listTables()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(821): CodeIgniter\Database\BaseConnection->tableExists()
+#5 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MigrationRunner.php(699): CodeIgniter\Database\MigrationRunner->ensureTable()
+#6 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Commands/Database/MigrateStatus.php(115): CodeIgniter\Database\MigrationRunner->getHistory()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CLI/Commands.php(72): CodeIgniter\Commands\Database\MigrateStatus->run()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CLI/Console.php(47): CodeIgniter\CLI\Commands->run()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(444): CodeIgniter\CLI\Console->run()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(166): CodeIgniter\Boot::runCommand()
+#11 /home/kira/pmdsragen/spark(87): CodeIgniter\Boot::bootSpark()
+#12 {main}
+CRITICAL - 2026-08-21 15:03:44 --> CodeIgniter\Database\Exceptions\DatabaseException: Unable to connect to the database.
+Main connection [MySQLi]: Unknown database 'pmdsragen'
+[Method: CLI, Route: migrate:status]
+in SYSTEMPATH/Database/BaseConnection.php on line 606.
+ 1 SYSTEMPATH/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+ 2 SYSTEMPATH/Database/BaseConnection.php(1706): CodeIgniter\Database\BaseConnection->query()
+ 3 SYSTEMPATH/Database/BaseConnection.php(1726): CodeIgniter\Database\BaseConnection->listTables()
+ 4 SYSTEMPATH/Database/MigrationRunner.php(821): CodeIgniter\Database\BaseConnection->tableExists()
+ 5 SYSTEMPATH/Database/MigrationRunner.php(699): CodeIgniter\Database\MigrationRunner->ensureTable()
+ 6 SYSTEMPATH/Commands/Database/MigrateStatus.php(115): CodeIgniter\Database\MigrationRunner->getHistory()
+ 7 SYSTEMPATH/CLI/Commands.php(72): CodeIgniter\Commands\Database\MigrateStatus->run()
+ 8 SYSTEMPATH/CLI/Console.php(47): CodeIgniter\CLI\Commands->run()
+ 9 SYSTEMPATH/Boot.php(444): CodeIgniter\CLI\Console->run()
+10 SYSTEMPATH/Boot.php(166): CodeIgniter\Boot::runCommand()
+11 ROOTPATH/spark(87): CodeIgniter\Boot::bootSpark()
+ERROR - 2026-08-21 15:08:58 --> Error connecting to the database: mysqli_sql_exception: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:201
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(201): mysqli->real_connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1659): CodeIgniter\Database\BaseConnection->query()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Model.php(255): CodeIgniter\Database\BaseBuilder->get()
+#5 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/BaseModel.php(676): CodeIgniter\Model->doFindAll()
+#6 /home/kira/pmdsragen/app/Controllers/Pendataan.php(52): CodeIgniter\BaseModel->findAll()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(974): App\Controllers\Pendataan->index()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(520): CodeIgniter\CodeIgniter->runController()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(363): CodeIgniter\CodeIgniter->handleRequest()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(417): CodeIgniter\CodeIgniter->run()
+#11 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+#12 /home/kira/pmdsragen/public/index.php(59): CodeIgniter\Boot::bootWeb()
+#13 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/rewrite.php(44): require_once('...')
+#14 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:231
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1659): CodeIgniter\Database\BaseConnection->query()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Model.php(255): CodeIgniter\Database\BaseBuilder->get()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/BaseModel.php(676): CodeIgniter\Model->doFindAll()
+#5 /home/kira/pmdsragen/app/Controllers/Pendataan.php(52): CodeIgniter\BaseModel->findAll()
+#6 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(974): App\Controllers\Pendataan->index()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(520): CodeIgniter\CodeIgniter->runController()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(363): CodeIgniter\CodeIgniter->handleRequest()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(417): CodeIgniter\CodeIgniter->run()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+#11 /home/kira/pmdsragen/public/index.php(59): CodeIgniter\Boot::bootWeb()
+#12 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/rewrite.php(44): require_once('...')
+#13 {main}
+DEBUG - 2026-08-21 15:08:58 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2026-08-21 15:10:00 --> Error connecting to the database: mysqli_sql_exception: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:201
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php(201): mysqli->real_connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1659): CodeIgniter\Database\BaseConnection->query()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Model.php(255): CodeIgniter\Database\BaseBuilder->get()
+#5 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/BaseModel.php(676): CodeIgniter\Model->doFindAll()
+#6 /home/kira/pmdsragen/app/Controllers/Pendataan.php(52): CodeIgniter\BaseModel->findAll()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(974): App\Controllers\Pendataan->index()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(520): CodeIgniter\CodeIgniter->runController()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(363): CodeIgniter\CodeIgniter->handleRequest()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(417): CodeIgniter\CodeIgniter->run()
+#11 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+#12 /home/kira/pmdsragen/public/index.php(59): CodeIgniter\Boot::bootWeb()
+#13 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/rewrite.php(44): require_once('...')
+#14 {main}
+
+Next CodeIgniter\Database\Exceptions\DatabaseException: Unknown database 'pmdsragen' in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/MySQLi/Connection.php:231
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\MySQLi\Connection->connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(795): CodeIgniter\Database\BaseConnection->initialize()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseBuilder.php(1659): CodeIgniter\Database\BaseConnection->query()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Model.php(255): CodeIgniter\Database\BaseBuilder->get()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/BaseModel.php(676): CodeIgniter\Model->doFindAll()
+#5 /home/kira/pmdsragen/app/Controllers/Pendataan.php(52): CodeIgniter\BaseModel->findAll()
+#6 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(974): App\Controllers\Pendataan->index()
+#7 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(520): CodeIgniter\CodeIgniter->runController()
+#8 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/CodeIgniter.php(363): CodeIgniter\CodeIgniter->handleRequest()
+#9 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(417): CodeIgniter\CodeIgniter->run()
+#10 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+#11 /home/kira/pmdsragen/public/index.php(59): CodeIgniter\Boot::bootWeb()
+#12 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/rewrite.php(44): require_once('...')
+#13 {main}
+DEBUG - 2026-08-21 15:10:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:20:41 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:23:02 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:23:49 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:24:36 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:25:00 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:27:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:46:40 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:48:52 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:50:04 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:56:17 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:56:52 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:57:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 15:59:43 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.

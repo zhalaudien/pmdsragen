@@ -1,0 +1,913 @@
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('title') ?>Form Pendataan Pemuda<?= $this->endSection() ?>
+
+<?= $this->section('styles') ?>
+<!-- Tom Select CSS for Searchable Selects -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="<?= base_url('css/pendataan.css') ?>">
+<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+
+<!-- Page Hero Header -->
+<div class="row justify-content-center mb-4">
+    <div class="col-lg-10 text-center">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-pmd-badge fw-semibold small mb-2">
+            <i class="bi bi-patch-check-fill text-pmd-red"></i> Database Pemuda MTA Perwakilan Sragen
+        </div>
+        <h1 class="h2 fw-bold text-slate-900 mb-2">Formulir Pendataan Pemuda</h1>
+        <p class="text-muted mx-auto" style="max-width: 650px;">
+            Lengkapi profil dan data diri Anda untuk pemetaan potensi, program pemberdayaan, dan pengembangan pemuda MTA Perwakilan Sragen.
+        </p>
+    </div>
+</div>
+
+<!-- Main Form Container -->
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+
+        <!-- Server-side Alert Feedback -->
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show card-custom border-danger" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <div><?= session()->getFlashdata('error') ?></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('errors')): ?>
+            <div class="alert alert-danger alert-dismissible fade show card-custom border-danger" role="alert">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-x-circle-fill fs-5"></i>
+                    <strong>Mohon perbaiki kesalahan berikut:</strong>
+                </div>
+                <ul class="mb-0 ps-3">
+                    <?php foreach (session()->getFlashdata('errors') as $err): ?>
+                        <li><?= esc($err) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Multi-step Navigation Stepper -->
+        <div class="stepper-wrapper">
+            <div class="stepper-progress-bar">
+                <div class="stepper-progress-fill" id="stepperProgressFill"></div>
+            </div>
+
+            <div class="stepper-item active" data-step="1" onclick="goToStep(1)">
+                <div class="stepper-circle"><i class="bi bi-person"></i></div>
+                <span class="stepper-title">Data Pribadi</span>
+            </div>
+            <div class="stepper-item" data-step="2" onclick="goToStep(2)">
+                <div class="stepper-circle"><i class="bi bi-geo-alt"></i></div>
+                <span class="stepper-title">Alamat</span>
+            </div>
+            <div class="stepper-item" data-step="3" onclick="goToStep(3)">
+                <div class="stepper-circle"><i class="bi bi-mortarboard"></i></div>
+                <span class="stepper-title">Pendidikan</span>
+            </div>
+            <div class="stepper-item" data-step="4" onclick="goToStep(4)">
+                <div class="stepper-circle"><i class="bi bi-briefcase"></i></div>
+                <span class="stepper-title">Pekerjaan</span>
+            </div>
+            <div class="stepper-item" data-step="5" onclick="goToStep(5)">
+                <div class="stepper-circle"><i class="bi bi-diagram-3"></i></div>
+                <span class="stepper-title">Organisasi</span>
+            </div>
+            <div class="stepper-item" data-step="6" onclick="goToStep(6)">
+                <div class="stepper-circle"><i class="bi bi-award"></i></div>
+                <span class="stepper-title">Keahlian</span>
+            </div>
+            <div class="stepper-item" data-step="7" onclick="goToStep(7)">
+                <div class="stepper-circle"><i class="bi bi-heart"></i></div>
+                <span class="stepper-title">Minat</span>
+            </div>
+            <div class="stepper-item" data-step="8" onclick="goToStep(8)">
+                <div class="stepper-circle"><i class="bi bi-check2-circle"></i></div>
+                <span class="stepper-title">Konfirmasi</span>
+            </div>
+        </div>
+
+        <!-- Form Element -->
+        <form id="formPendataanPemuda" action="<?= base_url('pendataan/simpan') ?>" method="POST" class="needs-validation" novalidate>
+            <?= csrf_field() ?>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 1: DATA PRIBADI -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section active" id="step-1">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-person-vcard"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">1. Data Pribadi</h4>
+                            <p class="text-muted small mb-0">Informasi identitas kependudukan dan kontak utama</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Nama Lengkap -->
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nama Lengkap<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="name" name="name"
+                                    placeholder="Nama lengkap sesuai identitas"
+                                    value="<?= old('name') ?>" required minlength="3" maxlength="150">
+                            </div>
+                            <div class="invalid-feedback">Nama lengkap wajib diisi (minimal 3 karakter).</div>
+                        </div>
+
+                        <!-- Jenis Kelamin -->
+                        <div class="col-md-6">
+                            <label class="form-label d-block">Jenis Kelamin<span class="required-star">*</span></label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="gender" id="gender_l" value="L" <?= old('gender') === 'L' ? 'checked' : '' ?> required>
+                                    <label class="gender-card-select d-block" for="gender_l">
+                                        <i class="bi bi-gender-male text-pmd-red fs-4 d-block mb-1"></i>
+                                        <span class="fw-semibold">Laki-laki</span>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="gender" id="gender_p" value="P" <?= old('gender') === 'P' ? 'checked' : '' ?> required>
+                                    <label class="gender-card-select d-block" for="gender_p">
+                                        <i class="bi bi-gender-female text-danger fs-4 d-block mb-1"></i>
+                                        <span class="fw-semibold">Perempuan</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="invalid-feedback d-block" id="gender-error" style="display: none !important;">Pilih jenis kelamin.</div>
+                        </div>
+
+                        <!-- Wilayah & Cabang Domisili Organisasi -->
+                        <div class="col-md-6">
+                            <label for="cabang_id" class="form-label">Cabang PMD (Wilayah)<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-diagram-2"></i></span>
+                                <select class="form-select" id="cabang_id" name="cabang_id" required>
+                                    <option value="" selected disabled>-- Pilih Cabang PMD Terdaftar --</option>
+                                    <?php if (!empty($wilayahList)): ?>
+                                        <?php foreach ($wilayahList as $w): ?>
+                                            <optgroup label="<?= esc($w['name']) ?> (<?= esc($w['code']) ?>)">
+                                                <?php if (!empty($w['cabang'])): ?>
+                                                    <?php foreach ($w['cabang'] as $c): ?>
+                                                        <option value="<?= $c['id'] ?>" <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
+                                                            <?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <!-- Wilayah 1 (18 Cabang) -->
+                                        <optgroup label="Wilayah 1 (W01)">
+                                            <option value="1" <?= old('cabang_id') == '1' ? 'selected' : '' ?>>Gesi</option>
+                                            <option value="2" <?= old('cabang_id') == '2' ? 'selected' : '' ?>>Jenar</option>
+                                            <option value="3" <?= old('cabang_id') == '3' ? 'selected' : '' ?>>Mondokan 1</option>
+                                            <option value="4" <?= old('cabang_id') == '4' ? 'selected' : '' ?>>Mondokan 2</option>
+                                            <option value="5" <?= old('cabang_id') == '5' ? 'selected' : '' ?>>Mondokan 3</option>
+                                            <option value="6" <?= old('cabang_id') == '6' ? 'selected' : '' ?>>Sukodono 1</option>
+                                            <option value="7" <?= old('cabang_id') == '7' ? 'selected' : '' ?>>Sukodono 2</option>
+                                            <option value="8" <?= old('cabang_id') == '8' ? 'selected' : '' ?>>Sukodono 3</option>
+                                            <option value="9" <?= old('cabang_id') == '9' ? 'selected' : '' ?>>Sukodono 4</option>
+                                            <option value="10" <?= old('cabang_id') == '10' ? 'selected' : '' ?>>Sumberlawang 1</option>
+                                            <option value="11" <?= old('cabang_id') == '11' ? 'selected' : '' ?>>Sumberlawang 2</option>
+                                            <option value="12" <?= old('cabang_id') == '12' ? 'selected' : '' ?>>Sumberlawang 3</option>
+                                            <option value="13" <?= old('cabang_id') == '13' ? 'selected' : '' ?>>Sumberlawang 4</option>
+                                            <option value="14" <?= old('cabang_id') == '14' ? 'selected' : '' ?>>Tangen 1</option>
+                                            <option value="15" <?= old('cabang_id') == '15' ? 'selected' : '' ?>>Tangen 2</option>
+                                            <option value="16" <?= old('cabang_id') == '16' ? 'selected' : '' ?>>Tanon 1</option>
+                                            <option value="17" <?= old('cabang_id') == '17' ? 'selected' : '' ?>>Tanon 2</option>
+                                            <option value="18" <?= old('cabang_id') == '18' ? 'selected' : '' ?>>Tanon 3</option>
+                                        </optgroup>
+
+                                        <!-- Wilayah 2 (17 Cabang) -->
+                                        <optgroup label="Wilayah 2 (W02)">
+                                            <option value="19" <?= old('cabang_id') == '19' ? 'selected' : '' ?>>Gemolong 1</option>
+                                            <option value="20" <?= old('cabang_id') == '20' ? 'selected' : '' ?>>Gemolong 2</option>
+                                            <option value="21" <?= old('cabang_id') == '21' ? 'selected' : '' ?>>Gemolong 3</option>
+                                            <option value="22" <?= old('cabang_id') == '22' ? 'selected' : '' ?>>Gemolong 4</option>
+                                            <option value="23" <?= old('cabang_id') == '23' ? 'selected' : '' ?>>Gemolong 5</option>
+                                            <option value="24" <?= old('cabang_id') == '24' ? 'selected' : '' ?>>Kalijambe 1</option>
+                                            <option value="25" <?= old('cabang_id') == '25' ? 'selected' : '' ?>>Kalijambe 2</option>
+                                            <option value="26" <?= old('cabang_id') == '26' ? 'selected' : '' ?>>Kalijambe 3</option>
+                                            <option value="27" <?= old('cabang_id') == '27' ? 'selected' : '' ?>>Kalijambe 4</option>
+                                            <option value="28" <?= old('cabang_id') == '28' ? 'selected' : '' ?>>Miri 1</option>
+                                            <option value="29" <?= old('cabang_id') == '29' ? 'selected' : '' ?>>Miri 2</option>
+                                            <option value="30" <?= old('cabang_id') == '30' ? 'selected' : '' ?>>Plupuh 1</option>
+                                            <option value="31" <?= old('cabang_id') == '31' ? 'selected' : '' ?>>Plupuh 2</option>
+                                            <option value="32" <?= old('cabang_id') == '32' ? 'selected' : '' ?>>Plupuh 3</option>
+                                            <option value="33" <?= old('cabang_id') == '33' ? 'selected' : '' ?>>Plupuh 4</option>
+                                            <option value="34" <?= old('cabang_id') == '34' ? 'selected' : '' ?>>Plupuh 5</option>
+                                            <option value="35" <?= old('cabang_id') == '35' ? 'selected' : '' ?>>Plupuh 6</option>
+                                        </optgroup>
+
+                                        <!-- Wilayah 3 (20 Cabang) -->
+                                        <optgroup label="Wilayah 3 (W03)">
+                                            <option value="36" <?= old('cabang_id') == '36' ? 'selected' : '' ?>>Karangmalang 1</option>
+                                            <option value="37" <?= old('cabang_id') == '37' ? 'selected' : '' ?>>Karangmalang 2</option>
+                                            <option value="38" <?= old('cabang_id') == '38' ? 'selected' : '' ?>>Karangmalang 3</option>
+                                            <option value="39" <?= old('cabang_id') == '39' ? 'selected' : '' ?>>Karangmalang 4</option>
+                                            <option value="40" <?= old('cabang_id') == '40' ? 'selected' : '' ?>>Karangmalang 5</option>
+                                            <option value="41" <?= old('cabang_id') == '41' ? 'selected' : '' ?>>Masaran 1</option>
+                                            <option value="42" <?= old('cabang_id') == '42' ? 'selected' : '' ?>>Masaran 2</option>
+                                            <option value="43" <?= old('cabang_id') == '43' ? 'selected' : '' ?>>Masaran 3</option>
+                                            <option value="44" <?= old('cabang_id') == '44' ? 'selected' : '' ?>>Masaran 4</option>
+                                            <option value="45" <?= old('cabang_id') == '45' ? 'selected' : '' ?>>Masaran 5</option>
+                                            <option value="46" <?= old('cabang_id') == '46' ? 'selected' : '' ?>>Masaran 6</option>
+                                            <option value="47" <?= old('cabang_id') == '47' ? 'selected' : '' ?>>Sambungmacan 1</option>
+                                            <option value="48" <?= old('cabang_id') == '48' ? 'selected' : '' ?>>Sambungmacan 2</option>
+                                            <option value="49" <?= old('cabang_id') == '49' ? 'selected' : '' ?>>Sambungmacan 3</option>
+                                            <option value="50" <?= old('cabang_id') == '50' ? 'selected' : '' ?>>Sidoharjo 1</option>
+                                            <option value="51" <?= old('cabang_id') == '51' ? 'selected' : '' ?>>Sidoharjo 2</option>
+                                            <option value="52" <?= old('cabang_id') == '52' ? 'selected' : '' ?>>Sidoharjo 3</option>
+                                            <option value="53" <?= old('cabang_id') == '53' ? 'selected' : '' ?>>Sidoharjo 4</option>
+                                            <option value="54" <?= old('cabang_id') == '54' ? 'selected' : '' ?>>Sragen 1</option>
+                                            <option value="55" <?= old('cabang_id') == '55' ? 'selected' : '' ?>>Sragen 2</option>
+                                        </optgroup>
+
+                                        <!-- Wilayah 4 (14 Cabang) -->
+                                        <optgroup label="Wilayah 4 (W04)">
+                                            <option value="56" <?= old('cabang_id') == '56' ? 'selected' : '' ?>>Gondang 1</option>
+                                            <option value="57" <?= old('cabang_id') == '57' ? 'selected' : '' ?>>Gondang 2</option>
+                                            <option value="58" <?= old('cabang_id') == '58' ? 'selected' : '' ?>>Gondang 3</option>
+                                            <option value="59" <?= old('cabang_id') == '59' ? 'selected' : '' ?>>Gondang 4</option>
+                                            <option value="60" <?= old('cabang_id') == '60' ? 'selected' : '' ?>>Kedawung 1</option>
+                                            <option value="61" <?= old('cabang_id') == '61' ? 'selected' : '' ?>>Kedawung 2</option>
+                                            <option value="62" <?= old('cabang_id') == '62' ? 'selected' : '' ?>>Kedawung 3</option>
+                                            <option value="63" <?= old('cabang_id') == '63' ? 'selected' : '' ?>>Kedawung 4</option>
+                                            <option value="64" <?= old('cabang_id') == '64' ? 'selected' : '' ?>>Kedawung 5</option>
+                                            <option value="65" <?= old('cabang_id') == '65' ? 'selected' : '' ?>>Ngrampal 1</option>
+                                            <option value="66" <?= old('cabang_id') == '66' ? 'selected' : '' ?>>Ngrampal 2</option>
+                                            <option value="67" <?= old('cabang_id') == '67' ? 'selected' : '' ?>>Ngrampal 3</option>
+                                            <option value="68" <?= old('cabang_id') == '68' ? 'selected' : '' ?>>Sambirejo 1</option>
+                                            <option value="69" <?= old('cabang_id') == '69' ? 'selected' : '' ?>>Sambirejo 2</option>
+                                        </optgroup>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback">Pilih cabang PMD yang sesuai.</div>
+                        </div>
+
+                        <!-- Tempat Lahir -->
+                        <div class="col-md-6">
+                            <label for="birth_place" class="form-label">Tempat Lahir<span class="required-star">*</span></label>
+                            <input type="text" class="form-control" id="birth_place" name="birth_place"
+                                placeholder="Contoh: Sragen"
+                                value="<?= old('birth_place') ?>" required maxlength="100">
+                            <div class="invalid-feedback">Tempat lahir wajib diisi.</div>
+                        </div>
+
+                        <!-- Tanggal Lahir -->
+                        <div class="col-md-6">
+                            <label for="birth_date" class="form-label">Tanggal Lahir<span class="required-star">*</span></label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date"
+                                value="<?= old('birth_date') ?>" required max="<?= date('Y-m-d') ?>">
+                            <div class="invalid-feedback">Tanggal lahir wajib diisi.</div>
+                        </div>
+
+                        <!-- Nomor WhatsApp / HP -->
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Nomor WhatsApp / HP<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-whatsapp"></i></span>
+                                <input type="tel" class="form-control" id="phone" name="phone"
+                                    placeholder="Contoh: 081234567890"
+                                    value="<?= old('phone') ?>" required maxlength="20">
+                            </div>
+                            <div class="invalid-feedback">Nomor WhatsApp wajib diisi untuk koordinasi.</div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Alamat Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="Contoh: nama@domain.com"
+                                    value="<?= old('email') ?>" maxlength="100">
+                            </div>
+                            <div class="invalid-feedback">Masukkan format email yang valid.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 1 Actions -->
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(1)">
+                            Selanjutnya: Alamat <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 2: ALAMAT -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-2">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">2. Alamat Domisili</h4>
+                            <p class="text-muted small mb-0">Informasi alamat tempat tinggal saat ini</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Provinsi -->
+                        <div class="col-md-6">
+                            <label for="province_id" class="form-label">Provinsi<span class="required-star">*</span></label>
+                            <select class="form-select" id="province_id" name="province_id" required>
+                                <option value="33" selected>Jawa Tengah</option>
+                            </select>
+                            <div class="invalid-feedback">Pilih provinsi.</div>
+                        </div>
+
+                        <!-- Kabupaten / Kota -->
+                        <div class="col-md-6">
+                            <label for="regency_id" class="form-label">Kabupaten / Kota<span class="required-star">*</span></label>
+                            <select class="form-select" id="regency_id" name="regency_id" required>
+                                <option value="3314" selected>Kabupaten Sragen</option>
+                            </select>
+                            <div class="invalid-feedback">Pilih kabupaten/kota.</div>
+                        </div>
+
+                        <!-- Kecamatan -->
+                        <div class="col-md-6">
+                            <label for="district_id" class="form-label">Kecamatan<span class="required-star">*</span></label>
+                            <select class="form-select" id="district_id" name="district_id" required onchange="handleDistrictChange(this.value)">
+                                <option value="" selected disabled>-- Pilih Kecamatan --</option>
+                                <option value="1">Sragen</option>
+                                <option value="2">Karangmalang</option>
+                                <option value="3">Sidoharjo</option>
+                                <option value="4">Gemolong</option>
+                                <option value="5">Kalijambe</option>
+                                <option value="6">Plupuh</option>
+                                <option value="7">Masaran</option>
+                                <option value="8">Kedawung</option>
+                                <option value="9">Sambirejo</option>
+                                <option value="10">Gondang</option>
+                                <option value="11">Sambungmacan</option>
+                                <option value="12">Ngrampal</option>
+                                <option value="13">Tanon</option>
+                                <option value="14">Sumberlawang</option>
+                                <option value="15">Mondokan</option>
+                                <option value="16">Sukodono</option>
+                                <option value="17">Gesi</option>
+                                <option value="18">Tangen</option>
+                                <option value="19">Jenar</option>
+                                <option value="20">Miri</option>
+                            </select>
+                            <div class="invalid-feedback">Pilih kecamatan tempat tinggal Anda.</div>
+                        </div>
+
+                        <!-- Desa / Kelurahan -->
+                        <div class="col-md-6">
+                            <label for="village_id" class="form-label">Desa / Kelurahan<span class="required-star">*</span></label>
+                            <select class="form-select" id="village_id" name="village_id" required>
+                                <option value="" selected disabled>-- Pilih Kecamatan Terlebih Dahulu --</option>
+                            </select>
+                            <div class="invalid-feedback">Pilih desa/kelurahan.</div>
+                        </div>
+
+                        <!-- Dusun / Dukuh -->
+                        <div class="col-md-6">
+                            <label for="dusun" class="form-label">Dukuh / Dusun / Lingkungan</label>
+                            <input type="text" class="form-control" id="dusun" name="dusun"
+                                placeholder="Contoh: Dukuh Kebonromo"
+                                value="<?= old('dusun') ?>" maxlength="100">
+                        </div>
+
+                        <!-- RT & RW -->
+                        <div class="col-md-6">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label for="rt" class="form-label">RT</label>
+                                    <input type="text" class="form-control" id="rt" name="rt"
+                                        placeholder="01" maxlength="5" value="<?= old('rt') ?>">
+                                </div>
+                                <div class="col-6">
+                                    <label for="rw" class="form-label">RW</label>
+                                    <input type="text" class="form-control" id="rw" name="rw"
+                                        placeholder="03" maxlength="5" value="<?= old('rw') ?>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alamat Detail -->
+                        <div class="col-12">
+                            <label for="address_detail" class="form-label">Alamat Lengkap (Jalan / Nomor Rumah / Patokan)<span class="required-star">*</span></label>
+                            <textarea class="form-control" id="address_detail" name="address_detail" rows="2"
+                                placeholder="Contoh: Jl. Raya Sukowati No. 45, RT 02/RW 01, Dekat Masjid Al-Falah" required><?= old('address_detail') ?></textarea>
+                            <div class="invalid-feedback">Alamat lengkap wajib diisi.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(1)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(2)">
+                            Selanjutnya: Pendidikan <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 3: PENDIDIKAN -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-3">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">3. Riwayat Pendidikan</h4>
+                            <p class="text-muted small mb-0">Informasi latar belakang jenjang pendidikan terakhir</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Jenjang Pendidikan -->
+                        <div class="col-md-6">
+                            <label for="education_level_id" class="form-label">Jenjang Pendidikan Terakhir<span class="required-star">*</span></label>
+                            <select class="form-select" id="education_level_id" name="education_level_id" required>
+                                <option value="" selected disabled>-- Pilih Jenjang Pendidikan --</option>
+                                <?php if (!empty($educationLevels)): ?>
+                                    <?php foreach ($educationLevels as $edu): ?>
+                                        <option value="<?= $edu['id'] ?>" <?= old('education_level_id') == $edu['id'] ? 'selected' : '' ?>>
+                                            <?= esc($edu['name']) ?> (<?= esc($edu['description'] ?? '') ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="1">SD / Sederajat</option>
+                                    <option value="2">SMP / MTs / Sederajat</option>
+                                    <option value="3">SMA / SMK / MA</option>
+                                    <option value="4">Diploma (D1 / D2 / D3)</option>
+                                    <option value="5">Sarjana (S1 / D4)</option>
+                                    <option value="6">Magister (S2)</option>
+                                    <option value="7">Doktor (S3)</option>
+                                <?php endif; ?>
+                            </select>
+                            <div class="invalid-feedback">Pilih jenjang pendidikan terakhir.</div>
+                        </div>
+
+                        <!-- Status Pendidikan -->
+                        <div class="col-md-6">
+                            <label for="education_status" class="form-label">Status Pendidikan<span class="required-star">*</span></label>
+                            <select class="form-select" id="education_status" name="education_status" required>
+                                <option value="lulus" <?= old('education_status') === 'lulus' ? 'selected' : '' ?>>Sudah Lulus / Tamat</option>
+                                <option value="sedang_sekolah" <?= old('education_status') === 'sedang_sekolah' ? 'selected' : '' ?>>Sedang Menempuh Pendidikan</option>
+                                <option value="putus_sekolah" <?= old('education_status') === 'putus_sekolah' ? 'selected' : '' ?>>Tidak Tamat / Putus Sekolah</option>
+                            </select>
+                            <div class="invalid-feedback">Pilih status pendidikan.</div>
+                        </div>
+
+                        <!-- Nama Sekolah / Universitas -->
+                        <div class="col-md-6">
+                            <label for="school_name" class="form-label">Nama Sekolah / Kampus / Lembaga<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-building"></i></span>
+                                <input type="text" class="form-control" id="school_name" name="school_name"
+                                    placeholder="Contoh: SMAN 1 Sragen / Universitas Sebelas Maret"
+                                    value="<?= old('school_name') ?>" required minlength="3" maxlength="150">
+                            </div>
+                            <div class="invalid-feedback">Nama sekolah/universitas wajib diisi.</div>
+                        </div>
+
+                        <!-- Jurusan / Program Studi -->
+                        <div class="col-md-6">
+                            <label for="major" class="form-label">Jurusan / Program Studi / Peminatan</label>
+                            <input type="text" class="form-control" id="major" name="major"
+                                placeholder="Contoh: Rekayasa Perangkat Lunak / Teknik Informatika / IPA"
+                                value="<?= old('major') ?>" maxlength="150">
+                        </div>
+
+                        <!-- Tahun Kelulusan -->
+                        <div class="col-md-6">
+                            <label for="graduation_year" class="form-label">Tahun Kelulusan / Angkatan</label>
+                            <input type="number" class="form-control" id="graduation_year" name="graduation_year"
+                                placeholder="Contoh: <?= date('Y') ?>"
+                                min="1980" max="<?= date('Y') + 5 ?>" value="<?= old('graduation_year') ?>">
+                        </div>
+                    </div>
+
+                    <!-- Step 3 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(2)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(3)">
+                            Selanjutnya: Pekerjaan <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 4: PEKERJAAN -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-briefcase-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">4. Status Pekerjaan & Karir</h4>
+                            <p class="text-muted small mb-0">Informasi aktivitas profesi dan bidang kerja saat ini</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Status Pekerjaan -->
+                        <div class="col-md-6">
+                            <label for="job_status_id" class="form-label">Status Pekerjaan Saat Ini<span class="required-star">*</span></label>
+                            <select class="form-select" id="job_status_id" name="job_status_id" required onchange="handleJobStatusChange(this.value)">
+                                <option value="" selected disabled>-- Pilih Status Pekerjaan --</option>
+                                <?php if (!empty($jobStatuses)): ?>
+                                    <?php foreach ($jobStatuses as $job): ?>
+                                        <option value="<?= $job['id'] ?>" <?= old('job_status_id') == $job['id'] ? 'selected' : '' ?>>
+                                            <?= esc($job['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="1">Belum / Tidak Bekerja</option>
+                                    <option value="2">Pelajar / Mahasiswa</option>
+                                    <option value="3">Karyawan Swasta</option>
+                                    <option value="4">Pegawai Negeri / ASN / PPPK</option>
+                                    <option value="5">Wirausaha / Pemilik Usaha</option>
+                                    <option value="6">Freelancer / Pekerja Lepas</option>
+                                    <option value="7">Petani / Peternak</option>
+                                    <option value="8">Lainnya</option>
+                                <?php endif; ?>
+                            </select>
+                            <div class="invalid-feedback">Pilih status pekerjaan Anda.</div>
+                        </div>
+
+                        <!-- Profesi / Jabatan -->
+                        <div class="col-md-6" id="wrapper-job-title">
+                            <label for="job_title" class="form-label">Profesi / Jabatan / Posisi</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title"
+                                placeholder="Contoh: Staff Keuangan / Web Developer / Barista"
+                                value="<?= old('job_title') ?>" maxlength="150">
+                        </div>
+
+                        <!-- Nama Perusahaan / Instansi / Usaha -->
+                        <div class="col-md-6" id="wrapper-company-name">
+                            <label for="company_name" class="form-label">Nama Perusahaan / Tempat Usaha</label>
+                            <input type="text" class="form-control" id="company_name" name="company_name"
+                                placeholder="Contoh: PT Sumber Pangan / Usaha Sendiri"
+                                value="<?= old('company_name') ?>" maxlength="150">
+                        </div>
+
+                        <!-- Bidang Usaha / Sektor Industri -->
+                        <div class="col-md-6" id="wrapper-business-field">
+                            <label for="business_field" class="form-label">Bidang Industri / Sektor Usaha</label>
+                            <input type="text" class="form-control" id="business_field" name="business_field"
+                                placeholder="Contoh: Teknologi Informasi / Kuliner / Pertanian"
+                                value="<?= old('business_field') ?>" maxlength="150">
+                        </div>
+                    </div>
+
+                    <!-- Step 4 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(3)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(4)">
+                            Selanjutnya: Organisasi <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 5: ORGANISASI -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-5">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                        <div class="d-flex align-items-center">
+                            <div class="section-icon-badge">
+                                <i class="bi bi-diagram-3-fill"></i>
+                            </div>
+                            <div>
+                                <h4 class="card-title fw-bold mb-0">5. Riwayat Organisasi & Komunitas</h4>
+                                <p class="text-muted small mb-0">Pengalaman berorganisasi, kepemudaan, atau komunitas sosial (opsional)</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-pmd btn-sm" onclick="addOrganizationRow()">
+                            <i class="bi bi-plus-circle me-1"></i> Tambah Organisasi
+                        </button>
+                    </div>
+
+                    <!-- Repeater Container -->
+                    <div id="organizationRepeaterContainer">
+                        <div class="repeater-item" id="org-row-0">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-pmd-badge fw-semibold px-3 py-2 rounded-pill">
+                                    <i class="bi bi-flag-fill text-pmd-red me-1"></i> Pengalaman Organisasi #1
+                                </span>
+                                <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="removeOrganizationRow('org-row-0')" title="Hapus Organisasi">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nama Organisasi / Lembaga / Komunitas</label>
+                                    <input type="text" class="form-control" name="organizations[0][name]" placeholder="Contoh: Karang Taruna / OSIS / HMI / Relawan Sragen">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Jabatan / Posisi</label>
+                                    <input type="text" class="form-control" name="organizations[0][position]" placeholder="Contoh: Ketua / Sekretaris / Anggota">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal / Tahun Mulai</label>
+                                    <input type="date" class="form-control" name="organizations[0][join_date]">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal / Tahun Selesai</label>
+                                    <input type="date" class="form-control" name="organizations[0][end_date]">
+                                    <div class="form-text">Biarkan kosong jika masih aktif.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Deskripsi Peran & Program yang Pernah Diikuti</label>
+                                    <textarea class="form-control" name="organizations[0][description]" rows="2" placeholder="Jelaskan kontribusi atau kegiatan yang dijalankan..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(4)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(5)">
+                            Selanjutnya: Keahlian <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 6: KEAHLIAN (SKILLS) -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-6">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-award-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">6. Keahlian & Keterampilan</h4>
+                            <p class="text-muted small mb-0">Pilih keahlian yang Anda miliki beserta tingkatan kemampuannya</p>
+                        </div>
+                    </div>
+
+                    <p class="text-secondary small mb-3">Centang keahlian yang relevan dan tentukan tingkat keahlian Anda (Pemula, Menengah, Mahir):</p>
+
+                    <!-- Skills Matrix -->
+                    <div class="row g-3" id="skillsContainer">
+                        <?php
+                        $availableSkills = [
+                            ['id' => 1, 'name' => 'Desain Grafis & Multimedia', 'icon' => 'palette'],
+                            ['id' => 2, 'name' => 'Pemrograman & IT (Web/Mobile)', 'icon' => 'code-slash'],
+                            ['id' => 3, 'name' => 'Digital Marketing & Social Media', 'icon' => 'megaphone'],
+                            ['id' => 4, 'name' => 'Public Speaking & Komunikasi', 'icon' => 'mic'],
+                            ['id' => 5, 'name' => 'Fotografi & Videografi', 'icon' => 'camera-video'],
+                            ['id' => 6, 'name' => 'Pertanian Modern & Hidroponik', 'icon' => 'flower1'],
+                            ['id' => 7, 'name' => 'Tata Boga & Kuliner', 'icon' => 'cup-hot'],
+                            ['id' => 8, 'name' => 'Menjahit & Tata Busana', 'icon' => 'scissors'],
+                            ['id' => 9, 'name' => 'Teknik Otomotif & Mesin', 'icon' => 'tools'],
+                            ['id' => 10, 'name' => 'Administrasi & Pembukuan', 'icon' => 'calculator'],
+                            ['id' => 11, 'name' => 'Bahasa Asing (Inggris/Lainnya)', 'icon' => 'translate'],
+                            ['id' => 12, 'name' => 'Kepemimpinan & Manajemen Tim', 'icon' => 'people']
+                        ];
+                        ?>
+
+                        <?php foreach ($availableSkills as $skill): ?>
+                            <div class="col-md-6">
+                                <div class="skill-card h-100">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="form-check">
+                                            <input class="form-check-input skill-toggle-check" type="checkbox"
+                                                name="skills[<?= $skill['id'] ?>][selected]"
+                                                value="<?= $skill['id'] ?>"
+                                                id="skill_<?= $skill['id'] ?>"
+                                                onchange="toggleSkillLevel('<?= $skill['id'] ?>')">
+                                            <label class="form-check-label fw-semibold text-slate-800" for="skill_<?= $skill['id'] ?>">
+                                                <i class="bi bi-<?= $skill['icon'] ?> text-primary me-1"></i> <?= $skill['name'] ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top skill-level-wrapper" id="skill_level_box_<?= $skill['id'] ?>" style="display: none;">
+                                        <label class="form-label small text-muted mb-1">Tingkat Kemampuan:</label>
+                                        <select class="form-select form-select-sm" name="skills[<?= $skill['id'] ?>][level]">
+                                            <option value="pemula">Pemula (Beginner)</option>
+                                            <option value="menengah" selected>Menengah (Intermediate)</option>
+                                            <option value="mahir">Mahir (Advanced)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Custom Skill Input -->
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <label class="form-label fw-semibold"><i class="bi bi-plus-circle me-1"></i> Keahlian Lainnya (Jika belum terdaftar):</label>
+                        <input type="text" class="form-control" name="custom_skills" placeholder="Contoh: Barista Kopi, Servis HP, Operator Drone (pisahkan dengan koma)">
+                    </div>
+
+                    <!-- Step 6 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(5)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(6)">
+                            Selanjutnya: Minat <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 7: MINAT (INTERESTS) -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-7">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">7. Minat & Pengembangan Diri</h4>
+                            <p class="text-muted small mb-0">Pilih bidang minat atau pelatihan yang ingin Anda kembangkan</p>
+                        </div>
+                    </div>
+
+                    <p class="text-secondary small mb-3">Klik untuk memilih satu atau beberapa minat yang paling Anda sukai:</p>
+
+                    <!-- Interest Tag Pills -->
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        <?php
+                        $availableInterests = [
+                            ['id' => 1, 'name' => 'Olahraga & Kebugaran', 'icon' => 'trophy'],
+                            ['id' => 2, 'name' => 'Seni Musik & Tari', 'icon' => 'music-note-beamed'],
+                            ['id' => 3, 'name' => 'Seni Rupa & Kriya', 'icon' => 'brush'],
+                            ['id' => 4, 'name' => 'Teknologi & Robotika', 'icon' => 'cpu'],
+                            ['id' => 5, 'name' => 'Kewirausahaan & UMKM', 'icon' => 'shop'],
+                            ['id' => 6, 'name' => 'Aksi Relawan & Sosial', 'icon' => 'heart-pulse'],
+                            ['id' => 7, 'name' => 'Kelestarian Lingkungan', 'icon' => 'tree'],
+                            ['id' => 8, 'name' => 'Literasi & Buku', 'icon' => 'book'],
+                            ['id' => 9, 'name' => 'Kajian & Keagamaan', 'icon' => 'moon-stars'],
+                            ['id' => 10, 'name' => 'Pariwisata & Budaya Lokal', 'icon' => 'compass'],
+                            ['id' => 11, 'name' => 'E-Sport & Gaming', 'icon' => 'controller'],
+                            ['id' => 12, 'name' => 'Kepemimpinan & Organisasi', 'icon' => 'diagram-3']
+                        ];
+                        ?>
+
+                        <?php foreach ($availableInterests as $interest): ?>
+                            <div>
+                                <input type="checkbox" class="interest-tag-checkbox"
+                                    name="interests[]"
+                                    value="<?= $interest['id'] ?>"
+                                    id="interest_<?= $interest['id'] ?>"
+                                    data-name="<?= esc($interest['name']) ?>">
+                                <label class="interest-tag-label" for="interest_<?= $interest['id'] ?>">
+                                    <i class="bi bi-<?= $interest['icon'] ?>"></i> <?= $interest['name'] ?>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Custom Interests -->
+                    <div class="p-3 bg-light rounded-3">
+                        <label class="form-label fw-semibold"><i class="bi bi-plus-circle me-1"></i> Minat Lainnya:</label>
+                        <input type="text" class="form-control" name="custom_interests" placeholder="Contoh: Astronomi, Podcast, Panahan (pisahkan dengan koma)">
+                    </div>
+
+                    <!-- Step 7 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(6)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali
+                        </button>
+                        <button type="button" class="btn btn-primary-pmd" onclick="prepareReview(); goToStep(8)">
+                            Selanjutnya: Review & Konfirmasi <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- SECTION 8: KONFIRMASI & PERSETUJUAN -->
+            <!-- ================================================================= -->
+            <div class="card card-custom mb-4 form-step-section" id="step-8">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">8. Konfirmasi & Ringkasan Data</h4>
+                            <p class="text-muted small mb-0">Pastikan seluruh data yang Anda masukkan telah lengkap dan benar</p>
+                        </div>
+                    </div>
+
+                    <!-- Review Cards Summary -->
+                    <div class="p-3 p-md-4 rounded-3 border bg-white mb-4">
+                        <div class="row g-4">
+                            <!-- Review Pribadi -->
+                            <div class="col-md-6">
+                                <div class="review-group-title"><i class="bi bi-person me-1"></i> Data Pribadi</div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Nama Lengkap</div>
+                                    <div class="review-item-value" id="rev_name">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Jenis Kelamin & Tempat/Tgl Lahir</div>
+                                    <div class="review-item-value" id="rev_ttl">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Kontak (WhatsApp & Email)</div>
+                                    <div class="review-item-value" id="rev_contact">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Cabang PMD Terpilih</div>
+                                    <div class="review-item-value" id="rev_cabang">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Review Alamat & Pendidikan -->
+                            <div class="col-md-6">
+                                <div class="review-group-title"><i class="bi bi-geo-alt me-1"></i> Domisili & Pendidikan</div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Alamat Lengkap</div>
+                                    <div class="review-item-value" id="rev_address">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Pendidikan Terakhir</div>
+                                    <div class="review-item-value" id="rev_education">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Pekerjaan Saat Ini</div>
+                                    <div class="review-item-value" id="rev_job">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Keahlian & Minat</div>
+                                    <div class="review-item-value" id="rev_skills_interests">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statement Checkbox -->
+                    <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="agreement_check" required>
+                            <label class="form-check-label fw-semibold text-slate-800 small" for="agreement_check">
+                                Saya menyatakan dengan sesungguhnya bahwa seluruh data yang saya isikan pada formulir pendataan pemuda ini adalah benar, akurat, dan dapat dipertanggungjawabkan sesuai ketentuan yang berlaku.
+                            </label>
+                            <div class="invalid-feedback">Anda wajib menyetujui pernyataan keabsahan data sebelum mengirim form.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 8 Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(7)">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali Ubah Data
+                        </button>
+                        <button type="submit" class="btn btn-primary-pmd px-4 py-2" id="btnSubmitForm">
+                            <i class="bi bi-send-fill me-1"></i> Kirim Data Pendataan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<!-- Tom Select JS for Searchable Selects -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="<?= base_url('js/pendataan.js') ?>"></script>
+<?= $this->endSection() ?>

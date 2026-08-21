@@ -1,0 +1,189 @@
+/**
+ * Sistem Pendataan Pemuda Kabupaten Sragen
+ * Main Layout & Global Component Styles (Tema Merah / Red Nuance)
+ */
+
+:root {
+    --pmd-primary: #dc2626;        /* Vibrant Red */
+    --pmd-primary-dark: #991b1b;   /* Deep Maroon */
+    --pmd-primary-light: #ef4444;  /* Coral Red */
+    --pmd-primary-subtle: #fef2f2; /* Light Red Tint */
+    --pmd-secondary: #475569;
+    --pmd-accent: #f59e0b;
+    --pmd-bg: #fafbfc;
+    --pmd-card-bg: #ffffff;
+    --pmd-text-main: #0f172a;
+    --pmd-text-muted: #64748b;
+    --pmd-border: #e2e8f0;
+    --pmd-border-red: #fee2e2;
+    --pmd-radius-sm: 8px;
+    --pmd-radius-md: 12px;
+    --pmd-radius-lg: 16px;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--pmd-bg);
+    color: var(--pmd-text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar - Rich Crimson Gradient */
+.navbar-pmd {
+    background: linear-gradient(135deg, #881337 0%, #991b1b 45%, #dc2626 100%);
+    box-shadow: 0 4px 20px -2px rgba(185, 28, 28, 0.35);
+    padding: 0.85rem 0;
+}
+
+.navbar-brand-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+}
+
+.navbar-brand-subtitle {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+    display: block;
+}
+
+.navbar-brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: var(--pmd-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Cards */
+.card-custom {
+    background-color: var(--pmd-card-bg);
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-lg);
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-header-gradient {
+    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    color: #ffffff;
+    border-top-left-radius: var(--pmd-radius-lg) !important;
+    border-top-right-radius: var(--pmd-radius-lg) !important;
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+/* Form Controls & Labels */
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.form-label .required-star {
+    color: var(--pmd-primary);
+    margin-left: 2px;
+}
+
+.form-control, 
+.form-select {
+    border-radius: var(--pmd-radius-sm);
+    border: 1.5px solid #cbd5e1;
+    padding: 0.65rem 0.95rem;
+    font-size: 0.925rem;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus, 
+.form-select:focus {
+    border-color: var(--pmd-primary);
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
+
+.form-control::placeholder {
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+/* Red-themed Custom Buttons */
+.btn-primary-pmd {
+    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.65rem 1.5rem;
+    border-radius: var(--pmd-radius-sm);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+    transition: all 0.2s ease;
+}
+
+.btn-primary-pmd:hover, 
+.btn-primary-pmd:focus {
+    background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.38);
+}
+
+.btn-outline-pmd {
+    background-color: transparent;
+    border: 1.5px solid var(--pmd-primary);
+    color: var(--pmd-primary);
+    font-weight: 600;
+    padding: 0.45rem 1.15rem;
+    border-radius: 50px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-pmd:hover,
+.btn-outline-pmd:focus {
+    background-color: var(--pmd-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.btn-secondary-pmd {
+    background-color: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    font-weight: 600;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--pmd-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.btn-secondary-pmd:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+/* Red Nuance Utilities */
+.text-pmd-red {
+    color: var(--pmd-primary) !important;
+}
+
+.bg-pmd-badge {
+    background-color: var(--pmd-primary-subtle) !important;
+    color: var(--pmd-primary) !important;
+    border: 1px solid var(--pmd-border-red);
+}
+
+/* Footer */
+.footer-pmd {
+    margin-top: auto;
+    background-color: #ffffff;
+    border-top: 1px solid var(--pmd-border);
+    padding: 1.5rem 0;
+    font-size: 0.85rem;
+    color: var(--pmd-text-muted);
+}

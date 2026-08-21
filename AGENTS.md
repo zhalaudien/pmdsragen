@@ -108,11 +108,11 @@ Pemuda
 
 Role utama:
 
-| Role | Scope |
-|---|---|
-| `superadmin` | Seluruh sistem |
-| `admin_wilayah` | Satu wilayah |
-| `admin_cabang` | Satu cabang |
+| Role            | Scope          |
+| --------------- | -------------- |
+| `superadmin`    | Seluruh sistem |
+| `admin_wilayah` | Satu wilayah   |
+| `admin_cabang`  | Satu cabang    |
 
 ## 4.1 Superadmin
 
@@ -346,15 +346,12 @@ cabang.code
 pemuda.registration_number
 ```
 
-NIK dapat dibuat unique apabila kebijakan pendataan memang mengharuskan satu NIK hanya boleh muncul sekali.
-
 ---
 
 # 7. Data Sensitif
 
 Data seperti:
 
-- NIK
 - nomor HP
 - email
 - alamat
@@ -363,14 +360,12 @@ harus diperlakukan sebagai data sensitif.
 
 Aturan:
 
-1. Jangan menampilkan NIK lengkap pada daftar umum.
-2. Jangan memasukkan NIK ke URL.
-3. Jangan mencatat NIK/password dalam log.
-4. Gunakan HTTPS pada production.
-5. Password wajib menggunakan hashing.
-6. Jangan pernah menyimpan password plaintext.
-7. Batasi akses data berdasarkan role dan scope.
-8. Jangan mengirim seluruh data pribadi ke frontend jika tidak diperlukan.
+1. Jangan mencatat password dalam log.
+2. Gunakan HTTPS pada production.
+3. Password wajib menggunakan hashing.
+4. Jangan pernah menyimpan password plaintext.
+5. Batasi akses data berdasarkan role dan scope.
+6. Jangan mengirim seluruh data pribadi ke frontend jika tidak diperlukan.
 
 ---
 
@@ -747,12 +742,7 @@ file
 Contoh:
 
 ```json
-[
-  "Olahraga",
-  "Seni",
-  "Teknologi",
-  "Wirausaha"
-]
+["Olahraga", "Seni", "Teknologi", "Wirausaha"]
 ```
 
 ---
@@ -913,7 +903,6 @@ Sebelum production:
 - [ ] Authorization diterapkan di server.
 - [ ] Scope wilayah/cabang diterapkan pada query.
 - [ ] Upload file divalidasi tipe dan ukurannya.
-- [ ] NIK dan data pribadi tidak masuk log.
 - [ ] HTTPS digunakan.
 - [ ] Database user production memiliki privilege minimum.
 - [ ] Backup database tersedia.
@@ -1166,16 +1155,15 @@ Saat mengerjakan project ini:
 6. Jangan mengandalkan UI untuk security.
 7. Jangan menulis password plaintext.
 8. Jangan menggunakan `SELECT *` jika hanya beberapa kolom diperlukan untuk response sensitif.
-9. Jangan memasukkan data NIK ke log/debug output.
-10. Gunakan transaction untuk operasi multi-tabel.
-11. Semua perubahan database harus melalui migration.
-12. Gunakan seeders untuk reference data.
-13. Jangan menghapus data production secara permanen tanpa mekanisme dan konfirmasi yang sesuai.
-14. Pertahankan backward compatibility jika memungkinkan.
-15. Jika requirement ambigu dan dapat memengaruhi database/security, jelaskan asumsi sebelum melakukan perubahan besar.
-16. Untuk perubahan besar, kerjakan secara bertahap dan pastikan setiap tahap tetap dapat dijalankan.
-17. Jangan memasukkan dependency baru jika fitur dapat dibuat menggunakan CodeIgniter 4 atau dependency yang sudah ada.
-18. Prioritaskan keamanan, integritas data, dan authorization dibanding kemudahan implementasi sementara.
+9. Gunakan transaction untuk operasi multi-tabel.
+10. Semua perubahan database harus melalui migration.
+11. Gunakan seeders untuk reference data.
+12. Jangan menghapus data production secara permanen tanpa mekanisme dan konfirmasi yang sesuai.
+13. Pertahankan backward compatibility jika memungkinkan.
+14. Jika requirement ambigu dan dapat memengaruhi database/security, jelaskan asumsi sebelum melakukan perubahan besar.
+15. Untuk perubahan besar, kerjakan secara bertahap dan pastikan setiap tahap tetap dapat dijalankan.
+16. Jangan memasukkan dependency baru jika fitur dapat dibuat menggunakan CodeIgniter 4 atau dependency yang sudah ada.
+17. Prioritaskan keamanan, integritas data, dan authorization dibanding kemudahan implementasi sementara.
 
 ---
 
@@ -1193,7 +1181,7 @@ Saat mengerjakan project ini:
              v                                 v
        +-----------+                    +-------------+
        |  PEMUDA   |                    |   RBAC      |
-       +-----+-----+                    +------+------+ 
+       +-----+-----+                    +------+------+
              |                                 |
              v                         +-------+-------+
         CABANG                        |       |       |
@@ -1221,6 +1209,7 @@ Saat mengerjakan project ini:
 ## Prioritas implementasi
 
 **Phase 1 — Fondasi**
+
 - Migration
 - Seeder
 - Models
@@ -1230,6 +1219,7 @@ Saat mengerjakan project ini:
 - Cabang
 
 **Phase 2 — Pendataan**
+
 - CRUD Pemuda
 - Alamat
 - Pendidikan
@@ -1239,6 +1229,7 @@ Saat mengerjakan project ini:
 - Minat
 
 **Phase 3 — Public Form**
+
 - Form pendataan
 - Validasi
 - Transaction
@@ -1246,6 +1237,7 @@ Saat mengerjakan project ini:
 - Halaman sukses
 
 **Phase 4 — Dashboard**
+
 - Statistik
 - Search
 - Filter
@@ -1253,12 +1245,14 @@ Saat mengerjakan project ini:
 - Verifikasi
 
 **Phase 5 — Reporting**
+
 - Export Excel
 - CSV
 - Print
 - Statistik per wilayah/cabang
 
 **Phase 6 — Form Builder**
+
 - Form dinamis
 - Question builder
 - Response
