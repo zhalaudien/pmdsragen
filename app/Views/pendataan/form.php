@@ -147,6 +147,38 @@
                             <div class="invalid-feedback d-block" id="gender-error" style="display: none !important;">Pilih jenis kelamin.</div>
                         </div>
 
+                        <!-- Status Pernikahan -->
+                        <div class="col-md-6">
+                            <label for="marital_status" class="form-label">Status Pernikahan<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-heart"></i></span>
+                                <select class="form-select" id="marital_status" name="marital_status" required onchange="this.classList.remove('is-invalid')">
+                                    <option value="" selected disabled>-- Pilih Status Pernikahan --</option>
+                                    <option value="belum_menikah" <?= old('marital_status') === 'belum_menikah' ? 'selected' : '' ?>>Belum Menikah</option>
+                                    <option value="sudah_menikah" <?= old('marital_status') === 'sudah_menikah' ? 'selected' : '' ?>>Sudah Menikah</option>
+                                    <option value="janda" <?= old('marital_status') === 'janda' ? 'selected' : '' ?>>Janda</option>
+                                    <option value="duda" <?= old('marital_status') === 'duda' ? 'selected' : '' ?>>Duda</option>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback">Pilih status pernikahan.</div>
+                        </div>
+
+                        <!-- Golongan Darah -->
+                        <div class="col-md-6">
+                            <label for="blood_type" class="form-label">Golongan Darah</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-droplet-half"></i></span>
+                                <select class="form-select" id="blood_type" name="blood_type">
+                                    <option value="" <?= old('blood_type') === '' || old('blood_type') === null ? 'selected' : '' ?>>-- Pilih Golongan Darah (Opsional) --</option>
+                                    <option value="A" <?= old('blood_type') === 'A' ? 'selected' : '' ?>>A</option>
+                                    <option value="B" <?= old('blood_type') === 'B' ? 'selected' : '' ?>>B</option>
+                                    <option value="AB" <?= old('blood_type') === 'AB' ? 'selected' : '' ?>>AB</option>
+                                    <option value="O" <?= old('blood_type') === 'O' ? 'selected' : '' ?>>O</option>
+                                    <option value="tidak_tahu" <?= old('blood_type') === 'tidak_tahu' ? 'selected' : '' ?>>Tidak Tahu / Belum Tahu</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Wilayah & Cabang Domisili Organisasi -->
                         <div class="col-md-6">
                             <label for="cabang_id" class="form-label">Cabang PMD (Wilayah)<span class="required-star">*</span></label>
@@ -600,56 +632,133 @@
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-5">
                 <div class="card-body p-4 p-md-5">
-                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-                        <div class="d-flex align-items-center">
-                            <div class="section-icon-badge">
-                                <i class="bi bi-diagram-3-fill"></i>
-                            </div>
-                            <div>
-                                <h4 class="card-title fw-bold mb-0">5. Riwayat Organisasi & Komunitas</h4>
-                                <p class="text-muted small mb-0">Pengalaman berorganisasi, kepemudaan, atau komunitas sosial (opsional)</p>
-                            </div>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="section-icon-badge">
+                            <i class="bi bi-diagram-3-fill"></i>
                         </div>
-                        <button type="button" class="btn btn-outline-pmd btn-sm" onclick="addOrganizationRow()">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Organisasi
-                        </button>
+                        <div>
+                            <h4 class="card-title fw-bold mb-0">5. Keikutsertaan Organisasi & Penugasan</h4>
+                            <p class="text-muted small mb-0">Pilih unit tugas / bidang organisasi yang Anda ikuti (opsional, bisa pilih lebih dari satu)</p>
+                        </div>
                     </div>
 
-                    <!-- Repeater Container -->
-                    <div id="organizationRepeaterContainer">
-                        <div class="repeater-item" id="org-row-0">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge bg-pmd-badge fw-semibold px-3 py-2 rounded-pill">
-                                    <i class="bi bi-flag-fill text-pmd-red me-1"></i> Pengalaman Organisasi #1
-                                </span>
-                                <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="removeOrganizationRow('org-row-0')" title="Hapus Organisasi">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                    <p class="text-secondary small mb-3">Centang organisasi yang Anda ikuti dan lengkapi jabatan/peran Anda:</p>
+
+                    <?php
+                    $availableOrganizations = [
+                        [
+                            'key'         => 'satgas',
+                            'name'        => 'Satgas',
+                            'title'       => 'Satgas',
+                            'badge'       => 'Satuan Tugas',
+                            'description' => 'Satuan Tugas Pengamanan, Penertiban, dan Pengawalan Kegiatan',
+                            'icon'        => 'shield-shaded',
+                            'color'       => 'text-danger',
+                        ],
+                        [
+                            'key'         => 'bankom',
+                            'name'        => 'Bankom',
+                            'title'       => 'Bankom',
+                            'badge'       => 'Bantuan Komunikasi',
+                            'description' => 'Unit Bantuan Komunikasi, Radio Pancar Ulang, dan Informasi Lapangan',
+                            'icon'        => 'broadcast-pin',
+                            'color'       => 'text-primary',
+                        ],
+                        [
+                            'key'         => 'parkir',
+                            'name'        => 'Parkir',
+                            'title'       => 'Parkir',
+                            'badge'       => 'Tim Parkir',
+                            'description' => 'Tim Pengaturan Parkir, Kelancaran Arus, dan Kerapian Kendaraan',
+                            'icon'        => 'p-circle-fill',
+                            'color'       => 'text-warning',
+                        ],
+                        [
+                            'key'         => 'pemuda',
+                            'name'        => 'Pemuda',
+                            'title'       => 'Pemuda',
+                            'badge'       => 'Kepengurusan Pemuda',
+                            'description' => 'Keaktifan Struktural / Anggota dalam Kegiatan Kepemudaan Cabang/Wilayah',
+                            'icon'        => 'people-fill',
+                            'color'       => 'text-success',
+                        ],
+                        [
+                            'key'         => 'tim_ikhrom',
+                            'name'        => 'Tim Ikhrom',
+                            'title'       => 'Tim Ikhrom',
+                            'badge'       => 'Perawatan Jenazah',
+                            'description' => 'Tim Khusus Pelayanan, Perawatan, dan Pengurusan Jenazah',
+                            'icon'        => 'heart-pulse-fill',
+                            'color'       => 'text-info',
+                        ],
+                    ];
+                    ?>
+
+                    <div class="row g-3" id="organizationContainer">
+                        <?php foreach ($availableOrganizations as $org): ?>
+                            <div class="col-12">
+                                <div class="org-card" id="org_card_box_<?= $org['key'] ?>">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="form-check w-100">
+                                            <input class="form-check-input org-toggle-check" type="checkbox"
+                                                name="organizations[<?= $org['key'] ?>][selected]"
+                                                value="<?= $org['name'] ?>"
+                                                id="org_<?= $org['key'] ?>"
+                                                data-key="<?= $org['key'] ?>"
+                                                data-title="<?= $org['name'] ?>"
+                                                onchange="toggleOrgDetail('<?= $org['key'] ?>')">
+                                            <label class="form-check-label fw-bold text-slate-900 fs-6 w-100 cursor-pointer" for="org_<?= $org['key'] ?>">
+                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                    <span>
+                                                        <i class="bi bi-<?= $org['icon'] ?> <?= $org['color'] ?> me-2 fs-5 align-middle"></i>
+                                                        <?= $org['title'] ?>
+                                                    </span>
+                                                    <span class="badge bg-light text-secondary border rounded-pill fw-medium small">
+                                                        <?= $org['badge'] ?>
+                                                    </span>
+                                                </div>
+                                                <div class="text-muted fw-normal small mt-1 ms-4"><?= $org['description'] ?></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-top org-detail-wrapper" id="org_detail_<?= $org['key'] ?>" style="display: none;">
+                                        <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= $org['name'] ?>">
+                                        <div class="row g-2">
+                                            <div class="col-md-5">
+                                                <label class="form-label small text-muted mb-1">Jabatan / Posisi / Peran:</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    name="organizations[<?= $org['key'] ?>][position]"
+                                                    placeholder="Contoh: Anggota / Koordinator / Sie Lapangan"
+                                                    value="Anggota">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small text-muted mb-1">Tahun Bergabung:</label>
+                                                <input type="number" class="form-control form-control-sm"
+                                                    name="organizations[<?= $org['key'] ?>][join_year]"
+                                                    placeholder="Contoh: <?= date('Y') ?>"
+                                                    min="1990" max="<?= date('Y') ?>"
+                                                    value="<?= date('Y') ?>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small text-muted mb-1">Keterangan Tambahan:</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    name="organizations[<?= $org['key'] ?>][description]"
+                                                    placeholder="Opsional">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nama Organisasi / Lembaga / Komunitas</label>
-                                    <input type="text" class="form-control" name="organizations[0][name]" placeholder="Contoh: Karang Taruna / OSIS / HMI / Relawan Sragen">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Jabatan / Posisi</label>
-                                    <input type="text" class="form-control" name="organizations[0][position]" placeholder="Contoh: Ketua / Sekretaris / Anggota">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Tanggal / Tahun Mulai</label>
-                                    <input type="date" class="form-control" name="organizations[0][join_date]">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Tanggal / Tahun Selesai</label>
-                                    <input type="date" class="form-control" name="organizations[0][end_date]">
-                                    <div class="form-text">Biarkan kosong jika masih aktif.</div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Deskripsi Peran & Program yang Pernah Diikuti</label>
-                                    <textarea class="form-control" name="organizations[0][description]" rows="2" placeholder="Jelaskan kontribusi atau kegiatan yang dijalankan..."></textarea>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Organisasi Lainnya -->
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <label class="form-label fw-semibold text-slate-800 small mb-1">
+                            <i class="bi bi-plus-circle me-1"></i> Organisasi / Komunitas Lainnya (Jika ada):
+                        </label>
+                        <input type="text" class="form-control form-control-sm" name="other_organization"
+                            placeholder="Contoh: Karang Taruna, OSIS, Relawan BPBD (pisahkan dengan koma jika lebih dari satu)">
                     </div>
 
                     <!-- Step 5 Actions -->
@@ -844,6 +953,10 @@
                                     <div class="review-item-value" id="rev_ttl">-</div>
                                 </div>
                                 <div class="mb-2">
+                                    <div class="review-item-label">Status Pernikahan & Golongan Darah</div>
+                                    <div class="review-item-value" id="rev_marital_blood">-</div>
+                                </div>
+                                <div class="mb-2">
                                     <div class="review-item-label">Kontak (WhatsApp & Email)</div>
                                     <div class="review-item-value" id="rev_contact">-</div>
                                 </div>
@@ -867,6 +980,10 @@
                                 <div class="mb-2">
                                     <div class="review-item-label">Pekerjaan Saat Ini</div>
                                     <div class="review-item-value" id="rev_job">-</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="review-item-label">Keikutsertaan Organisasi / Unit Tugas</div>
+                                    <div class="review-item-value" id="rev_organizations">-</div>
                                 </div>
                                 <div class="mb-2">
                                     <div class="review-item-label">Keahlian & Minat</div>

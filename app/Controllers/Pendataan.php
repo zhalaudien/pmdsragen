@@ -86,6 +86,8 @@ class Pendataan extends BaseController
             'cabang_id'          => 'required|is_natural_no_zero',
             'name'               => 'required|min_length[3]|max_length[150]',
             'gender'             => 'required|in_list[L,P]',
+            'marital_status'     => 'required|in_list[belum_menikah,sudah_menikah,janda,duda]',
+            'blood_type'         => 'permit_empty|in_list[A,B,AB,O,tidak_tahu,-]',
             'birth_place'        => 'required|max_length[100]',
             'birth_date'         => 'required|valid_date',
             'phone'              => 'required|min_length[9]|max_length[20]',
@@ -119,6 +121,8 @@ class Pendataan extends BaseController
                 'registration_number' => $regNumber,
                 'name'                => $this->request->getPost('name'),
                 'gender'              => $this->request->getPost('gender'),
+                'marital_status'      => $this->request->getPost('marital_status') ?: 'belum_menikah',
+                'blood_type'          => $this->request->getPost('blood_type') ?: null,
                 'birth_place'         => $this->request->getPost('birth_place'),
                 'birth_date'          => $this->request->getPost('birth_date'),
                 'phone'               => $this->request->getPost('phone'),
@@ -165,18 +169,46 @@ class Pendataan extends BaseController
             ];
             $this->pekerjaanModel->insert($pekerjaanData);
 
-            // 7. Insert Organisasi (Multi rows)
+            // 7. Insert Organisasi (Pilihan: Satgas, Bankom, Parkir, Pemuda, Tim Ikhrom, & Lainnya)
             $organizations = $this->request->getPost('organizations');
             if (!empty($organizations) && is_array($organizations)) {
-                foreach ($organizations as $org) {
-                    if (!empty($org['name'])) {
+                foreach ($organizations as $orgKey => $org) {
+                    if (!empty($org['selected'])) {
+                        $orgName  = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
+                        $position = !empty($org['position']) ? $org['position'] : 'Anggota';
+                        $joinDate = !empty($org['join_year']) ? ($org['join_year'] . '-01-01') : (!empty($org['join_date']) ? $org['join_date'] : null);
+                        $desc     = !empty($org['description']) ? $org['description'] : null;
+
+                        $this->organisasiModel->insert([
+                            'pemuda_id'         => $pemudaId,
+                            'organization_name' => $orgName,
+                            'position'          => $position,
+                            'join_date'         => $joinDate,
+                            'description'       => $desc,
+                        ]);
+                    } elseif (!empty($org['name']) && is_string($org['name'])) {
+                        // Fallback for custom array
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
                             'organization_name' => $org['name'],
-                            'position'          => $org['position'] ?? null,
+                            'position'          => $org['position'] ?? 'Anggota',
                             'join_date'         => !empty($org['join_date']) ? $org['join_date'] : null,
-                            'end_date'          => !empty($org['end_date']) ? $org['end_date'] : null,
                             'description'       => $org['description'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            // Insert other organizations if provided
+            $otherOrg = trim((string) $this->request->getPost('other_organization'));
+            if (!empty($otherOrg)) {
+                $otherOrgs = array_map('trim', explode(',', $otherOrg));
+                foreach ($otherOrgs as $name) {
+                    if (!empty($name)) {
+                        $this->organisasiModel->insert([
+                            'pemuda_id'         => $pemudaId,
+                            'organization_name' => $name,
+                            'position'          => 'Anggota',
                         ]);
                     }
                 }

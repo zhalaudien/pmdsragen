@@ -8,6 +8,9 @@ class WilayahSeeder extends Seeder
 {
     public function run()
     {
+        $this->db->disableForeignKeyChecks();
+        $this->db->table('wilayah')->truncate();
+
         $data = [
             [
                 'id'          => 1,
@@ -36,5 +39,6 @@ class WilayahSeeder extends Seeder
         ];
 
         $this->db->table('wilayah')->insertBatch($data);
+        $this->db->enableForeignKeyChecks();
     }
 }

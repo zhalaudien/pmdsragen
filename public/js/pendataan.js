@@ -3,28 +3,119 @@
  * Pendataan Form Interactive Logic with Tom Select Searchable Dropdowns
  */
 
-// Master data desa/kelurahan per kecamatan di Sragen
+// Master data desa/kelurahan per kecamatan di Sragen dengan ID Database yang akurat
 const sragenVillages = {
-    "1": ["Sragen Wetan", "Sragen Kulon", "Sragen Tengah", "Nglorog", "Sine", "Karangtengah", "Kroyo", "Tangkil"],
-    "2": ["Kujon", "Plumbungan", "Puro", "Saradan", "Guworejo", "Mojorejo", "Jurangjero", "Pelemgadung", "Kedungwaduk", "Ngringkwit"],
-    "3": ["Sidoharjo", "Jetak", "Purwosuman", "Patihan", "Bentak", "Duyungan", "Sribit", "Taraman", "Tenggak", "Jambanan", "Pandak", "Singopadu"],
-    "4": ["Gemolong", "Kwangen", "Ngembatpadas", "Kragilan", "Jenalas", "Kaloran", "Purworejo", "Peleman", "Brangkal", "Tlogotirto", "Jatibatur", "Nganti", "Kalenan"],
-    "5": ["Kalijambe", "Banaran", "Donoyudan", "Krikilan", "Ngetal", "Saren", "Tegaldowo", "Trobayan", "Wonorejo", "Bukuran", "Karangjati"],
-    "6": ["Plupuh", "Dari", "Gedongan", "Gentanbanaran", "Jabung", "Karanganyar", "Karangwaru", "Krikil", "Manyarejo", "Ngrombo", "Padas", "Sambirejo", "Somomorodukuh"],
-    "7": ["Masaran", "Dawungan", "Gebang", "Jati", "Karangmalang", "Kliwonan", "Krebet", "Pilangsari", "Pringanom", "Sepat", "Sidodadi"],
-    "8": ["Kedawung", "Bendungan", "Celep", "Jatimulyo", "Karangpelem", "Mojokerto", "Pengkok", "Wonokerso", "Wonorejo"],
-    "9": ["Sambirejo", "Blimbing", "Dawung", "Jambeyan", "Jetis", "Musuk", "Sukorejo"],
-    "10": ["Gondang", "Banyurip", "Glonggong", "Kaliwedi", "Plosorejo", "Tegalrejo", "Tunggul", "Wonotolo"],
-    "11": ["Sambungmacan", "Banaran", "Bedoro", "Cemeng", "Gringging", "Karanganyar", "Plumbon", "Toyogo"],
-    "12": ["Ngrampal", "Bener", "Gabus", "Karangudi", "Kebonromo", "Klandungan", "Pilangsari", "Ngarum"],
-    "13": ["Tanon", "Bonagung", "Gading", "Gentan", "Kalikobok", "Karangtalun", "Karangasem", "Ketro", "Padas", "Pengkol", "Sambiduwur", "Slogo", "Suwatu"],
-    "14": ["Sumberlawang", "Cepoko", "Hadiluwih", "Jati", "Kacangan", "Mojopuro", "Ngandul", "Ngargosari", "Ngargotirto", "Pagak", "Pendem", "Tlogorejo"],
-    "15": ["Mondokan", "Gemantar", "Jekawal", "Kedawung", "Pare", "Sono", "Sumberejo", "Tempelrejo", "Trombol"],
-    "16": ["Sukodono", "Baleharjo", "Bendo", "Gebang", "Jatitengah", "Juwok", "Karang Anom", "Majenang", "Newung", "Pantirejo"],
-    "17": ["Gesi", "Blangu", "Poleng", "Slendro", "Srawung", "Tanggan"],
-    "18": ["Tangen", "Denanyar", "Dukuh", "Galeh", "Katelan", "Ngrombo", "Sigit"],
-    "19": ["Jenar", "Banyurip", "Dawung", "Japoh", "Kandangsapi", "Mlale", "Ngepringan"],
-    "20": ["Miri", "Bagor", "Doyong", "Geneng", "Girimargo", "Jeruk", "Soko", "Sunggingan", "Brojol"]
+    "1": [
+        { id: 1, name: "Sragen Wetan" }, { id: 2, name: "Sragen Kulon" }, { id: 3, name: "Sragen Tengah" },
+        { id: 4, name: "Nglorog" }, { id: 5, name: "Sine" }, { id: 6, name: "Karangtengah" },
+        { id: 7, name: "Kroyo" }, { id: 8, name: "Tangkil" }
+    ],
+    "2": [
+        { id: 9, name: "Kujon" }, { id: 10, name: "Plumbungan" }, { id: 11, name: "Puro" },
+        { id: 12, name: "Saradan" }, { id: 13, name: "Guworejo" }, { id: 14, name: "Mojorejo" },
+        { id: 15, name: "Jurangjero" }, { id: 16, name: "Pelemgadung" }, { id: 17, name: "Kedungwaduk" },
+        { id: 18, name: "Ngringkwit" }
+    ],
+    "3": [
+        { id: 19, name: "Sidoharjo" }, { id: 20, name: "Jetak" }, { id: 21, name: "Purwosuman" },
+        { id: 22, name: "Patihan" }, { id: 23, name: "Bentak" }, { id: 24, name: "Duyungan" },
+        { id: 25, name: "Sribit" }, { id: 26, name: "Taraman" }, { id: 27, name: "Tenggak" },
+        { id: 28, name: "Jambanan" }, { id: 29, name: "Pandak" }, { id: 30, name: "Singopadu" }
+    ],
+    "4": [
+        { id: 31, name: "Gemolong" }, { id: 32, name: "Kwangen" }, { id: 33, name: "Ngembatpadas" },
+        { id: 34, name: "Kragilan" }, { id: 35, name: "Jenalas" }, { id: 36, name: "Kaloran" },
+        { id: 37, name: "Purworejo" }, { id: 38, name: "Peleman" }, { id: 39, name: "Brangkal" },
+        { id: 40, name: "Tlogotirto" }, { id: 41, name: "Jatibatur" }, { id: 42, name: "Nganti" },
+        { id: 43, name: "Kalenan" }
+    ],
+    "5": [
+        { id: 44, name: "Kalijambe" }, { id: 45, name: "Banaran" }, { id: 46, name: "Donoyudan" },
+        { id: 47, name: "Krikilan" }, { id: 48, name: "Ngetal" }, { id: 49, name: "Saren" },
+        { id: 50, name: "Tegaldowo" }, { id: 51, name: "Trobayan" }, { id: 52, name: "Wonorejo" },
+        { id: 53, name: "Bukuran" }, { id: 54, name: "Karangjati" }
+    ],
+    "6": [
+        { id: 55, name: "Plupuh" }, { id: 56, name: "Dari" }, { id: 57, name: "Gedongan" },
+        { id: 58, name: "Gentanbanaran" }, { id: 59, name: "Jabung" }, { id: 60, name: "Karanganyar" },
+        { id: 61, name: "Karangwaru" }, { id: 62, name: "Krikil" }, { id: 63, name: "Manyarejo" },
+        { id: 64, name: "Ngrombo" }, { id: 65, name: "Padas" }, { id: 66, name: "Sambirejo" },
+        { id: 67, name: "Somomorodukuh" }
+    ],
+    "7": [
+        { id: 68, name: "Masaran" }, { id: 69, name: "Dawungan" }, { id: 70, name: "Gebang" },
+        { id: 71, name: "Jati" }, { id: 72, name: "Karangmalang" }, { id: 73, name: "Kliwonan" },
+        { id: 74, name: "Krebet" }, { id: 75, name: "Pilangsari" }, { id: 76, name: "Pringanom" },
+        { id: 77, name: "Sepat" }, { id: 78, name: "Sidodadi" }
+    ],
+    "8": [
+        { id: 79, name: "Kedawung" }, { id: 80, name: "Bendungan" }, { id: 81, name: "Celep" },
+        { id: 82, name: "Jatimulyo" }, { id: 83, name: "Karangpelem" }, { id: 84, name: "Mojokerto" },
+        { id: 85, name: "Pengkok" }, { id: 86, name: "Wonokerso" }, { id: 87, name: "Wonorejo" }
+    ],
+    "9": [
+        { id: 88, name: "Sambirejo" }, { id: 89, name: "Blimbing" }, { id: 90, name: "Dawung" },
+        { id: 91, name: "Jambeyan" }, { id: 92, name: "Jetis" }, { id: 93, name: "Musuk" },
+        { id: 94, name: "Sukorejo" }
+    ],
+    "10": [
+        { id: 95, name: "Gondang" }, { id: 96, name: "Banyurip" }, { id: 97, name: "Glonggong" },
+        { id: 98, name: "Kaliwedi" }, { id: 99, name: "Plosorejo" }, { id: 100, name: "Tegalrejo" },
+        { id: 101, name: "Tunggul" }, { id: 102, name: "Wonotolo" }
+    ],
+    "11": [
+        { id: 103, name: "Sambungmacan" }, { id: 104, name: "Banaran" }, { id: 105, name: "Bedoro" },
+        { id: 106, name: "Cemeng" }, { id: 107, name: "Gringging" }, { id: 108, name: "Karanganyar" },
+        { id: 109, name: "Plumbon" }, { id: 110, name: "Toyogo" }
+    ],
+    "12": [
+        { id: 111, name: "Ngrampal" }, { id: 112, name: "Bener" }, { id: 113, name: "Gabus" },
+        { id: 114, name: "Karangudi" }, { id: 115, name: "Kebonromo" }, { id: 116, name: "Klandungan" },
+        { id: 117, name: "Pilangsari" }, { id: 118, name: "Ngarum" }
+    ],
+    "13": [
+        { id: 119, name: "Tanon" }, { id: 120, name: "Bonagung" }, { id: 121, name: "Gading" },
+        { id: 122, name: "Gentan" }, { id: 123, name: "Kalikobok" }, { id: 124, name: "Karangtalun" },
+        { id: 125, name: "Karangasem" }, { id: 126, name: "Ketro" }, { id: 127, name: "Padas" },
+        { id: 128, name: "Pengkol" }, { id: 129, name: "Sambiduwur" }, { id: 130, name: "Slogo" },
+        { id: 131, name: "Suwatu" }
+    ],
+    "14": [
+        { id: 132, name: "Sumberlawang" }, { id: 133, name: "Cepoko" }, { id: 134, name: "Hadiluwih" },
+        { id: 135, name: "Jati" }, { id: 136, name: "Kacangan" }, { id: 137, name: "Mojopuro" },
+        { id: 138, name: "Ngandul" }, { id: 139, name: "Ngargosari" }, { id: 140, name: "Ngargotirto" },
+        { id: 141, name: "Pagak" }, { id: 142, name: "Pendem" }, { id: 143, name: "Tlogorejo" }
+    ],
+    "15": [
+        { id: 144, name: "Mondokan" }, { id: 145, name: "Gemantar" }, { id: 146, name: "Jekawal" },
+        { id: 147, name: "Kedawung" }, { id: 148, name: "Pare" }, { id: 149, name: "Sono" },
+        { id: 150, name: "Sumberejo" }, { id: 151, name: "Tempelrejo" }, { id: 152, name: "Trombol" }
+    ],
+    "16": [
+        { id: 153, name: "Sukodono" }, { id: 154, name: "Baleharjo" }, { id: 155, name: "Bendo" },
+        { id: 156, name: "Gebang" }, { id: 157, name: "Jatitengah" }, { id: 158, name: "Juwok" },
+        { id: 159, name: "Karang Anom" }, { id: 160, name: "Majenang" }, { id: 161, name: "Newung" },
+        { id: 162, name: "Pantirejo" }
+    ],
+    "17": [
+        { id: 163, name: "Gesi" }, { id: 164, name: "Blangu" }, { id: 165, name: "Poleng" },
+        { id: 166, name: "Slendro" }, { id: 167, name: "Srawung" }, { id: 168, name: "Tanggan" }
+    ],
+    "18": [
+        { id: 169, name: "Tangen" }, { id: 170, name: "Denanyar" }, { id: 171, name: "Dukuh" },
+        { id: 172, name: "Galeh" }, { id: 173, name: "Katelan" }, { id: 174, name: "Ngrombo" },
+        { id: 175, name: "Sigit" }
+    ],
+    "19": [
+        { id: 176, name: "Jenar" }, { id: 177, name: "Banyurip" }, { id: 178, name: "Dawung" },
+        { id: 179, name: "Japoh" }, { id: 180, name: "Kandangsapi" }, { id: 181, name: "Mlale" },
+        { id: 182, name: "Ngepringan" }
+    ],
+    "20": [
+        { id: 183, name: "Miri" }, { id: 184, name: "Bagor" }, { id: 185, name: "Doyong" },
+        { id: 186, name: "Geneng" }, { id: 187, name: "Girimargo" }, { id: 188, name: "Jeruk" },
+        { id: 189, name: "Soko" }, { id: 190, name: "Sunggingan" }, { id: 191, name: "Brojol" }
+    ]
 };
 
 let currentStep = 1;
@@ -208,9 +299,9 @@ function handleDistrictChange(districtId) {
         villageTomSelect.clearOptions();
 
         if (villages.length > 0) {
-            const options = villages.map((v, idx) => ({
-                value: (idx + 1).toString(),
-                text: v
+            const options = villages.map(v => ({
+                value: v.id.toString(),
+                text: v.name
             }));
             villageTomSelect.addOptions(options);
             villageTomSelect.settings.placeholder = '-- Ketik nama desa/kelurahan untuk mencari... --';
@@ -224,10 +315,10 @@ function handleDistrictChange(districtId) {
     } else if (villageSelect) {
         if (villages.length > 0) {
             villageSelect.innerHTML = '<option value="" selected disabled>-- Pilih Desa / Kelurahan --</option>';
-            villages.forEach((v, idx) => {
+            villages.forEach(v => {
                 const opt = document.createElement('option');
-                opt.value = idx + 1;
-                opt.textContent = v;
+                opt.value = v.id;
+                opt.textContent = v.name;
                 villageSelect.appendChild(opt);
             });
         } else {
@@ -266,56 +357,22 @@ function handleJobStatusChange(statusId) {
     }
 }
 
-// Dynamic Organization Repeater
-function addOrganizationRow() {
-    const container = document.getElementById('organizationRepeaterContainer');
-    if (!container) return;
-
-    const newIndex = orgCount++;
-    const rowId = `org-row-${newIndex}`;
-
-    const rowHtml = `
-        <div class="repeater-item" id="${rowId}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill">
-                    <i class="bi bi-flag-fill me-1"></i> Pengalaman Organisasi #${newIndex + 1}
-                </span>
-                <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="removeOrganizationRow('${rowId}')" title="Hapus Organisasi">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Nama Organisasi / Lembaga / Komunitas</label>
-                    <input type="text" class="form-control" name="organizations[${newIndex}][name]" placeholder="Contoh: BEM / Karang Taruna / Saka Bhayangkara">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Jabatan / Posisi</label>
-                    <input type="text" class="form-control" name="organizations[${newIndex}][position]" placeholder="Contoh: Koordinator Lapangan / Anggota">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Tanggal / Tahun Mulai</label>
-                    <input type="date" class="form-control" name="organizations[${newIndex}][join_date]">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Tanggal / Tahun Selesai</label>
-                    <input type="date" class="form-control" name="organizations[${newIndex}][end_date]">
-                    <div class="form-text">Biarkan kosong jika masih aktif.</div>
-                </div>
-                <div class="col-12">
-                    <label class="form-label">Deskripsi Peran & Program yang Pernah Diikuti</label>
-                    <textarea class="form-control" name="organizations[${newIndex}][description]" rows="2" placeholder="Jelaskan kontribusi Anda..."></textarea>
-                </div>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', rowHtml);
-}
-
-function removeOrganizationRow(rowId) {
-    const row = document.getElementById(rowId);
-    if (row) {
-        row.remove();
+// Toggle Organization detail panel
+function toggleOrgDetail(orgKey) {
+    const checkbox = document.getElementById('org_' + orgKey);
+    const detailBox = document.getElementById('org_detail_' + orgKey);
+    const cardBox = document.getElementById('org_card_box_' + orgKey);
+    if (checkbox) {
+        if (detailBox) {
+            detailBox.style.display = checkbox.checked ? 'block' : 'none';
+        }
+        if (cardBox) {
+            if (checkbox.checked) {
+                cardBox.classList.add('selected');
+            } else {
+                cardBox.classList.remove('selected');
+            }
+        }
     }
 }
 
@@ -332,6 +389,16 @@ function prepareReview() {
     const revTtl = document.getElementById('rev_ttl');
     if (revTtl) revTtl.innerText = `${genderText} | ${birthPlace}, ${birthDate}`;
     
+    // Status Pernikahan & Golongan Darah
+    const maritalEl = document.getElementById('marital_status');
+    const maritalText = maritalEl && maritalEl.value ? (maritalEl.options[maritalEl.selectedIndex]?.text || '-') : '-';
+    const bloodEl = document.getElementById('blood_type');
+    const bloodText = bloodEl && bloodEl.value ? (bloodEl.options[bloodEl.selectedIndex]?.text || '-') : '-';
+    const revMaritalBlood = document.getElementById('rev_marital_blood');
+    if (revMaritalBlood) {
+        revMaritalBlood.innerText = `${maritalText} | Gol. Darah: ${bloodText}`;
+    }
+
     const phone = document.getElementById('phone')?.value || '-';
     const email = document.getElementById('email')?.value || '(Tanpa email)';
     const revContact = document.getElementById('rev_contact');
@@ -398,6 +465,24 @@ function prepareReview() {
     const revJob = document.getElementById('rev_job');
     if (revJob) {
         revJob.innerText = `${jobStatus} ${jobTitle ? ' | ' + jobTitle : ''} ${compName ? ' di ' + compName : ''}`;
+    }
+
+    // Organisasi / Divisi
+    const checkedOrgs = [];
+    document.querySelectorAll('.org-toggle-check:checked').forEach(chk => {
+        const title = chk.getAttribute('data-title') || chk.value;
+        const orgKey = chk.getAttribute('data-key');
+        const posInput = document.querySelector(`input[name="organizations[${orgKey}][position]"]`);
+        const pos = posInput && posInput.value.trim() ? posInput.value.trim() : '';
+        checkedOrgs.push(pos && pos !== 'Anggota' ? `${title} (${pos})` : title);
+    });
+    const otherOrgInput = document.querySelector('input[name="other_organization"]');
+    if (otherOrgInput && otherOrgInput.value.trim()) {
+        checkedOrgs.push(otherOrgInput.value.trim());
+    }
+    const revOrgs = document.getElementById('rev_organizations');
+    if (revOrgs) {
+        revOrgs.innerText = checkedOrgs.length > 0 ? checkedOrgs.join(', ') : 'Tidak ada / Belum mengikuti';
     }
 
     // Keahlian & Minat

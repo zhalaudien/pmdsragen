@@ -17,6 +17,8 @@ class PemudaModel extends Model
         'registration_number',
         'name',
         'gender',
+        'marital_status',
+        'blood_type',
         'birth_place',
         'birth_date',
         'phone',
@@ -34,11 +36,13 @@ class PemudaModel extends Model
 
     // Validation Rules
     protected $validationRules = [
-        'cabang_id' => 'required|is_natural_no_zero',
-        'name'      => 'required|min_length[3]|max_length[150]',
-        'gender'    => 'required|in_list[L,P]',
-        'phone'     => 'permit_empty|max_length[20]',
-        'email'     => 'permit_empty|valid_email|max_length[100]',
+        'cabang_id'      => 'required|is_natural_no_zero',
+        'name'           => 'required|min_length[3]|max_length[150]',
+        'gender'         => 'required|in_list[L,P]',
+        'marital_status' => 'permit_empty|in_list[belum_menikah,sudah_menikah,janda,duda]',
+        'blood_type'     => 'permit_empty|max_length[10]',
+        'phone'          => 'permit_empty|max_length[20]',
+        'email'          => 'permit_empty|valid_email|max_length[100]',
     ];
 
     protected $validationMessages = [

@@ -210,14 +210,28 @@
     box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
 }
 
-/* Organization Repeater */
-.repeater-item {
-    background-color: #fffafa;
-    border: 1px dashed #fca5a5;
+/* Organization Cards */
+.org-card {
+    border: 1.5px solid #e2e8f0;
     border-radius: var(--pmd-radius-md);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    position: relative;
+    padding: 1rem;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.org-card:hover {
+    border-color: #fca5a5;
+    background-color: #fffafa;
+}
+
+.org-card.selected {
+    border-color: #dc2626;
+    background-color: #fff5f5;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
 
 /* Review Step Cards */

@@ -8,45 +8,48 @@ class EducationLevelSeeder extends Seeder
 {
     public function run()
     {
+        $this->db->disableForeignKeyChecks();
+        $this->db->table('education_levels')->truncate();
+
         $data = [
             [
-                'name'        => 'SD',
-                'description' => 'Sekolah Dasar',
+                'id'          => 1,
+                'name'        => 'SD / Sederajat',
+                'description' => 'Sekolah Dasar / MI / Sederajat',
             ],
             [
-                'name'        => 'SMP',
-                'description' => 'Sekolah Menengah Pertama',
+                'id'          => 2,
+                'name'        => 'SMP / MTs / Sederajat',
+                'description' => 'Sekolah Menengah Pertama / MTs / Sederajat',
             ],
             [
-                'name'        => 'SMA/SMK',
-                'description' => 'Sekolah Menengah Atas/Kejuruan',
+                'id'          => 3,
+                'name'        => 'SMA / SMK / MA',
+                'description' => 'Sekolah Menengah Atas / Kejuruan / MA / Sederajat',
             ],
             [
-                'name'        => 'D1',
-                'description' => 'Diploma 1',
+                'id'          => 4,
+                'name'        => 'Diploma (D1 / D2 / D3)',
+                'description' => 'Program Diploma Satu, Dua, atau Tiga',
             ],
             [
-                'name'        => 'D2',
-                'description' => 'Diploma 2',
+                'id'          => 5,
+                'name'        => 'Sarjana (S1 / D4)',
+                'description' => 'Program Sarjana S1 atau Diploma 4 Terapan',
             ],
             [
-                'name'        => 'D3',
-                'description' => 'Diploma 3',
+                'id'          => 6,
+                'name'        => 'Magister (S2)',
+                'description' => 'Program Magister / Pascasarjana S2',
             ],
             [
-                'name'        => 'D4/S1',
-                'description' => 'Diploma 4/Sarjana',
-            ],
-            [
-                'name'        => 'S2',
-                'description' => 'Magister',
-            ],
-            [
-                'name'        => 'S3',
-                'description' => 'Doktor',
+                'id'          => 7,
+                'name'        => 'Doktor (S3)',
+                'description' => 'Program Doktoral S3',
             ],
         ];
 
         $this->db->table('education_levels')->insertBatch($data);
+        $this->db->enableForeignKeyChecks();
     }
 }

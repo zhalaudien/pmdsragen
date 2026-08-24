@@ -128,3 +128,44 @@ DEBUG - 2026-08-21 15:56:17 --> Session: Class initialized using 'CodeIgniter\Se
 DEBUG - 2026-08-21 15:56:52 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
 DEBUG - 2026-08-21 15:57:14 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
 DEBUG - 2026-08-21 15:59:43 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2026-08-21 21:10:04 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2026-08-21 21:14:21 --> Error connecting to the database: Error: Class "SQLite3" not found in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/SQLite3/Connection.php:111
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\SQLite3\Connection->connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/SQLite3/Connection.php(74): CodeIgniter\Database\BaseConnection->initialize()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php(91): CodeIgniter\Database\SQLite3\Connection->initialize()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php(67): ExampleDatabaseTest->loadDependencies()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php(254): ExampleDatabaseTest->setUpDatabase()
+#5 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(2181): CodeIgniter\Test\CIUnitTestCase->setUp()
+#6 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(2091): PHPUnit\Framework\TestCase->invokeHookMethods()
+#7 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(678): PHPUnit\Framework\TestCase->invokeBeforeTestHookMethods()
+#8 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestRunner.php(106): PHPUnit\Framework\TestCase->runBare()
+#9 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(516): PHPUnit\Framework\TestRunner->run()
+#10 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestCase->run()
+#11 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+#12 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+#13 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#14 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/TextUI/Application.php(204): PHPUnit\TextUI\TestRunner->run()
+#15 /home/kira/pmdsragen/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#16 /home/kira/pmdsragen/vendor/bin/phpunit(122): include('...')
+#17 {main}
+ERROR - 2026-08-21 21:14:21 --> Error connecting to the database: Error: Class "SQLite3" not found in /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/SQLite3/Connection.php:111
+Stack trace:
+#0 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/BaseConnection.php(555): CodeIgniter\Database\SQLite3\Connection->connect()
+#1 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Database/SQLite3/Connection.php(74): CodeIgniter\Database\BaseConnection->initialize()
+#2 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php(91): CodeIgniter\Database\SQLite3\Connection->initialize()
+#3 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/DatabaseTestTrait.php(67): ExampleDatabaseTest->loadDependencies()
+#4 /home/kira/pmdsragen/vendor/codeigniter4/framework/system/Test/CIUnitTestCase.php(254): ExampleDatabaseTest->setUpDatabase()
+#5 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(2181): CodeIgniter\Test\CIUnitTestCase->setUp()
+#6 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(2091): PHPUnit\Framework\TestCase->invokeHookMethods()
+#7 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(678): PHPUnit\Framework\TestCase->invokeBeforeTestHookMethods()
+#8 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestRunner.php(106): PHPUnit\Framework\TestCase->runBare()
+#9 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestCase.php(516): PHPUnit\Framework\TestRunner->run()
+#10 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestCase->run()
+#11 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+#12 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+#13 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#14 /home/kira/pmdsragen/vendor/phpunit/phpunit/src/TextUI/Application.php(204): PHPUnit\TextUI\TestRunner->run()
+#15 /home/kira/pmdsragen/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#16 /home/kira/pmdsragen/vendor/bin/phpunit(122): include('...')
+#17 {main}

@@ -8,6 +8,9 @@ class CabangSeeder extends Seeder
 {
     public function run()
     {
+        $this->db->disableForeignKeyChecks();
+        $this->db->table('cabang')->truncate();
+
         $cabangWilayah1 = [
             'Gesi',
             'Jenar',
@@ -91,10 +94,12 @@ class CabangSeeder extends Seeder
 
         $data = [];
         $codeIndex = 1;
+        $idIndex = 1;
 
         // Wilayah 1
         foreach ($cabangWilayah1 as $name) {
             $data[] = [
+                'id'          => $idIndex++,
                 'wilayah_id'  => 1,
                 'code'        => 'CBG-' . str_pad((string) $codeIndex++, 3, '0', STR_PAD_LEFT),
                 'name'        => $name,
@@ -105,6 +110,7 @@ class CabangSeeder extends Seeder
         // Wilayah 2
         foreach ($cabangWilayah2 as $name) {
             $data[] = [
+                'id'          => $idIndex++,
                 'wilayah_id'  => 2,
                 'code'        => 'CBG-' . str_pad((string) $codeIndex++, 3, '0', STR_PAD_LEFT),
                 'name'        => $name,
@@ -115,6 +121,7 @@ class CabangSeeder extends Seeder
         // Wilayah 3
         foreach ($cabangWilayah3 as $name) {
             $data[] = [
+                'id'          => $idIndex++,
                 'wilayah_id'  => 3,
                 'code'        => 'CBG-' . str_pad((string) $codeIndex++, 3, '0', STR_PAD_LEFT),
                 'name'        => $name,
@@ -125,6 +132,7 @@ class CabangSeeder extends Seeder
         // Wilayah 4
         foreach ($cabangWilayah4 as $name) {
             $data[] = [
+                'id'          => $idIndex++,
                 'wilayah_id'  => 4,
                 'code'        => 'CBG-' . str_pad((string) $codeIndex++, 3, '0', STR_PAD_LEFT),
                 'name'        => $name,
@@ -133,5 +141,6 @@ class CabangSeeder extends Seeder
         }
 
         $this->db->table('cabang')->insertBatch($data);
+        $this->db->enableForeignKeyChecks();
     }
 }
