@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call('RegionalSeeder');
         $this->call('WilayahSeeder');
         $this->call('CabangSeeder');
+        $this->call('UserSeeder');
         $this->call('EducationLevelSeeder');
         $this->call('JobStatusSeeder');
         $this->call('SkillSeeder');

@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $this->renderSection('title') ?? 'Sistem Pendataan Pemuda' ?> - PMD Sragen</title>
     <meta name="description" content="Sistem Informasi dan Pendataan Pemuda Daerah Sragen">
-    
+
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
     <!-- App Global Stylesheet -->
     <link rel="stylesheet" href="<?= base_url('css/main.css') ?>">
-    
+
     <?= $this->renderSection('styles') ?>
 </head>
+
 <body>
 
     <!-- Top Navigation -->
@@ -68,7 +70,7 @@
         <div class="container">
             <div class="row align-items-center gy-2">
                 <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0">&copy; <?= date('Y') ?> <strong>Sistem Pendataan Pemuda</strong>. All rights reserved.</p>
+                    <p class="mb-0">&copy; <?= date('Y') ?> <strong>Pemuda MTA Sragen</strong>. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <span class="badge bg-light text-secondary border px-3 py-2">
@@ -83,4 +85,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <?= $this->renderSection('scripts') ?>
 </body>
+
 </html>
