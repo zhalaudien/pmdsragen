@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Administrator | Sistem Pendataan Pemuda</title>
+    <title>Login Administrator | Pemuda MTA Perwakilan Sragen</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -20,13 +20,13 @@
     <div class="container p-3">
         <div class="row justify-content-center">
             <div class="col-11 col-sm-9 col-md-7 col-lg-5 col-xl-4">
-                <div class="login-card">
-                    <div class="login-header">
-                        <div class="brand-icon">
+                <div class="login-card shadow-lg">
+                    <div class="login-header text-center">
+                        <div class="brand-icon mx-auto mb-2">
                             <i class="bi bi-people-fill"></i>
                         </div>
-                        <h4 class="fw-bold mb-1">PMD SRAGEN</h4>
-                        <p class="mb-0 text-white-50 small">Sistem Pendataan & Manajemen Pemuda</p>
+                        <h5 class="fw-bold mb-1 text-white">Pemuda MTA Perwakilan Sragen</h5>
+                        <p class="mb-0 text-white-50 small">Portal Administrator &amp; Pengurus</p>
                     </div>
                     
                     <div class="p-4 p-md-5">
@@ -103,9 +103,12 @@
                             <div class="text-secondary">Password: <code class="text-primary fw-semibold">admin123</code></div>
                         </div>
 
-                        <div class="text-center mt-4">
-                            <a href="<?= base_url('pendataan') ?>" class="text-decoration-none small text-muted">
-                                <i class="bi bi-arrow-left me-1"></i> Kembali ke Form Publik
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top small">
+                            <a href="<?= base_url('/') ?>" class="text-decoration-none text-muted">
+                                <i class="bi bi-house-door me-1"></i> Beranda
+                            </a>
+                            <a href="<?= base_url('pendataan') ?>" class="text-decoration-none text-danger fw-semibold">
+                                <i class="bi bi-ui-checks me-1"></i> Form Pendataan
                             </a>
                         </div>
                     </div>

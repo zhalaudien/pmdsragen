@@ -7,7 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 // ==========================================
 // 1. PUBLIC ROUTES
 // ==========================================
-$routes->get('/', 'Pendataan::index');
+$routes->get('/', 'Home::index');
 $routes->get('pendataan', 'Pendataan::index');
 $routes->post('pendataan/simpan', 'Pendataan::simpan');
 $routes->get('pendataan/sukses', 'Pendataan::sukses');

@@ -1,0 +1,498 @@
+/**
+ * Landing Page Stylesheet - Pemuda MTA Perwakilan Sragen
+ * Elegant Crimson Theme, Smooth Animations & Responsive Cards
+ */
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+/* ===================================================
+   1. HERO SECTION
+   =================================================== */
+.hero-landing {
+    position: relative;
+    background: linear-gradient(145deg, #700f2b 0%, #991b1b 40%, #c81e1e 80%, #b91c1c 100%);
+    color: #ffffff;
+    padding: 5rem 0 4.5rem;
+    overflow: hidden;
+}
+
+/* Ambient glow overlay in hero */
+.hero-landing::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(254, 202, 202, 0.15) 0%, rgba(220, 38, 38, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero-landing::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(220, 38, 38, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.hero-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hero-title {
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .hero-landing {
+        padding: 3.5rem 0 3rem;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-btn-primary {
+    background: #ffffff;
+    color: #991b1b;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.85rem;
+    border-radius: 50px;
+    border: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hero-btn-primary:hover {
+    background: #fef2f2;
+    color: #7f1d1d;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+}
+
+.hero-btn-outline {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.75rem;
+    border-radius: 50px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(6px);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hero-btn-outline:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.hero-feature-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.35rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* ===================================================
+   2. STATS COUNTER STRIP
+   =================================================== */
+.stats-strip {
+    margin-top: -2.5rem;
+    position: relative;
+    z-index: 10;
+}
+
+.stats-card {
+    background: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-lg);
+    padding: 1.5rem 1.25rem;
+    box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.08), 0 5px 15px rgba(0, 0, 0, 0.03);
+    text-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -5px rgba(15, 23, 42, 0.12);
+    border-color: #fca5a5;
+}
+
+.stats-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.stats-num {
+    font-size: 2.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.stats-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* ===================================================
+   3. SECTION BASICS & PILL HEADERS
+   =================================================== */
+.landing-section {
+    padding: 5rem 0;
+}
+
+.section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--pmd-primary);
+    background-color: var(--pmd-primary-subtle);
+    padding: 0.35rem 0.95rem;
+    border-radius: 50px;
+    border: 1px solid var(--pmd-border-red);
+    margin-bottom: 0.75rem;
+}
+
+.section-heading {
+    font-size: 2.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+@media (max-width: 768px) {
+    .landing-section {
+        padding: 3.5rem 0;
+    }
+    .section-heading {
+        font-size: 1.75rem;
+    }
+}
+
+.section-desc {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ===================================================
+   4. TENTANG & VISI MISI CARDS
+   =================================================== */
+.visi-card {
+    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    color: #ffffff;
+    border-radius: var(--pmd-radius-lg);
+    padding: 2.25rem;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.visi-card::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+}
+
+.misi-item {
+    display: flex;
+    gap: 1rem;
+    background: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-md);
+    padding: 1.15rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.misi-item:hover {
+    border-color: #fca5a5;
+    box-shadow: 0 8px 20px -4px rgba(220, 38, 38, 0.08);
+    transform: translateX(4px);
+}
+
+.misi-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--pmd-primary-subtle);
+    color: var(--pmd-primary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+}
+
+/* ===================================================
+   5. WILAYAH & CABANG INTERACTIVE SECTION
+   =================================================== */
+.wilayah-nav-pills .nav-link {
+    border-radius: var(--pmd-radius-md);
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    color: #475569;
+    background: #ffffff;
+    border: 1.5px solid var(--pmd-border);
+    text-align: left;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wilayah-nav-pills .nav-link:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--pmd-primary);
+}
+
+.wilayah-nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    color: #ffffff !important;
+    border-color: transparent;
+    box-shadow: 0 8px 20px -2px rgba(220, 38, 38, 0.3);
+}
+
+.wilayah-nav-pills .nav-link.active .badge {
+    background-color: #ffffff !important;
+    color: #991b1b !important;
+}
+
+.cabang-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+    transition: all 0.15s ease;
+}
+
+.cabang-chip:hover {
+    background-color: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+    transform: translateY(-1px);
+}
+
+/* ===================================================
+   6. BIDANG & PROGRAM KERJA CARDS
+   =================================================== */
+.program-card {
+    background: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-lg);
+    padding: 1.75rem 1.5rem;
+    height: 100%;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.program-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.08);
+    border-color: #fca5a5;
+}
+
+.program-icon-box {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ===================================================
+   7. STEP BY STEP REGISTRATION TIMELINE
+   =================================================== */
+.step-card {
+    background: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-lg);
+    padding: 1.75rem 1.5rem;
+    position: relative;
+    height: 100%;
+    transition: all 0.2s ease;
+}
+
+.step-card:hover {
+    border-color: #dc2626;
+    box-shadow: 0 12px 25px -4px rgba(220, 38, 38, 0.08);
+    transform: translateY(-3px);
+}
+
+.step-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+/* ===================================================
+   8. BIG CTA BANNER
+   =================================================== */
+.cta-banner {
+    background: linear-gradient(135deg, #700f2b 0%, #991b1b 50%, #dc2626 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 3.5rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -10px rgba(153, 27, 27, 0.4);
+}
+
+.cta-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* ===================================================
+   9. FAQ ACCORDION
+   =================================================== */
+.accordion-custom .accordion-item {
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-md) !important;
+    margin-bottom: 0.85rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.accordion-custom .accordion-button {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+    background-color: #ffffff;
+    padding: 1.15rem 1.25rem;
+    border: none;
+    box-shadow: none;
+}
+
+.accordion-custom .accordion-button:not(.collapsed) {
+    background-color: var(--pmd-primary-subtle);
+    color: var(--pmd-primary-dark);
+}
+
+.accordion-custom .accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.accordion-custom .accordion-body {
+    padding: 1.25rem;
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    background-color: #ffffff;
+}
+
+/* ===================================================
+   10. CONTACT CARDS
+   =================================================== */
+.contact-card {
+    background: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-lg);
+    padding: 1.75rem;
+    height: 100%;
+    transition: all 0.2s ease;
+}
+
+.contact-card:hover {
+    border-color: #fca5a5;
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.06);
+}
+
+.hover-red:hover {
+    color: var(--pmd-primary) !important;
+    transition: color 0.15s ease;
+}

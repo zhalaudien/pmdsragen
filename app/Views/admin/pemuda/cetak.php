@@ -26,9 +26,9 @@
 
     <!-- HEADER DOKUMEN -->
     <div class="cetak-header-box">
-        <h4 class="fw-bold mb-1">SISTEM PENDATAAN PEMUDA</h4>
-        <h5 class="fw-bold text-uppercase mb-1">PENGURUS DAERAH PEMUDA SRAGEN</h5>
-        <p class="mb-0 cetak-header-subtitle">Sekretariat Daerah Kabupaten Sragen &bull; Dokumen Data Induk Pemuda</p>
+        <h4 class="fw-bold mb-1">MAJELIS TAFSIR AL-QUR'AN (MTA)</h4>
+        <h5 class="fw-bold text-uppercase mb-1">PENGURUS PEMUDA MTA PERWAKILAN SRAGEN</h5>
+        <p class="mb-0 cetak-header-subtitle">Sekretariat Perwakilan Kabupaten Sragen &bull; Dokumen Data Induk Pemuda</p>
     </div>
 
     <div class="row mb-3 align-items-center">

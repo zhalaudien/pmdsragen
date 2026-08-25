@@ -10,6 +10,22 @@
 
 <?= $this->section('content') ?>
 
+<div class="container py-4 py-md-5">
+    <!-- Breadcrumb & Navigation -->
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-10 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <a href="<?= base_url('/') ?>" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
+            </a>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="<?= base_url('/') ?>" class="text-decoration-none text-muted"><i class="bi bi-house-door me-1"></i>Beranda</a></li>
+                    <li class="breadcrumb-item active text-danger fw-semibold" aria-current="page">Form Pendataan Pemuda</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
 <!-- Page Hero Header -->
 <div class="row justify-content-center mb-4">
     <div class="col-lg-10 text-center">
@@ -181,11 +197,11 @@
 
                         <!-- Wilayah & Cabang Domisili Organisasi -->
                         <div class="col-md-6">
-                            <label for="cabang_id" class="form-label">Cabang PMD (Wilayah)<span class="required-star">*</span></label>
+                            <label for="cabang_id" class="form-label">Cabang Pemuda MTA (Wilayah)<span class="required-star">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="bi bi-diagram-2"></i></span>
                                 <select class="form-select" id="cabang_id" name="cabang_id" required>
-                                    <option value="" selected disabled>-- Pilih Cabang PMD Terdaftar --</option>
+                                    <option value="" selected disabled>-- Pilih Cabang Pemuda MTA Terdaftar --</option>
                                     <?php if (!empty($wilayahList)): ?>
                                         <?php foreach ($wilayahList as $w): ?>
                                             <optgroup label="<?= esc($w['name']) ?> (<?= esc($w['code']) ?>)">
@@ -286,7 +302,7 @@
                                     <?php endif; ?>
                                 </select>
                             </div>
-                            <div class="invalid-feedback">Pilih cabang PMD yang sesuai.</div>
+                            <div class="invalid-feedback">Pilih cabang Pemuda MTA yang sesuai.</div>
                         </div>
 
                         <!-- Tempat Lahir -->
@@ -961,7 +977,7 @@
                                     <div class="review-item-value" id="rev_contact">-</div>
                                 </div>
                                 <div class="mb-2">
-                                    <div class="review-item-label">Cabang PMD Terpilih</div>
+                                    <div class="review-item-label">Cabang Pemuda MTA Terpilih</div>
                                     <div class="review-item-value" id="rev_cabang">-</div>
                                 </div>
                             </div>
@@ -1019,6 +1035,7 @@
         </form>
 
     </div>
+</div>
 </div>
 
 <?= $this->endSection() ?>

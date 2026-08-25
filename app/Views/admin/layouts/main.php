@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Dashboard') ?> | PMD SRAGEN</title>
+    <title><?= esc($title ?? 'Dashboard') ?> | Pemuda MTA Perwakilan Sragen</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,8 +30,8 @@
                 <i class="bi bi-people-fill"></i>
             </div>
             <div>
-                <div>PMD SRAGEN</div>
-                <div style="font-size: 0.68rem; color: #64748b; font-weight: 500;">Sistem Pendataan</div>
+                <div>Pemuda MTA Sragen</div>
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 500;">Perwakilan Sragen</div>
             </div>
         </a>
 
@@ -99,11 +99,16 @@
                 </a>
             <?php endif; ?>
 
-            <div class="menu-header mt-3">Tautan Eksternal</div>
+            <div class="menu-header mt-3">Tautan Publik</div>
+
+            <a href="<?= base_url('/') ?>" target="_blank" class="nav-link-custom">
+                <i class="bi bi-house-door"></i>
+                <span>Beranda Web</span>
+            </a>
 
             <a href="<?= base_url('pendataan') ?>" target="_blank" class="nav-link-custom">
-                <i class="bi bi-box-arrow-up-right"></i>
-                <span>Formulir Publik</span>
+                <i class="bi bi-ui-checks"></i>
+                <span>Formulir Pendataan</span>
             </a>
 
             <a href="<?= base_url('admin/logout') ?>" class="nav-link-custom text-danger mt-3">
@@ -164,7 +169,8 @@
                             <div class="small text-muted"><?= esc(session()->get('email')) ?></div>
                         </li>
                         <li><a class="dropdown-item py-2 mt-1 rounded-2" href="<?= base_url('admin/pemuda') ?>"><i class="bi bi-person-lines-fill me-2 text-primary"></i> Data Pemuda</a></li>
-                        <li><a class="dropdown-item py-2 rounded-2" href="<?= base_url('pendataan') ?>" target="_blank"><i class="bi bi-box-arrow-up-right me-2 text-info"></i> Formulir Publik</a></li>
+                        <li><a class="dropdown-item py-2 rounded-2" href="<?= base_url('/') ?>" target="_blank"><i class="bi bi-house-door me-2 text-primary"></i> Beranda Web</a></li>
+                        <li><a class="dropdown-item py-2 rounded-2" href="<?= base_url('pendataan') ?>" target="_blank"><i class="bi bi-ui-checks me-2 text-info"></i> Formulir Publik</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item py-2 text-danger rounded-2" href="<?= base_url('admin/logout') ?>"><i class="bi bi-box-arrow-right me-2"></i> Keluar</a></li>
                     </ul>
@@ -210,7 +216,7 @@
 
         <!-- FOOTER -->
         <footer class="bg-white border-top py-3 px-4 text-center text-md-between d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
-            <div>&copy; <?= date('Y') ?> <strong>PMD SRAGEN</strong> — Sistem Pendataan & Manajemen Pemuda.</div>
+            <div>&copy; <?= date('Y') ?> <strong>Pemuda MTA Perwakilan Sragen</strong> — Sistem Pendataan &amp; Manajemen Pemuda.</div>
             <div class="mt-2 mt-md-0">CodeIgniter 4 Native MVC &bull; Hak Akses: <strong><?= esc(session()->get('role')) ?></strong></div>
         </footer>
     </div>
