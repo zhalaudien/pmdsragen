@@ -66,7 +66,7 @@
             </a>
 
             <a href="<?= base_url('admin/pemuda') ?>" 
-               class="nav-link-custom <?= (url_is('admin/pemuda*') && !url_is('admin/pemuda/tambah')) ? 'active' : '' ?>">
+               class="nav-link-custom <?= (url_is('admin/pemuda') || url_is('admin/pemuda/detail*') || url_is('admin/pemuda/edit*')) ? 'active' : '' ?>">
                 <i class="bi bi-person-lines-fill"></i>
                 <span>Data Pemuda</span>
             </a>
@@ -78,7 +78,13 @@
             </a>
 
             <?php if (session()->get('role') === 'superadmin'): ?>
-                <div class="menu-header mt-3">Master Data (Superadmin)</div>
+                <div class="menu-header mt-3">Master &amp; Import (Superadmin)</div>
+
+                <a href="<?= base_url('admin/pemuda/import') ?>" 
+                   class="nav-link-custom <?= url_is('admin/pemuda/import*') ? 'active' : '' ?>">
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                    <span>Import Data Pemuda</span>
+                </a>
 
                 <a href="<?= base_url('admin/wilayah') ?>" 
                    class="nav-link-custom <?= url_is('admin/wilayah*') ? 'active' : '' ?>">

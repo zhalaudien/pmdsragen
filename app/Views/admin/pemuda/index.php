@@ -9,6 +9,11 @@
         <p class="text-muted small mb-0">Kelola, verifikasi, saring, dan export seluruh data pemuda se-Kabupaten Sragen.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
+        <?php if (session()->get('role') === 'superadmin'): ?>
+            <a href="<?= base_url('admin/pemuda/import') ?>" class="btn btn-outline-primary rounded-3 shadow-sm">
+                <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import Excel
+            </a>
+        <?php endif; ?>
         <a href="<?= base_url('admin/pemuda/export?' . http_build_query($filters)) ?>" class="btn btn-outline-success rounded-3 shadow-sm">
             <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel / CSV
         </a>

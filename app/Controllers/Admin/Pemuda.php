@@ -18,6 +18,8 @@ use App\Models\PemudaSkillModel;
 use App\Models\PemudaInterestModel;
 use App\Models\DistrictModel;
 use App\Models\VillageModel;
+use App\Services\PemudaImportService;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Config\Database;
 
 class Pemuda extends BaseController
@@ -925,5 +927,124 @@ class Pemuda extends BaseController
 
         fclose($output);
         exit;
+    }
+
+    /**
+     * Halaman Formulir Import Data Pemuda (Khusus Superadmin)
+     */
+    public function import()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Fitur import data hanya dapat diakses oleh Super Administrator.');
+        }
+
+        $cabangCount  = $this->cabangModel->countAllResults();
+        $wilayahCount = $this->wilayahModel->countAllResults();
+
+        $data = [
+            'title'        => 'Import Data Pemuda dari Excel',
+            'user'         => session()->get(),
+            'cabangCount'  => $cabangCount,
+            'wilayahCount' => $wilayahCount,
+        ];
+
+        return view('admin/pemuda/import', $data);
+    }
+
+    /**
+     * Unduh Template Excel Standar Import Pemuda
+     */
+    public function templateImport()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Fitur ini hanya untuk Super Administrator.');
+        }
+
+        $service     = new PemudaImportService();
+        $spreadsheet = $service->generateTemplate();
+
+        $filename = 'Template_Import_Pemuda_MTA_Sragen_' . date('Ymd') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * Proses Upload dan Import File Excel / CSV
+     */
+    public function prosesImport()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Fitur import data hanya dapat diakses oleh Super Administrator.');
+        }
+
+        $validationRules = [
+            'file_excel' => [
+                'label' => 'File Excel / CSV',
+                'rules' => 'uploaded[file_excel]|max_size[file_excel,10240]|ext_in[file_excel,xlsx,xls,csv]',
+                'errors' => [
+                    'uploaded' => 'Silakan pilih file Excel (.xlsx, .xls) atau CSV terlebih dahulu.',
+                    'max_size' => 'Ukuran file maksimal adalah 10MB.',
+                    'ext_in'   => 'Format file harus berupa .xlsx, .xls, atau .csv.',
+                ],
+            ],
+        ];
+
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()
+                             ->withInput()
+                             ->with('errors', $this->validator->getErrors())
+                             ->with('error', 'Gagal memproses file unggahan. Silakan periksa format file.');
+        }
+
+        $file = $this->request->getFile('file_excel');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('error', 'File tidak valid atau terjadi kesalahan saat mengunggah.');
+        }
+
+        $tempPath = $file->getTempName();
+
+        $options = [
+            'default_verifikasi' => $this->request->getPost('default_verifikasi') ?: 'verified',
+            'skip_errors'        => (bool) $this->request->getPost('skip_errors'),
+        ];
+
+        $service = new PemudaImportService();
+        $result  = $service->importFile($tempPath, (int) session()->get('user_id'), $options);
+
+        if (!$result['success']) {
+            $redirect = redirect()->back()->withInput()->with('error', $result['message']);
+            if (!empty($result['errors'])) {
+                $redirect->with('import_errors', $result['errors']);
+            }
+            return $redirect;
+        }
+
+        $msg = "Import data pemuda selesai: {$result['imported']} data pemuda berhasil diimport ke sistem.";
+        if (!empty($result['skipped'])) {
+            $msg .= " ({$result['skipped']} baris dilewati karena terdapat kesalahan data).";
+        }
+
+        $redirect = redirect()->to(base_url('admin/pemuda'))->with('success', $msg);
+        if (!empty($result['errors'])) {
+            $redirect->with('import_warnings', $result['errors']);
+        }
+        return $redirect;
     }
 }

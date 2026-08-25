@@ -44,6 +44,11 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
         $routes->post('delete/(:num)', 'Admin\Pemuda::delete/$1');
         $routes->get('export', 'Admin\Pemuda::export');
         $routes->get('cetak/(:num)', 'Admin\Pemuda::cetak/$1');
+        
+        // Import Data Pemuda (Khusus Superadmin)
+        $routes->get('import', 'Admin\Pemuda::import', ['filter' => 'role:superadmin']);
+        $routes->post('import', 'Admin\Pemuda::prosesImport', ['filter' => 'role:superadmin']);
+        $routes->get('template-import', 'Admin\Pemuda::templateImport', ['filter' => 'role:superadmin']);
     });
 
     // Master Wilayah (Superadmin)
