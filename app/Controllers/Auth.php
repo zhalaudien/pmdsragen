@@ -55,6 +55,23 @@ class Auth extends BaseController
             // Regenerate session ID for security
             session()->regenerate();
 
+            $wilayahId   = $user['wilayah_id'] ? (int) $user['wilayah_id'] : null;
+            $wilayahName = $user['wilayah_name'] ?? null;
+            $cabangId    = $user['cabang_id'] ? (int) $user['cabang_id'] : null;
+            $cabangName  = $user['cabang_name'] ?? null;
+
+            // If user is admin_cabang and wilayah is not directly linked in users table, lookup from cabang
+            if ($user['role_name'] === 'admin_cabang' && $cabangId && !$wilayahId) {
+                $cabangModel = new \App\Models\CabangModel();
+                $cabangData  = $cabangModel->select('cabang.*, wilayah.name as wilayah_name')
+                                          ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')
+                                          ->find($cabangId);
+                if ($cabangData) {
+                    $wilayahId   = (int) $cabangData['wilayah_id'];
+                    $wilayahName = $cabangData['wilayah_name'];
+                }
+            }
+
             // Set session data
             $sessionData = [
                 'user_id'          => (int) $user['id'],
@@ -64,10 +81,10 @@ class Auth extends BaseController
                 'role'             => $user['role_name'],
                 'role_id'          => (int) $user['role_id'],
                 'role_description' => $user['role_description'] ?? '',
-                'wilayah_id'       => $user['wilayah_id'] ? (int) $user['wilayah_id'] : null,
-                'wilayah_name'     => $user['wilayah_name'] ?? null,
-                'cabang_id'        => $user['cabang_id'] ? (int) $user['cabang_id'] : null,
-                'cabang_name'      => $user['cabang_name'] ?? null,
+                'wilayah_id'       => $wilayahId,
+                'wilayah_name'     => $wilayahName,
+                'cabang_id'        => $cabangId,
+                'cabang_name'      => $cabangName,
                 'is_logged_in'     => true,
             ];
 

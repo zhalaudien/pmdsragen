@@ -60,7 +60,7 @@ class Pemuda extends BaseController
     {
         $scope = $this->getScope();
 
-        // 1. Ambil filter dari request
+        // 1. Ambil filter dari request & sesuaikan dengan scope role
         $filters = [
             'search'             => $this->request->getGet('search'),
             'wilayah_id'         => $this->request->getGet('wilayah_id'),
@@ -75,6 +75,14 @@ class Pemuda extends BaseController
             'start_date'         => $this->request->getGet('start_date'),
             'end_date'           => $this->request->getGet('end_date'),
         ];
+
+        // Enforce scope on filters
+        if ($scope['role'] === 'admin_wilayah') {
+            $filters['wilayah_id'] = $scope['wilayah_id'];
+        } elseif ($scope['role'] === 'admin_cabang') {
+            $filters['wilayah_id'] = $scope['wilayah_id'];
+            $filters['cabang_id']  = $scope['cabang_id'];
+        }
 
         // Jika status_data kosong atau 'all', jangan filter status_data
         if ($filters['status_data'] === 'all') {
@@ -96,14 +104,22 @@ class Pemuda extends BaseController
         // 3. Status Summary Counters
         $summary = $this->pemudaModel->getCountsSummary($scope);
 
-        // 4. Reference Data untuk dropdown filter
-        $wilayahList = $this->wilayahModel->orderBy('id', 'ASC')->findAll();
+        // 4. Reference Data untuk dropdown filter (disesuaikan scope)
+        $wilayahBuilder = $this->wilayahModel->orderBy('id', 'ASC');
+        if ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
+            $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
+        } elseif ($scope['role'] === 'admin_cabang' && !empty($scope['wilayah_id'])) {
+            $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
+        }
+        $wilayahList = $wilayahBuilder->findAll();
         
         $cabangBuilder = $this->cabangModel->orderBy('name', 'ASC');
-        if (!empty($filters['wilayah_id'])) {
-            $cabangBuilder->where('wilayah_id', (int) $filters['wilayah_id']);
+        if ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
+            $cabangBuilder->where('id', (int) $scope['cabang_id']);
         } elseif ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
             $cabangBuilder->where('wilayah_id', (int) $scope['wilayah_id']);
+        } elseif (!empty($filters['wilayah_id'])) {
+            $cabangBuilder->where('wilayah_id', (int) $filters['wilayah_id']);
         }
         $cabangList = $cabangBuilder->findAll();
 
@@ -171,7 +187,10 @@ class Pemuda extends BaseController
         $interestModel       = new InterestModel();
         $districtModel       = new DistrictModel();
 
-        $wilayahWithCabang = $this->wilayahModel->getWithCabang();
+        $filterWilayahId = ($scope['role'] === 'admin_wilayah' || $scope['role'] === 'admin_cabang') ? (int) $scope['wilayah_id'] : null;
+        $filterCabangId  = ($scope['role'] === 'admin_cabang') ? (int) $scope['cabang_id'] : null;
+
+        $wilayahWithCabang = $this->wilayahModel->getWithCabang($filterWilayahId, $filterCabangId);
         $districts         = $districtModel->where('regency_id', 3314)->orderBy('name', 'ASC')->findAll();
 
         $data = [
@@ -214,8 +233,12 @@ class Pemuda extends BaseController
             'school_name'        => 'required|min_length[3]|max_length[150]',
             'education_status'   => 'required|in_list[sedang_sekolah,lulus,putus_sekolah]',
             'job_status_id'      => 'required',
-            'status_verifikasi'  => 'required|in_list[pending,verified,rejected]',
         ];
+
+        // Status verifikasi input validation (only required if permitted)
+        if (in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
+            $rules['status_verifikasi'] = 'permit_empty|in_list[pending,verified,rejected]';
+        }
 
         if (!$this->validate($rules)) {
             return redirect()->back()
@@ -229,6 +252,20 @@ class Pemuda extends BaseController
         // Scope check for admin_cabang or admin_wilayah
         if ($scope['role'] === 'admin_cabang' && $cabangId !== (int) $scope['cabang_id']) {
             return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mendaftarkan pemuda pada cabang Anda sendiri.');
+        }
+
+        if ($scope['role'] === 'admin_wilayah') {
+            $targetCabang = $this->cabangModel->find($cabangId);
+            if (!$targetCabang || (int) $targetCabang['wilayah_id'] !== (int) $scope['wilayah_id']) {
+                return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mendaftarkan pemuda pada cabang dalam wilayah Anda.');
+            }
+        }
+
+        // Verification permission check: admin_wilayah cannot set verified/rejected, always 'pending'
+        if ($scope['role'] === 'admin_wilayah') {
+            $statusVerifikasi = 'pending';
+        } else {
+            $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: 'verified';
         }
 
         $db = Database::connect();
@@ -249,7 +286,7 @@ class Pemuda extends BaseController
                 'birth_date'          => $this->request->getPost('birth_date'),
                 'phone'               => $this->request->getPost('phone'),
                 'email'               => $this->request->getPost('email') ?: null,
-                'status_verifikasi'   => $this->request->getPost('status_verifikasi') ?: 'verified',
+                'status_verifikasi'   => $statusVerifikasi,
                 'status_data'         => $this->request->getPost('status_data') ?: 'active',
                 'created_by'          => session()->get('user_id'),
             ];
@@ -387,7 +424,10 @@ class Pemuda extends BaseController
         $districtModel       = new DistrictModel();
         $villageModel        = new VillageModel();
 
-        $wilayahWithCabang = $this->wilayahModel->getWithCabang();
+        $filterWilayahId = ($scope['role'] === 'admin_wilayah' || $scope['role'] === 'admin_cabang') ? (int) $scope['wilayah_id'] : null;
+        $filterCabangId  = ($scope['role'] === 'admin_cabang') ? (int) $scope['cabang_id'] : null;
+
+        $wilayahWithCabang = $this->wilayahModel->getWithCabang($filterWilayahId, $filterCabangId);
         $districts         = $districtModel->where('regency_id', 3314)->orderBy('name', 'ASC')->findAll();
         
         $villages = [];
@@ -458,9 +498,12 @@ class Pemuda extends BaseController
             'school_name'        => 'required|min_length[3]|max_length[150]',
             'education_status'   => 'required|in_list[sedang_sekolah,lulus,putus_sekolah]',
             'job_status_id'      => 'required',
-            'status_verifikasi'  => 'required|in_list[pending,verified,rejected]',
             'status_data'        => 'required|in_list[active,archived]',
         ];
+
+        if (in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
+            $rules['status_verifikasi'] = 'permit_empty|in_list[pending,verified,rejected]';
+        }
 
         if (!$this->validate($rules)) {
             return redirect()->back()
@@ -473,6 +516,20 @@ class Pemuda extends BaseController
 
         if ($scope['role'] === 'admin_cabang' && $cabangId !== (int) $scope['cabang_id']) {
             return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mengelola pemuda pada cabang Anda sendiri.');
+        }
+
+        if ($scope['role'] === 'admin_wilayah') {
+            $targetCabang = $this->cabangModel->find($cabangId);
+            if (!$targetCabang || (int) $targetCabang['wilayah_id'] !== (int) $scope['wilayah_id']) {
+                return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mengelola pemuda pada cabang dalam wilayah Anda.');
+            }
+        }
+
+        // Verification status handling
+        if ($scope['role'] === 'admin_wilayah') {
+            $statusVerifikasi = $existing['status_verifikasi'];
+        } else {
+            $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: $existing['status_verifikasi'];
         }
 
         $db = Database::connect();
@@ -490,7 +547,7 @@ class Pemuda extends BaseController
                 'birth_date'        => $this->request->getPost('birth_date'),
                 'phone'             => $this->request->getPost('phone'),
                 'email'             => $this->request->getPost('email') ?: null,
-                'status_verifikasi' => $this->request->getPost('status_verifikasi'),
+                'status_verifikasi' => $statusVerifikasi,
                 'status_data'       => $this->request->getPost('status_data'),
             ];
 
@@ -632,6 +689,18 @@ class Pemuda extends BaseController
     public function verifikasi(int $id)
     {
         $scope = $this->getScope();
+
+        // Verification permission check: only superadmin and admin_cabang are allowed
+        if (!in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error', 
+                    'message' => 'Akses ditolak. Admin Wilayah tidak memiliki izin untuk melakukan verifikasi data pemuda.'
+                ])->setStatusCode(403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak. Admin Wilayah tidak memiliki izin untuk melakukan verifikasi data pemuda.');
+        }
+
         $status = $this->request->getPost('status');
 
         if (!in_array($status, ['pending', 'verified', 'rejected'], true)) {
@@ -746,6 +815,14 @@ class Pemuda extends BaseController
             'start_date'         => $this->request->getGet('start_date'),
             'end_date'           => $this->request->getGet('end_date'),
         ];
+
+        // Enforce scope on export filters
+        if ($scope['role'] === 'admin_wilayah') {
+            $filters['wilayah_id'] = $scope['wilayah_id'];
+        } elseif ($scope['role'] === 'admin_cabang') {
+            $filters['wilayah_id'] = $scope['wilayah_id'];
+            $filters['cabang_id']  = $scope['cabang_id'];
+        }
 
         if ($filters['status_data'] === 'all') {
             unset($filters['status_data']);

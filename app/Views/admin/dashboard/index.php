@@ -3,17 +3,36 @@
 <?= $this->section('content') ?>
 
 <!-- WELCOME BANNER -->
+<?php 
+    $userRole    = session()->get('role');
+    $wilayahName = session()->get('wilayah_name') ?? ('Wilayah ' . session()->get('wilayah_id'));
+    $cabangName  = session()->get('cabang_name') ?? ('Cabang ' . session()->get('cabang_id'));
+?>
 <div class="card border-0 text-white mb-4 shadow-sm dashboard-hero-card">
     <div class="card-body p-4 p-lg-5">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white bg-opacity-10 rounded-pill mb-3 border border-white border-opacity-10">
                     <i class="bi bi-shield-check text-info"></i>
-                    <span class="small fw-semibold">Dashboard Super Administrator</span>
+                    <span class="small fw-semibold">
+                        <?php if ($userRole === 'superadmin'): ?>
+                            Dashboard Super Administrator
+                        <?php elseif ($userRole === 'admin_wilayah'): ?>
+                            Dashboard Admin Wilayah: <?= esc($wilayahName) ?>
+                        <?php else: ?>
+                            Dashboard Admin Cabang: <?= esc($cabangName) ?>
+                        <?php endif; ?>
+                    </span>
                 </div>
-                <h2 class="fw-bold mb-2">Selamat Datang, <?= esc($user['name'] ?? 'Super Admin') ?>! 👋</h2>
+                <h2 class="fw-bold mb-2">Selamat Datang, <?= esc($user['name'] ?? 'Administrator') ?>! 👋</h2>
                 <p class="text-white-50 mb-4 mb-lg-0">
-                    Anda memiliki hak akses penuh untuk memantau data pemuda, distribusi per wilayah, cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di seluruh Kabupaten Sragen.
+                    <?php if ($userRole === 'superadmin'): ?>
+                        Anda memiliki hak akses penuh untuk memantau data pemuda, distribusi per wilayah, cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di seluruh Kabupaten Sragen.
+                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                        Anda memantau data pemuda, statistik, dan sebaran seluruh cabang yang berada dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
+                    <?php else: ?>
+                        Anda mengelola, memverifikasi, dan memantau perkembangan data pemuda khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
+                    <?php endif; ?>
                 </p>
             </div>
             <div class="col-lg-4 text-lg-end">
@@ -296,7 +315,15 @@
             <div class="card-header-clean">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-trophy-fill text-warning"></i>
-                    <span>10 Cabang Terbanyak</span>
+                    <span>
+                        <?php if ($userRole === 'superadmin'): ?>
+                            10 Cabang Terbanyak
+                        <?php elseif ($userRole === 'admin_wilayah'): ?>
+                            Cabang Terbanyak di <?= esc($wilayahName) ?>
+                        <?php else: ?>
+                            Statistik Cabang <?= esc($cabangName) ?>
+                        <?php endif; ?>
+                    </span>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -331,9 +358,11 @@
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="card-footer bg-white border-0 text-center py-2">
-                <a href="<?= base_url('admin/cabang') ?>" class="small text-decoration-none fw-semibold">Kelola Semua Cabang <i class="bi bi-chevron-right"></i></a>
-            </div>
+            <?php if ($userRole === 'superadmin'): ?>
+                <div class="card-footer bg-white border-0 text-center py-2">
+                    <a href="<?= base_url('admin/cabang') ?>" class="small text-decoration-none fw-semibold">Kelola Semua Cabang <i class="bi bi-chevron-right"></i></a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

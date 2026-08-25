@@ -83,13 +83,13 @@ class PemudaModel extends Model
     /**
      * Apply Scope based on User Role (Superadmin, Admin Wilayah, Admin Cabang)
      */
-    protected function applyScope($builder, array $scope = [])
+    public function applyScope($builder, array $scope = [])
     {
         if (isset($scope['role'])) {
             if ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
-                $builder->where('cabang.wilayah_id', $scope['wilayah_id']);
+                $builder->where('cabang.wilayah_id', (int) $scope['wilayah_id']);
             } elseif ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
-                $builder->where('pemuda.cabang_id', $scope['cabang_id']);
+                $builder->where('pemuda.cabang_id', (int) $scope['cabang_id']);
             }
         }
         return $builder;
@@ -129,10 +129,10 @@ class PemudaModel extends Model
                         ->join('pekerjaan', 'pekerjaan.pemuda_id = pemuda.id', 'left')
                         ->join('job_statuses', 'job_statuses.id = pekerjaan.job_status_id', 'left');
 
-        // Apply role scope
+        // 1. Enforce Role Scope first
         $this->applyScope($builder, $scope);
 
-        // Apply filters
+        // 2. Apply filters (respecting user scope)
         if (!empty($filters['search'])) {
             $s = trim($filters['search']);
             $builder->groupStart()
@@ -146,11 +146,14 @@ class PemudaModel extends Model
                     ->groupEnd();
         }
 
-        if (!empty($filters['wilayah_id'])) {
+        // Only superadmin can filter across different wilayah
+        $role = $scope['role'] ?? 'superadmin';
+        if ($role === 'superadmin' && !empty($filters['wilayah_id'])) {
             $builder->where('cabang.wilayah_id', (int) $filters['wilayah_id']);
         }
 
-        if (!empty($filters['cabang_id'])) {
+        // Admin cabang is strictly bound to their own cabang_id; superadmin/admin_wilayah can filter by cabang
+        if ($role !== 'admin_cabang' && !empty($filters['cabang_id'])) {
             $builder->where('pemuda.cabang_id', (int) $filters['cabang_id']);
         }
 
@@ -306,10 +309,24 @@ class PemudaModel extends Model
         // 1. Summary Counts
         $summary = $this->getCountsSummary($scope);
 
-        // Total Wilayah & Cabang (Super Admin View)
-        $totalWilayah = $db->table('wilayah')->countAll();
-        $totalCabang  = $db->table('cabang')->countAll();
-        $totalUsers   = $db->table('users')->where('status', 1)->countAllResults();
+        $role      = $scope['role'] ?? 'superadmin';
+        $wilayahId = !empty($scope['wilayah_id']) ? (int) $scope['wilayah_id'] : null;
+        $cabangId  = !empty($scope['cabang_id']) ? (int) $scope['cabang_id'] : null;
+
+        // Total Wilayah, Cabang & Users based on Scope
+        if ($role === 'superadmin') {
+            $totalWilayah = $db->table('wilayah')->countAll();
+            $totalCabang  = $db->table('cabang')->countAll();
+            $totalUsers   = $db->table('users')->where('status', 1)->countAllResults();
+        } elseif ($role === 'admin_wilayah') {
+            $totalWilayah = 1;
+            $totalCabang  = $db->table('cabang')->where('wilayah_id', $wilayahId)->countAllResults();
+            $totalUsers   = $db->table('users')->where('status', 1)->where('wilayah_id', $wilayahId)->countAllResults();
+        } else { // admin_cabang
+            $totalWilayah = 1;
+            $totalCabang  = 1;
+            $totalUsers   = $db->table('users')->where('status', 1)->where('cabang_id', $cabangId)->countAllResults();
+        }
 
         // 2. Gender Statistics
         $builderGender = $db->table('pemuda')
@@ -348,6 +365,16 @@ class PemudaModel extends Model
                              ->join('pemuda', 'pemuda.cabang_id = cabang.id', 'left')
                              ->groupBy('wilayah.id, wilayah.code, wilayah.name')
                              ->orderBy('wilayah.id', 'ASC');
+        if ($role === 'admin_wilayah' && $wilayahId) {
+            $builderWilayah->where('wilayah.id', $wilayahId);
+        } elseif ($role === 'admin_cabang') {
+            if ($wilayahId) {
+                $builderWilayah->where('wilayah.id', $wilayahId);
+            }
+            if ($cabangId) {
+                $builderWilayah->where('cabang.id', $cabangId);
+            }
+        }
         $wilayahStats = $builderWilayah->get()->getResultArray();
 
         // 5. Top Cabang Statistics (Top 10 Cabang with most youth)
@@ -358,7 +385,11 @@ class PemudaModel extends Model
                             ->groupBy('cabang.id, cabang.name, wilayah.name')
                             ->orderBy('total', 'DESC')
                             ->limit(10);
-        $this->applyScope($builderCabang, $scope);
+        if ($role === 'admin_wilayah' && $wilayahId) {
+            $builderCabang->where('cabang.wilayah_id', $wilayahId);
+        } elseif ($role === 'admin_cabang' && $cabangId) {
+            $builderCabang->where('cabang.id', $cabangId);
+        }
         $topCabangStats = $builderCabang->get()->getResultArray();
 
         // 6. Education Level Statistics

@@ -25,13 +25,21 @@ class WilayahModel extends Model
     /**
      * Ambil wilayah lengkap beserta cabang-cabangnya
      */
-    public function getWithCabang(): array
+    public function getWithCabang(?int $wilayahId = null, ?int $cabangId = null): array
     {
-        $wilayahList = $this->orderBy('id', 'ASC')->findAll();
+        $builder = $this->orderBy('id', 'ASC');
+        if (!empty($wilayahId)) {
+            $builder->where('id', $wilayahId);
+        }
+        $wilayahList = $builder->findAll();
         $cabangModel = new CabangModel();
         
         foreach ($wilayahList as &$w) {
-            $w['cabang'] = $cabangModel->where('wilayah_id', $w['id'])->orderBy('name', 'ASC')->findAll();
+            $cBuilder = $cabangModel->where('wilayah_id', $w['id'])->orderBy('name', 'ASC');
+            if (!empty($cabangId)) {
+                $cBuilder->where('id', $cabangId);
+            }
+            $w['cabang'] = $cBuilder->findAll();
         }
 
         return $wilayahList;

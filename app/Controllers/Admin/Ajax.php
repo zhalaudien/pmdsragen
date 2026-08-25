@@ -11,10 +11,22 @@ class Ajax extends BaseController
 {
     public function getCabangByWilayah(int $wilayahId)
     {
+        $scopeRole      = session()->get('role');
+        $scopeWilayahId = session()->get('wilayah_id');
+        $scopeCabangId  = session()->get('cabang_id');
+
         $cabangModel = new CabangModel();
-        $cabang = $cabangModel->where('wilayah_id', $wilayahId)
-                              ->orderBy('name', 'ASC')
-                              ->findAll();
+        $builder = $cabangModel->orderBy('name', 'ASC');
+
+        if ($scopeRole === 'admin_wilayah' && !empty($scopeWilayahId)) {
+            $builder->where('wilayah_id', (int) $scopeWilayahId);
+        } elseif ($scopeRole === 'admin_cabang' && !empty($scopeCabangId)) {
+            $builder->where('id', (int) $scopeCabangId);
+        } else {
+            $builder->where('wilayah_id', $wilayahId);
+        }
+
+        $cabang = $builder->findAll();
 
         return $this->response->setJSON($cabang);
     }

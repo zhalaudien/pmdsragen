@@ -96,27 +96,45 @@
                     <!-- Wilayah -->
                     <div class="col-12 col-sm-6 col-md-4">
                         <label class="form-label small fw-semibold text-muted">Wilayah</label>
-                        <select name="wilayah_id" id="filterWilayah" class="form-select">
-                            <option value="">-- Semua Wilayah --</option>
-                            <?php foreach ($wilayahList as $w): ?>
-                                <option value="<?= $w['id'] ?>" <?= ($filters['wilayah_id'] ?? '') == $w['id'] ? 'selected' : '' ?>>
-                                    <?= esc($w['name']) ?> (<?= esc($w['code']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php if (session()->get('role') === 'superadmin'): ?>
+                            <select name="wilayah_id" id="filterWilayah" class="form-select">
+                                <option value="">-- Semua Wilayah --</option>
+                                <?php foreach ($wilayahList as $w): ?>
+                                    <option value="<?= $w['id'] ?>" <?= ($filters['wilayah_id'] ?? '') == $w['id'] ? 'selected' : '' ?>>
+                                        <?= esc($w['name']) ?> (<?= esc($w['code']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php else: ?>
+                            <select class="form-select bg-light" disabled>
+                                <?php foreach ($wilayahList as $w): ?>
+                                    <option selected><?= esc($w['name']) ?> (<?= esc($w['code']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="hidden" name="wilayah_id" value="<?= esc($filters['wilayah_id'] ?? session()->get('wilayah_id')) ?>">
+                        <?php endif; ?>
                     </div>
 
                     <!-- Cabang -->
                     <div class="col-12 col-sm-6 col-md-4">
                         <label class="form-label small fw-semibold text-muted">Cabang</label>
-                        <select name="cabang_id" id="filterCabang" class="form-select">
-                            <option value="">-- Semua Cabang --</option>
-                            <?php foreach ($cabangList as $c): ?>
-                                <option value="<?= $c['id'] ?>" <?= ($filters['cabang_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
-                                    <?= esc($c['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php if (session()->get('role') === 'admin_cabang'): ?>
+                            <select class="form-select bg-light" disabled>
+                                <?php foreach ($cabangList as $c): ?>
+                                    <option selected><?= esc($c['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="hidden" name="cabang_id" value="<?= esc(session()->get('cabang_id')) ?>">
+                        <?php else: ?>
+                            <select name="cabang_id" id="filterCabang" class="form-select">
+                                <option value="">-- Semua Cabang --</option>
+                                <?php foreach ($cabangList as $c): ?>
+                                    <option value="<?= $c['id'] ?>" <?= ($filters['cabang_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
+                                        <?= esc($c['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Gender -->
@@ -285,49 +303,64 @@
                                     <div class="text-muted" style="font-size: 0.72rem;"><?= esc($p['job_status_name'] ?? '-') ?></div>
                                 </td>
                                 <td>
-                                    <!-- Status Badge with dropdown change -->
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle border-0 py-1 px-2 rounded-pill shadow-none <?php 
+                                    <?php if (in_array(session()->get('role'), ['superadmin', 'admin_cabang'], true)): ?>
+                                        <!-- Status Badge with dropdown change for superadmin & admin_cabang -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm dropdown-toggle border-0 py-1 px-2 rounded-pill shadow-none <?php 
+                                                if ($p['status_verifikasi'] === 'verified') echo 'badge-verif-verified';
+                                                elseif ($p['status_verifikasi'] === 'rejected') echo 'badge-verif-rejected';
+                                                else echo 'badge-verif-pending';
+                                            ?>" type="button" data-bs-toggle="dropdown" style="font-size: 0.78rem; font-weight: 600;">
+                                                <?php 
+                                                    if ($p['status_verifikasi'] === 'verified') echo '<i class="bi bi-check-circle me-1"></i> Terverifikasi';
+                                                    elseif ($p['status_verifikasi'] === 'rejected') echo '<i class="bi bi-x-circle me-1"></i> Ditolak';
+                                                    else echo '<i class="bi bi-clock me-1"></i> Menunggu';
+                                                ?>
+                                            </button>
+                                            <ul class="dropdown-menu shadow border-0 rounded-3 p-1">
+                                                <li>
+                                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="status" value="verified">
+                                                        <button type="submit" class="dropdown-item py-1 text-success small rounded-2">
+                                                            <i class="bi bi-check-circle-fill me-2"></i> Verifikasi (Valid)
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="status" value="rejected">
+                                                        <button type="submit" class="dropdown-item py-1 text-danger small rounded-2">
+                                                            <i class="bi bi-x-circle-fill me-2"></i> Tolak Data
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="status" value="pending">
+                                                        <button type="submit" class="dropdown-item py-1 text-warning small rounded-2">
+                                                            <i class="bi bi-clock-history me-2"></i> Set Menunggu
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    <?php else: ?>
+                                        <!-- Static status badge for admin_wilayah -->
+                                        <span class="badge rounded-pill px-2 py-1 <?php 
                                             if ($p['status_verifikasi'] === 'verified') echo 'badge-verif-verified';
                                             elseif ($p['status_verifikasi'] === 'rejected') echo 'badge-verif-rejected';
                                             else echo 'badge-verif-pending';
-                                        ?>" type="button" data-bs-toggle="dropdown" style="font-size: 0.78rem; font-weight: 600;">
+                                        ?>" style="font-size: 0.78rem; font-weight: 600;">
                                             <?php 
                                                 if ($p['status_verifikasi'] === 'verified') echo '<i class="bi bi-check-circle me-1"></i> Terverifikasi';
                                                 elseif ($p['status_verifikasi'] === 'rejected') echo '<i class="bi bi-x-circle me-1"></i> Ditolak';
                                                 else echo '<i class="bi bi-clock me-1"></i> Menunggu';
                                             ?>
-                                        </button>
-                                        <ul class="dropdown-menu shadow border-0 rounded-3 p-1">
-                                            <li>
-                                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="verified">
-                                                    <button type="submit" class="dropdown-item py-1 text-success small rounded-2">
-                                                        <i class="bi bi-check-circle-fill me-2"></i> Verifikasi (Valid)
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="rejected">
-                                                    <button type="submit" class="dropdown-item py-1 text-danger small rounded-2">
-                                                        <i class="bi bi-x-circle-fill me-2"></i> Tolak Data
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
-                                                    <?= csrf_field() ?>
-                                                    <input type="hidden" name="status" value="pending">
-                                                    <button type="submit" class="dropdown-item py-1 text-warning small rounded-2">
-                                                        <i class="bi bi-clock-history me-2"></i> Set Menunggu
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                        </span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="text-muted small">
                                     <?= date('d/m/y H:i', strtotime($p['created_at'])) ?>

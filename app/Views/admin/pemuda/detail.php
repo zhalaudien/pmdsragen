@@ -59,41 +59,43 @@
                         <i class="bi bi-pencil-square me-1"></i> Edit Data
                     </a>
 
-                    <!-- Verifikasi dropdown -->
-                    <div class="dropdown">
-                        <button class="btn btn-outline-success dropdown-toggle rounded-3" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-patch-check me-1"></i> Ubah Status
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-1">
-                            <li>
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="verified">
-                                    <button type="submit" class="dropdown-item py-2 text-success small rounded-2">
-                                        <i class="bi bi-check-circle-fill me-2"></i> Verifikasi (Setujui)
-                                    </button>
-                                </form>
-                            </li>
-                            <li>
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="rejected">
-                                    <button type="submit" class="dropdown-item py-2 text-danger small rounded-2">
-                                        <i class="bi bi-x-circle-fill me-2"></i> Tolak Pendaftaran
-                                    </button>
-                                </form>
-                            </li>
-                            <li>
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="pending">
-                                    <button type="submit" class="dropdown-item py-2 text-warning small rounded-2">
-                                        <i class="bi bi-clock-history me-2"></i> Kembalikan ke Menunggu
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
+                    <!-- Verifikasi dropdown (Superadmin & Admin Cabang only) -->
+                    <?php if (in_array(session()->get('role'), ['superadmin', 'admin_cabang'], true)): ?>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-success dropdown-toggle rounded-3" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-patch-check me-1"></i> Ubah Status
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-1">
+                                <li>
+                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="status" value="verified">
+                                        <button type="submit" class="dropdown-item py-2 text-success small rounded-2">
+                                            <i class="bi bi-check-circle-fill me-2"></i> Verifikasi (Setujui)
+                                        </button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="dropdown-item py-2 text-danger small rounded-2">
+                                            <i class="bi bi-x-circle-fill me-2"></i> Tolak Pendaftaran
+                                        </button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="status" value="pending">
+                                        <button type="submit" class="dropdown-item py-2 text-warning small rounded-2">
+                                            <i class="bi bi-clock-history me-2"></i> Kembalikan ke Menunggu
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

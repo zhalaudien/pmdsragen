@@ -31,27 +31,64 @@
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label for="wilayah_id" class="form-label small fw-semibold text-muted">Pilih Wilayah <span class="text-danger">*</span></label>
-                        <select id="wilayah_id" class="form-select" required>
-                            <option value="">-- Pilih Wilayah --</option>
-                            <?php foreach ($wilayahWithCabang as $w): ?>
-                                <option value="<?= $w['id'] ?>" <?= (isset($pemuda['wilayah_id']) && $pemuda['wilayah_id'] == $w['id']) ? 'selected' : '' ?>>
-                                    <?= esc($w['name']) ?> (<?= esc($w['code']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <?php 
+                        $userRole = session()->get('role');
+                        $userWilayahId = session()->get('wilayah_id');
+                        $userCabangId = session()->get('cabang_id');
+                    ?>
 
-                    <div class="col-12 col-md-6">
-                        <label for="cabang_id" class="form-label small fw-semibold text-muted">Pilih Cabang <span class="text-danger">*</span></label>
-                        <select name="cabang_id" id="cabang_id" class="form-select" required>
-                            <option value="">-- Pilih Wilayah Terlebih Dahulu --</option>
-                            <?php if (!empty($pemuda['cabang_id'])): ?>
-                                <option value="<?= $pemuda['cabang_id'] ?>" selected><?= esc($pemuda['cabang_name']) ?></option>
-                            <?php endif; ?>
-                        </select>
-                    </div>
+                    <?php if ($userRole === 'admin_cabang'): ?>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Wilayah</label>
+                            <input type="text" class="form-control bg-light" value="<?= esc(session()->get('wilayah_name') ?? ('Wilayah ' . $userWilayahId)) ?>" readonly>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Cabang <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-light" value="<?= esc(session()->get('cabang_name') ?? ('Cabang ' . $userCabangId)) ?>" readonly>
+                            <input type="hidden" name="cabang_id" id="cabang_id" value="<?= esc($userCabangId) ?>">
+                        </div>
+                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Wilayah</label>
+                            <input type="text" class="form-control bg-light" value="<?= esc(session()->get('wilayah_name') ?? ('Wilayah ' . $userWilayahId)) ?>" readonly>
+                            <input type="hidden" id="wilayah_id" value="<?= esc($userWilayahId) ?>">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="cabang_id" class="form-label small fw-semibold text-muted">Pilih Cabang (Wilayah Anda) <span class="text-danger">*</span></label>
+                            <select name="cabang_id" id="cabang_id" class="form-select" required>
+                                <option value="">-- Pilih Cabang --</option>
+                                <?php if (!empty($wilayahWithCabang[0]['cabang'])): ?>
+                                    <?php foreach ($wilayahWithCabang[0]['cabang'] as $c): ?>
+                                        <option value="<?= $c['id'] ?>" <?= (old('cabang_id', $pemuda['cabang_id'] ?? '') == $c['id']) ? 'selected' : '' ?>>
+                                            <?= esc($c['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    <?php else: ?>
+                        <div class="col-12 col-md-6">
+                            <label for="wilayah_id" class="form-label small fw-semibold text-muted">Pilih Wilayah <span class="text-danger">*</span></label>
+                            <select id="wilayah_id" class="form-select" required>
+                                <option value="">-- Pilih Wilayah --</option>
+                                <?php foreach ($wilayahWithCabang as $w): ?>
+                                    <option value="<?= $w['id'] ?>" <?= (isset($pemuda['wilayah_id']) && $pemuda['wilayah_id'] == $w['id']) ? 'selected' : '' ?>>
+                                        <?= esc($w['name']) ?> (<?= esc($w['code']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="cabang_id" class="form-label small fw-semibold text-muted">Pilih Cabang <span class="text-danger">*</span></label>
+                            <select name="cabang_id" id="cabang_id" class="form-select" required>
+                                <option value="">-- Pilih Wilayah Terlebih Dahulu --</option>
+                                <?php if (!empty($pemuda['cabang_id'])): ?>
+                                    <option value="<?= $pemuda['cabang_id'] ?>" selected><?= esc($pemuda['cabang_name']) ?></option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -379,11 +416,26 @@
                 <div class="row g-3">
                     <div class="col-12 col-sm-6">
                         <label class="form-label small fw-semibold text-muted">Status Verifikasi</label>
-                        <select name="status_verifikasi" class="form-select" required>
-                            <option value="verified" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? 'verified') === 'verified' ? 'selected' : '' ?>>Terverifikasi (Valid)</option>
-                            <option value="pending" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'pending' ? 'selected' : '' ?>>Menunggu Verifikasi</option>
-                            <option value="rejected" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'rejected' ? 'selected' : '' ?>>Ditolak</option>
-                        </select>
+                        <?php if (in_array(session()->get('role'), ['superadmin', 'admin_cabang'], true)): ?>
+                            <select name="status_verifikasi" class="form-select" required>
+                                <option value="verified" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? 'verified') === 'verified' ? 'selected' : '' ?>>Terverifikasi (Valid)</option>
+                                <option value="pending" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'pending' ? 'selected' : '' ?>>Menunggu Verifikasi</option>
+                                <option value="rejected" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'rejected' ? 'selected' : '' ?>>Ditolak</option>
+                            </select>
+                        <?php else: ?>
+                            <!-- Read-only for admin_wilayah -->
+                            <div class="p-3 bg-light rounded-3 border">
+                                <?php 
+                                    $currV = $pemuda['status_verifikasi'] ?? 'pending';
+                                    if ($currV === 'verified') echo '<span class="badge badge-verif-verified rounded-pill px-3 py-1"><i class="bi bi-check-circle-fill me-1"></i> Terverifikasi</span>';
+                                    elseif ($currV === 'rejected') echo '<span class="badge badge-verif-rejected rounded-pill px-3 py-1"><i class="bi bi-x-circle-fill me-1"></i> Ditolak</span>';
+                                    else echo '<span class="badge badge-verif-pending rounded-pill px-3 py-1"><i class="bi bi-clock-history me-1"></i> Menunggu Verifikasi</span>';
+                                ?>
+                                <div class="small text-muted mt-2">
+                                    <i class="bi bi-info-circle me-1"></i> Hak verifikasi dipegang oleh <strong>Admin Cabang</strong> & <strong>Superadmin</strong>.
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="col-12 col-sm-6">
