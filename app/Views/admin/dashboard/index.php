@@ -8,43 +8,41 @@
     $wilayahName = session()->get('wilayah_name') ?? ('Wilayah ' . session()->get('wilayah_id'));
     $cabangName  = session()->get('cabang_name') ?? ('Cabang ' . session()->get('cabang_id'));
 ?>
-<div class="card border-0 text-white mb-4 shadow-sm dashboard-hero-card">
-    <div class="card-body p-4 p-lg-5">
+<div class="card bg-gradient-navy mb-4 shadow-sm">
+    <div class="card-body p-4">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white bg-opacity-10 rounded-pill mb-3 border border-white border-opacity-10">
-                    <i class="bi bi-shield-check text-info"></i>
-                    <span class="small fw-semibold">
-                        <?php if ($userRole === 'superadmin'): ?>
-                            Dashboard Super Administrator
-                        <?php elseif ($userRole === 'admin_wilayah'): ?>
-                            Dashboard Admin Wilayah: <?= esc($wilayahName) ?>
-                        <?php else: ?>
-                            Dashboard Admin Cabang: <?= esc($cabangName) ?>
-                        <?php endif; ?>
-                    </span>
-                </div>
-                <h2 class="fw-bold mb-2">Selamat Datang, <?= esc($user['name'] ?? 'Administrator') ?>! 👋</h2>
-                <p class="text-white-50 mb-4 mb-lg-0">
+                <div class="d-inline-flex align-items-center mb-2 px-3 py-1 bg-white bg-opacity-10 rounded-pill border border-light text-xs font-weight-bold">
+                    <i class="fas fa-shield-alt text-info mr-1"></i>
                     <?php if ($userRole === 'superadmin'): ?>
-                        Anda memiliki hak akses penuh untuk memantau data pemuda, distribusi per wilayah, cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di seluruh Kabupaten Sragen.
+                        Dashboard Super Administrator
                     <?php elseif ($userRole === 'admin_wilayah'): ?>
-                        Anda memantau data pemuda, statistik, dan sebaran seluruh cabang yang berada dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
+                        Dashboard Admin Wilayah: <?= esc($wilayahName) ?>
                     <?php else: ?>
-                        Anda mengelola, memverifikasi, dan memantau perkembangan data pemuda khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
+                        Dashboard Admin Cabang: <?= esc($cabangName) ?>
+                    <?php endif; ?>
+                </div>
+                <h2 class="font-weight-bold mb-2">Selamat Datang, <?= esc($user['name'] ?? 'Administrator') ?>! 👋</h2>
+                <p class="text-white-50 mb-0 font-weight-normal">
+                    <?php if ($userRole === 'superadmin'): ?>
+                        Pantau seluruh data pemuda, distribusi wilayah &amp; cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di Kabupaten Sragen.
+                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                        Pantau dan analisis sebaran data pemuda pada seluruh cabang dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
+                    <?php else: ?>
+                        Kelola, input, dan verifikasi data pemuda khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
                     <?php endif; ?>
                 </p>
             </div>
-            <div class="col-lg-4 text-lg-end">
-                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-                    <a href="<?= base_url('admin/pemuda/tambah') ?>" class="btn btn-primary px-3 py-2 rounded-3 shadow-sm">
-                        <i class="bi bi-person-plus-fill me-1"></i> Tambah Pemuda
+            <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
+                <div class="btn-group">
+                    <a href="<?= base_url('admin/pemuda/tambah') ?>" class="btn btn-primary btn-sm shadow-sm">
+                        <i class="fas fa-user-plus mr-1"></i> Tambah Pemuda
                     </a>
-                    <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-light px-3 py-2 rounded-3 shadow-sm">
-                        <i class="bi bi-table me-1"></i> Kelola Data
+                    <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-light btn-sm shadow-sm">
+                        <i class="fas fa-table mr-1"></i> Kelola Data
                     </a>
-                    <a href="<?= base_url('admin/pemuda/export') ?>" class="btn btn-outline-light px-3 py-2 rounded-3">
-                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Excel
+                    <a href="<?= base_url('admin/pemuda/export') ?>" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-file-excel mr-1"></i> Export Excel
                     </a>
                 </div>
             </div>
@@ -52,150 +50,145 @@
     </div>
 </div>
 
-<!-- STATS CARDS ROW 1 -->
-<div class="row g-3 mb-4">
+<!-- STATS ROW 1: SMALL-BOXES -->
+<div class="row">
     <!-- Total Pemuda -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card stat-card stat-card-blue border-0 h-100 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small fw-semibold text-uppercase">Total Pemuda</div>
-                    <div class="fs-2 fw-bold text-dark mt-1"><?= number_format($stats['summary']['total'] ?? 0) ?></div>
-                    <div class="small text-muted mt-1"><i class="bi bi-people-fill text-primary me-1"></i> Terdaftar di sistem</div>
-                </div>
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="bi bi-people-fill"></i>
-                </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info elevation-2">
+            <div class="inner">
+                <h3><?= number_format($stats['summary']['total'] ?? 0) ?></h3>
+                <p>Total Pemuda</p>
             </div>
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <a href="<?= base_url('admin/pemuda') ?>" class="small-box-footer">
+                Lihat Seluruh Data <i class="fas fa-arrow-circle-right"></i>
+            </a>
         </div>
     </div>
 
     <!-- Menunggu Verifikasi -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card stat-card stat-card-yellow border-0 h-100 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small fw-semibold text-uppercase">Menunggu Verifikasi</div>
-                    <div class="fs-2 fw-bold text-warning mt-1"><?= number_format($stats['summary']['pending'] ?? 0) ?></div>
-                    <a href="<?= base_url('admin/pemuda?status_verifikasi=pending') ?>" class="small text-decoration-none text-warning fw-semibold mt-1 d-inline-block">
-                        Proses sekarang <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="bi bi-clock-history"></i>
-                </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning elevation-2">
+            <div class="inner">
+                <h3><?= number_format($stats['summary']['pending'] ?? 0) ?></h3>
+                <p>Menunggu Verifikasi</p>
             </div>
+            <div class="icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <a href="<?= base_url('admin/pemuda?status_verifikasi=pending') ?>" class="small-box-footer">
+                Proses Verifikasi <i class="fas fa-arrow-circle-right"></i>
+            </a>
         </div>
     </div>
 
     <!-- Terverifikasi -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card stat-card stat-card-green border-0 h-100 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small fw-semibold text-uppercase">Terverifikasi</div>
-                    <div class="fs-2 fw-bold text-success mt-1"><?= number_format($stats['summary']['verified'] ?? 0) ?></div>
-                    <div class="small text-muted mt-1"><i class="bi bi-check2-circle text-success me-1"></i> Data valid</div>
-                </div>
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="bi bi-patch-check-fill"></i>
-                </div>
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success elevation-2">
+            <div class="inner">
+                <h3><?= number_format($stats['summary']['verified'] ?? 0) ?></h3>
+                <p>Terverifikasi</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <a href="<?= base_url('admin/pemuda?status_verifikasi=verified') ?>" class="small-box-footer">
+                Data Valid <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Ditolak -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger elevation-2">
+            <div class="inner">
+                <h3><?= number_format($stats['summary']['rejected'] ?? 0) ?></h3>
+                <p>Ditolak</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <a href="<?= base_url('admin/pemuda?status_verifikasi=rejected') ?>" class="small-box-footer">
+                Perlu Revisi <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- STATS ROW 2: INFO-BOXES -->
+<div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box shadow-sm mb-3">
+            <span class="info-box-icon bg-purple elevation-1"><i class="fas fa-map-marked-alt"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text text-muted text-xs text-uppercase font-weight-bold">Wilayah</span>
+                <span class="info-box-number text-lg font-weight-bold"><?= number_format($stats['totalWilayah'] ?? 4) ?> <small>Wilayah</small></span>
             </div>
         </div>
     </div>
 
-    <!-- Ditolak / Tidak Valid -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card stat-card stat-card-red border-0 h-100 shadow-sm">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small fw-semibold text-uppercase">Ditolak</div>
-                    <div class="fs-2 fw-bold text-danger mt-1"><?= number_format($stats['summary']['rejected'] ?? 0) ?></div>
-                    <div class="small text-muted mt-1"><i class="bi bi-x-circle text-danger me-1"></i> Perlu perbaikan</div>
-                </div>
-                <div class="stat-icon bg-danger-subtle text-danger">
-                    <i class="bi bi-x-octagon-fill"></i>
-                </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box shadow-sm mb-3">
+            <span class="info-box-icon bg-teal elevation-1"><i class="fas fa-sitemap"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text text-muted text-xs text-uppercase font-weight-bold">Cabang</span>
+                <span class="info-box-number text-lg font-weight-bold"><?= number_format($stats['totalCabang'] ?? 0) ?> <small>Cabang</small></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box shadow-sm mb-3">
+            <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-user-shield"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text text-muted text-xs text-uppercase font-weight-bold">Pengguna / Admin</span>
+                <span class="info-box-number text-lg font-weight-bold"><?= number_format($stats['totalUsers'] ?? 0) ?> <small>User</small></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box shadow-sm mb-3">
+            <span class="info-box-icon bg-secondary elevation-1"><i class="fas fa-archive"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text text-muted text-xs text-uppercase font-weight-bold">Data Arsip</span>
+                <span class="info-box-number text-lg font-weight-bold"><?= number_format($stats['summary']['archived'] ?? 0) ?> <small>Data</small></span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- STATS CARDS ROW 2 (Master scope info) -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card p-3 border-0 shadow-sm h-100 d-flex flex-row align-items-center gap-3">
-            <div class="stat-icon bg-purple-subtle text-purple rounded-3">
-                <i class="bi bi-geo-alt-fill"></i>
-            </div>
-            <div>
-                <div class="text-muted small fw-semibold">Wilayah</div>
-                <div class="fs-4 fw-bold text-dark"><?= number_format($stats['totalWilayah'] ?? 4) ?> <span class="fs-6 fw-normal text-muted">Wilayah</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 border-0 shadow-sm h-100 d-flex flex-row align-items-center gap-3">
-            <div class="stat-icon bg-info-subtle text-info rounded-3">
-                <i class="bi bi-diagram-3-fill"></i>
-            </div>
-            <div>
-                <div class="text-muted small fw-semibold">Cabang</div>
-                <div class="fs-4 fw-bold text-dark"><?= number_format($stats['totalCabang'] ?? 0) ?> <span class="fs-6 fw-normal text-muted">Cabang</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 border-0 shadow-sm h-100 d-flex flex-row align-items-center gap-3">
-            <div class="stat-icon bg-primary-subtle text-primary rounded-3">
-                <i class="bi bi-shield-lock-fill"></i>
-            </div>
-            <div>
-                <div class="text-muted small fw-semibold">Pengguna / Admin</div>
-                <div class="fs-4 fw-bold text-dark"><?= number_format($stats['totalUsers'] ?? 0) ?> <span class="fs-6 fw-normal text-muted">User</span></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 border-0 shadow-sm h-100 d-flex flex-row align-items-center gap-3">
-            <div class="stat-icon bg-secondary-subtle text-secondary rounded-3">
-                <i class="bi bi-archive-fill"></i>
-            </div>
-            <div>
-                <div class="text-muted small fw-semibold">Data Arsip</div>
-                <div class="fs-4 fw-bold text-dark"><?= number_format($stats['summary']['archived'] ?? 0) ?> <span class="fs-6 fw-normal text-muted">Data</span></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CHARTS ROW 1: Pemuda per Wilayah & Gender & Marital -->
-<div class="row g-4 mb-4">
+<!-- CHARTS ROW 1 -->
+<div class="row">
     <!-- Chart Wilayah -->
-    <div class="col-12 col-xl-7">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-bar-chart-fill text-primary"></i>
-                    <span>Sebaran Data Pemuda per Wilayah</span>
+    <div class="col-lg-7 col-12">
+        <div class="card card-primary card-outline shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-chart-bar mr-1 text-primary"></i> Sebaran Data Pemuda per Wilayah
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-light border">Kab. Sragen</span>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
-                <span class="badge bg-light text-muted border">Kab. Sragen</span>
             </div>
-            <div class="card-body p-4">
-                <div style="position: relative; height: 280px;">
+            <div class="card-body pt-0">
+                <div style="position: relative; height: 260px;">
                     <canvas id="chartWilayah"></canvas>
                 </div>
-                <div class="row text-center mt-3 g-2">
+                <div class="row text-center mt-3">
                     <?php 
-                    $colors = ['#0284c7', '#059669', '#f59e0b', '#7c3aed'];
+                    $colors = ['#007bff', '#28a745', '#ffc107', '#6f42c1'];
                     $i = 0;
                     foreach ($stats['wilayahStats'] as $w): 
                     ?>
-                        <div class="col-6 col-md-3">
-                            <div class="p-2 border rounded-3 bg-light">
-                                <div class="small fw-semibold" style="color: <?= $colors[$i % 4] ?>;"><?= esc($w['name']) ?></div>
-                                <div class="fs-5 fw-bold text-dark"><?= number_format($w['total']) ?></div>
-                                <div class="text-muted" style="font-size: 0.72rem;"><?= esc($w['code']) ?></div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <div class="p-2 border rounded bg-light">
+                                <div class="text-xs font-weight-bold" style="color: <?= $colors[$i % 4] ?>;"><?= esc($w['name']) ?></div>
+                                <div class="h5 font-weight-bold text-dark mb-0"><?= number_format($w['total']) ?></div>
+                                <div class="text-muted text-xs"><?= esc($w['code']) ?></div>
                             </div>
                         </div>
                     <?php 
@@ -207,61 +200,63 @@
         </div>
     </div>
 
-    <!-- Chart Gender & Status Pernikahan -->
-    <div class="col-12 col-xl-5">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-pie-chart-fill text-primary"></i>
-                    <span>Demografi Gender & Pernikahan</span>
+    <!-- Chart Gender & Marital -->
+    <div class="col-lg-5 col-12">
+        <div class="card card-info card-outline shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-chart-pie mr-1 text-info"></i> Demografi Gender &amp; Status Nikah
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
             </div>
-            <div class="card-body p-4">
-                <div class="row align-items-center g-3">
+            <div class="card-body pt-0">
+                <div class="row align-items-center">
                     <div class="col-6 text-center">
-                        <div style="position: relative; height: 170px;">
+                        <div style="position: relative; height: 160px;">
                             <canvas id="chartGender"></canvas>
                         </div>
-                        <div class="mt-2 fw-semibold small text-dark">Jenis Kelamin</div>
-                        <div class="d-flex justify-content-center gap-2 mt-1 small">
-                            <span class="text-primary fw-semibold"><i class="bi bi-gender-male"></i> L: <?= $stats['genderData']['L'] ?></span>
-                            <span class="text-danger fw-semibold"><i class="bi bi-gender-female"></i> P: <?= $stats['genderData']['P'] ?></span>
+                        <div class="mt-2 font-weight-bold text-xs">Jenis Kelamin</div>
+                        <div class="d-flex justify-content-center text-xs mt-1">
+                            <span class="text-primary font-weight-bold mr-2"><i class="fas fa-mars"></i> L: <?= $stats['genderData']['L'] ?></span>
+                            <span class="text-danger font-weight-bold"><i class="fas fa-venus"></i> P: <?= $stats['genderData']['P'] ?></span>
                         </div>
                     </div>
-                    <div class="col-6 text-center border-start">
-                        <div style="position: relative; height: 170px;">
+                    <div class="col-6 text-center border-left">
+                        <div style="position: relative; height: 160px;">
                             <canvas id="chartMarital"></canvas>
                         </div>
-                        <div class="mt-2 fw-semibold small text-dark">Status Pernikahan</div>
-                        <div class="text-muted" style="font-size: 0.72rem;">Belum / Sudah / Janda / Duda</div>
+                        <div class="mt-2 font-weight-bold text-xs">Status Nikah</div>
+                        <div class="text-muted text-xs">Belum / Sudah / J / D</div>
                     </div>
                 </div>
 
-                <hr class="my-3 text-muted opacity-25">
+                <hr class="my-3">
 
-                <div class="row g-2 text-center" style="font-size: 0.8rem;">
+                <div class="row text-center text-xs">
                     <div class="col-3">
                         <div class="p-1 bg-light rounded border">
-                            <div class="text-muted" style="font-size: 0.68rem;">Belum Nikah</div>
-                            <div class="fw-bold text-primary"><?= $stats['maritalData']['belum_menikah'] ?></div>
+                            <div class="text-muted text-xs">Belum Nikah</div>
+                            <div class="font-weight-bold text-primary"><?= $stats['maritalData']['belum_menikah'] ?></div>
                         </div>
                     </div>
                     <div class="col-3">
                         <div class="p-1 bg-light rounded border">
-                            <div class="text-muted" style="font-size: 0.68rem;">Menikah</div>
-                            <div class="fw-bold text-success"><?= $stats['maritalData']['sudah_menikah'] ?></div>
+                            <div class="text-muted text-xs">Menikah</div>
+                            <div class="font-weight-bold text-success"><?= $stats['maritalData']['sudah_menikah'] ?></div>
                         </div>
                     </div>
                     <div class="col-3">
                         <div class="p-1 bg-light rounded border">
-                            <div class="text-muted" style="font-size: 0.68rem;">Janda</div>
-                            <div class="fw-bold text-warning"><?= $stats['maritalData']['janda'] ?></div>
+                            <div class="text-muted text-xs">Janda</div>
+                            <div class="font-weight-bold text-warning"><?= $stats['maritalData']['janda'] ?></div>
                         </div>
                     </div>
                     <div class="col-3">
                         <div class="p-1 bg-light rounded border">
-                            <div class="text-muted" style="font-size: 0.68rem;">Duda</div>
-                            <div class="fw-bold text-secondary"><?= $stats['maritalData']['duda'] ?></div>
+                            <div class="text-muted text-xs">Duda</div>
+                            <div class="font-weight-bold text-secondary"><?= $stats['maritalData']['duda'] ?></div>
                         </div>
                     </div>
                 </div>
@@ -270,19 +265,21 @@
     </div>
 </div>
 
-<!-- CHARTS ROW 2: Pendidikan & Pekerjaan -->
-<div class="row g-4 mb-4">
+<!-- CHARTS ROW 2: PENDIDIKAN & PEKERJAAN -->
+<div class="row">
     <!-- Chart Pendidikan -->
-    <div class="col-12 col-lg-6">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-mortarboard-fill text-info"></i>
-                    <span>Statistik Jenjang Pendidikan</span>
+    <div class="col-lg-6 col-12">
+        <div class="card card-success card-outline shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-graduation-cap mr-1 text-success"></i> Statistik Jenjang Pendidikan
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
             </div>
-            <div class="card-body p-4">
-                <div style="position: relative; height: 260px;">
+            <div class="card-body pt-0">
+                <div style="position: relative; height: 250px;">
                     <canvas id="chartPendidikan"></canvas>
                 </div>
             </div>
@@ -290,16 +287,18 @@
     </div>
 
     <!-- Chart Pekerjaan -->
-    <div class="col-12 col-lg-6">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-briefcase-fill text-warning"></i>
-                    <span>Statistik Status Pekerjaan</span>
+    <div class="col-lg-6 col-12">
+        <div class="card card-warning card-outline shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-briefcase mr-1 text-warning"></i> Statistik Status Pekerjaan
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
             </div>
-            <div class="card-body p-4">
-                <div style="position: relative; height: 260px;">
+            <div class="card-body pt-0">
+                <div style="position: relative; height: 250px;">
                     <canvas id="chartPekerjaan"></canvas>
                 </div>
             </div>
@@ -308,87 +307,89 @@
 </div>
 
 <!-- SECTION 3: TOP CABANG & RECENT REGISTRATIONS -->
-<div class="row g-4">
+<div class="row">
     <!-- 10 Cabang Terbanyak -->
-    <div class="col-12 col-xl-4">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-trophy-fill text-warning"></i>
-                    <span>
-                        <?php if ($userRole === 'superadmin'): ?>
-                            10 Cabang Terbanyak
-                        <?php elseif ($userRole === 'admin_wilayah'): ?>
-                            Cabang Terbanyak di <?= esc($wilayahName) ?>
-                        <?php else: ?>
-                            Statistik Cabang <?= esc($cabangName) ?>
-                        <?php endif; ?>
-                    </span>
+    <div class="col-xl-4 col-12">
+        <div class="card card-navy card-outline shadow-sm h-100">
+            <div class="card-header border-0">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-trophy mr-1 text-warning"></i>
+                    <?php if ($userRole === 'superadmin'): ?>
+                        10 Cabang Terbanyak
+                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                        Cabang Terbanyak di <?= esc($wilayahName) ?>
+                    <?php else: ?>
+                        Statistik Cabang <?= esc($cabangName) ?>
+                    <?php endif; ?>
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
             </div>
             <div class="card-body p-0">
-                <div class="list-group list-group-flush">
+                <ul class="products-list product-list-in-card pl-2 pr-2">
                     <?php if (empty($stats['topCabangStats'])): ?>
-                        <div class="p-4 text-center text-muted small">Belum ada data pemuda terdaftar.</div>
+                        <li class="item text-center py-3 text-muted">Belum ada data pemuda terdaftar.</li>
                     <?php else: ?>
                         <?php 
                         $maxTotal = max(array_column($stats['topCabangStats'], 'total')) ?: 1;
                         foreach ($stats['topCabangStats'] as $idx => $c): 
                             $percent = round(($c['total'] / $maxTotal) * 100);
                         ?>
-                            <div class="list-group-item px-3 py-2 border-bottom border-light">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="badge bg-light text-dark rounded-circle badge-number-circle"><?= $idx + 1 ?></span>
-                                        <span class="fw-semibold text-dark small"><?= esc($c['name']) ?></span>
+                            <li class="item py-2 border-bottom">
+                                <div class="product-info ml-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="font-weight-bold text-dark">
+                                            <span class="badge badge-light border mr-1"><?= $idx + 1 ?></span>
+                                            <?= esc($c['name']) ?>
+                                        </span>
+                                        <span class="badge badge-primary font-weight-bold"><?= number_format($c['total']) ?> pemuda</span>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="fw-bold text-primary small"><?= number_format($c['total']) ?></span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">pemuda</span>
+                                    <div class="progress progress-xs">
+                                        <div class="progress-bar bg-primary" style="width: <?= $percent ?>%"></div>
                                     </div>
+                                    <small class="text-muted"><?= esc($c['wilayah_name']) ?></small>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="progress flex-grow-1" style="height: 5px;">
-                                        <div class="progress-bar bg-primary" role="progressbar" style="width: <?= $percent ?>%"></div>
-                                    </div>
-                                    <span class="text-muted" style="font-size: 0.68rem;"><?= esc($c['wilayah_name']) ?></span>
-                                </div>
-                            </div>
+                            </li>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                </div>
+                </ul>
             </div>
             <?php if ($userRole === 'superadmin'): ?>
-                <div class="card-footer bg-white border-0 text-center py-2">
-                    <a href="<?= base_url('admin/cabang') ?>" class="small text-decoration-none fw-semibold">Kelola Semua Cabang <i class="bi bi-chevron-right"></i></a>
+                <div class="card-footer text-center bg-white border-0 py-2">
+                    <a href="<?= base_url('admin/cabang') ?>" class="text-xs font-weight-bold">
+                        Kelola Semua Cabang <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
     <!-- Pendaftaran Pemuda Terbaru -->
-    <div class="col-12 col-xl-8">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-header-clean">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-clock-history text-primary"></i>
-                    <span>Pendaftaran Pemuda Terbaru</span>
+    <div class="col-xl-8 col-12">
+        <div class="card card-primary card-outline shadow-sm h-100">
+            <div class="card-header border-0 d-flex justify-content-between align-items-center">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fas fa-history mr-1 text-primary"></i> Pendaftaran Pemuda Terbaru
+                </h3>
+                <div class="card-tools">
+                    <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-xs btn-outline-primary">
+                        Lihat Semua Data
+                    </a>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
-                <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                    Lihat Semua Data
-                </a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
-                        <thead class="table-light">
+                    <table class="table table-hover table-striped table-vcenter mb-0" style="font-size: 0.85rem;">
+                        <thead class="thead-light">
                             <tr>
-                                <th class="ps-3">No. Registrasi</th>
+                                <th class="pl-3">No. Reg</th>
                                 <th>Nama Lengkap</th>
                                 <th>Cabang / Wilayah</th>
                                 <th>Status Verifikasi</th>
                                 <th>Tgl Daftar</th>
-                                <th class="text-end pe-3">Aksi</th>
+                                <th class="text-right pr-3">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -399,47 +400,47 @@
                             <?php else: ?>
                                 <?php foreach ($stats['recentRegistrations'] as $p): ?>
                                     <tr>
-                                        <td class="ps-3">
-                                            <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="fw-bold text-decoration-none text-primary">
+                                        <td class="pl-3">
+                                            <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="font-weight-bold text-primary">
                                                 <?= esc($p['registration_number']) ?>
                                             </a>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-dark"><?= esc($p['name']) ?></div>
-                                            <div class="text-muted" style="font-size: 0.75rem;">
-                                                <?= $p['gender'] === 'L' ? '<i class="bi bi-gender-male text-primary"></i> Laki-laki' : '<i class="bi bi-gender-female text-danger"></i> Perempuan' ?>
+                                            <div class="font-weight-bold text-dark"><?= esc($p['name']) ?></div>
+                                            <div class="text-muted text-xs">
+                                                <?= $p['gender'] === 'L' ? '<i class="fas fa-mars text-primary"></i> L' : '<i class="fas fa-venus text-danger"></i> P' ?>
                                                 <?php if (!empty($p['phone'])): ?>
-                                                    &bull; <i class="bi bi-whatsapp text-success"></i> <?= esc($p['phone']) ?>
+                                                    &bull; <i class="fab fa-whatsapp text-success"></i> <?= esc($p['phone']) ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="fw-medium text-dark"><?= esc($p['cabang_name']) ?></div>
-                                            <div class="text-muted small"><?= esc($p['wilayah_name']) ?></div>
+                                            <div class="font-weight-semibold text-dark"><?= esc($p['cabang_name']) ?></div>
+                                            <div class="text-muted text-xs"><?= esc($p['wilayah_name']) ?></div>
                                         </td>
                                         <td>
                                             <?php if ($p['status_verifikasi'] === 'verified'): ?>
-                                                <span class="badge badge-verif-verified rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i> Terverifikasi</span>
+                                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
                                             <?php elseif ($p['status_verifikasi'] === 'rejected'): ?>
-                                                <span class="badge badge-verif-rejected rounded-pill px-2 py-1"><i class="bi bi-x-circle me-1"></i> Ditolak</span>
+                                                <span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
                                             <?php else: ?>
-                                                <span class="badge badge-verif-pending rounded-pill px-2 py-1"><i class="bi bi-clock me-1"></i> Menunggu</span>
+                                                <span class="badge badge-warning px-2 py-1"><i class="fas fa-clock mr-1"></i> Menunggu</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="text-muted small">
+                                        <td class="text-muted text-xs">
                                             <?= date('d/m/Y H:i', strtotime($p['created_at'])) ?>
                                         </td>
-                                        <td class="text-end pe-3">
+                                        <td class="text-right pr-3">
                                             <div class="btn-group btn-group-sm">
                                                 <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" 
-                                                   class="btn btn-outline-secondary btn-sm" 
+                                                   class="btn btn-default btn-xs" 
                                                    title="Lihat Detail">
-                                                    <i class="bi bi-eye"></i>
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="<?= base_url('admin/pemuda/edit/' . $p['id']) ?>" 
-                                                   class="btn btn-outline-primary btn-sm" 
+                                                   class="btn btn-primary btn-xs" 
                                                    title="Edit">
-                                                    <i class="bi bi-pencil"></i>
+                                                    <i class="fas fa-edit"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -458,7 +459,7 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    $(document).ready(function () {
         // 1. Chart Wilayah
         const wilayahLabels = <?= json_encode(array_column($stats['wilayahStats'], 'name')) ?>;
         const wilayahData   = <?= json_encode(array_map('intval', array_column($stats['wilayahStats'], 'total'))) ?>;
@@ -470,8 +471,8 @@
                 datasets: [{
                     label: 'Jumlah Pemuda',
                     data: wilayahData,
-                    backgroundColor: ['#0284c7', '#059669', '#f59e0b', '#7c3aed'],
-                    borderRadius: 8,
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#6f42c1'],
+                    borderRadius: 6,
                     maxBarThickness: 45
                 }]
             },
@@ -497,7 +498,7 @@
                 labels: ['Laki-laki', 'Perempuan'],
                 datasets: [{
                     data: [<?= (int) $stats['genderData']['L'] ?>, <?= (int) $stats['genderData']['P'] ?>],
-                    backgroundColor: ['#0284c7', '#ec4899'],
+                    backgroundColor: ['#007bff', '#e83e8c'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -524,7 +525,7 @@
                         <?= (int) $stats['maritalData']['janda'] ?>,
                         <?= (int) $stats['maritalData']['duda'] ?>
                     ],
-                    backgroundColor: ['#0284c7', '#10b981', '#f59e0b', '#64748b'],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#6c757d'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -550,9 +551,9 @@
                 datasets: [{
                     label: 'Jumlah Pemuda',
                     data: eduData,
-                    backgroundColor: '#0ea5e9',
-                    borderRadius: 6,
-                    maxBarThickness: 28
+                    backgroundColor: '#17a2b8',
+                    borderRadius: 5,
+                    maxBarThickness: 26
                 }]
             },
             options: {
@@ -582,9 +583,9 @@
                 datasets: [{
                     label: 'Jumlah Pemuda',
                     data: jobData,
-                    backgroundColor: '#f59e0b',
-                    borderRadius: 6,
-                    maxBarThickness: 32
+                    backgroundColor: '#ffc107',
+                    borderRadius: 5,
+                    maxBarThickness: 30
                 }]
             },
             options: {

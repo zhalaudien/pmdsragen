@@ -21,11 +21,12 @@ Project menggunakan:
 - **Language:** PHP 8.2+
 - **Database:** MySQL
 - **Frontend:** HTML5, CSS, JavaScript
-- **UI:** Bootstrap 5
+- **UI:** Bootstrapm 5 AdminLte3
 - **Chart:** Chart.js
 - **Export:** PhpSpreadsheet
 - **Database access:** CodeIgniter Model / Query Builder
 - **Authentication:** CodeIgniter Session
+- **Time Zone:** Asia/Jakarta
 
 ---
 
@@ -124,6 +125,7 @@ Superadmin dapat:
 - Mengelola user/admin.
 - Mengelola form.
 - Melihat seluruh statistik.
+- Import Data Pemuda dari exel
 - Export seluruh data.
 - Mengubah konfigurasi sistem.
 
