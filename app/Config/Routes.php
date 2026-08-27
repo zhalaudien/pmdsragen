@@ -10,6 +10,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('pendataan', 'Pendataan::index');
 $routes->post('pendataan/simpan', 'Pendataan::simpan');
+$routes->post('pendataan/check-duplicate', 'Pendataan::checkDuplicate');
 $routes->get('pendataan/sukses', 'Pendataan::sukses');
 
 // Public API for dropdowns

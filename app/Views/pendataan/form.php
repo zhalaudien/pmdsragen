@@ -347,9 +347,20 @@
                         </div>
                     </div>
 
+                    <!-- Peringatan Duplikasi Data Pribadi -->
+                    <div id="duplicate-warning-box" class="alert alert-danger card-custom border-danger mt-4 mb-0" style="display: none;" role="alert">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-exclamation-octagon-fill fs-4 text-danger flex-shrink-0"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-danger">Data Pemuda Sudah Terdaftar!</h6>
+                                <div id="duplicate-warning-message" class="small text-dark"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Step 1 Actions -->
                     <div class="d-flex justify-content-end mt-4 pt-3 border-top">
-                        <button type="button" class="btn btn-primary-pmd" onclick="validateAndNext(1)">
+                        <button type="button" class="btn btn-primary-pmd" id="btnNextStep1" onclick="validateAndNext(1)">
                             Selanjutnya: Alamat <i class="bi bi-arrow-right ms-1"></i>
                         </button>
                     </div>
@@ -738,14 +749,14 @@
                                         </div>
                                     </div>
                                     <div class="mt-3 pt-3 border-top org-detail-wrapper" id="org_detail_<?= $org['key'] ?>" style="display: none;">
-                                        <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= $org['name'] ?>">
+                                        <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= $org['name'] ?>" disabled>
                                         <div class="row g-2">
                                             <div class="col-md-5">
                                                 <label class="form-label small text-muted mb-1">Jabatan / Posisi / Peran:</label>
                                                 <input type="text" class="form-control form-control-sm"
                                                     name="organizations[<?= $org['key'] ?>][position]"
                                                     placeholder="Contoh: Anggota / Koordinator / Sie Lapangan"
-                                                    value="Anggota">
+                                                    value="Anggota" disabled>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label small text-muted mb-1">Tahun Bergabung:</label>
@@ -753,13 +764,13 @@
                                                     name="organizations[<?= $org['key'] ?>][join_year]"
                                                     placeholder="Contoh: <?= date('Y') ?>"
                                                     min="1990" max="<?= date('Y') ?>"
-                                                    value="<?= date('Y') ?>">
+                                                    value="<?= date('Y') ?>" disabled>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label small text-muted mb-1">Keterangan Tambahan:</label>
                                                 <input type="text" class="form-control form-control-sm"
                                                     name="organizations[<?= $org['key'] ?>][description]"
-                                                    placeholder="Opsional">
+                                                    placeholder="Opsional" disabled>
                                             </div>
                                         </div>
                                     </div>
@@ -842,7 +853,7 @@
                                     </div>
                                     <div class="mt-2 pt-2 border-top skill-level-wrapper" id="skill_level_box_<?= $skill['id'] ?>" style="display: none;">
                                         <label class="form-label small text-muted mb-1">Tingkat Kemampuan:</label>
-                                        <select class="form-select form-select-sm" name="skills[<?= $skill['id'] ?>][level]">
+                                        <select class="form-select form-select-sm" name="skills[<?= $skill['id'] ?>][level]" disabled>
                                             <option value="pemula">Pemula (Beginner)</option>
                                             <option value="menengah" selected>Menengah (Intermediate)</option>
                                             <option value="mahir">Mahir (Advanced)</option>
@@ -1043,5 +1054,13 @@
 <?= $this->section('scripts') ?>
 <!-- Tom Select JS for Searchable Selects -->
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+    const PENDATAAN_CONFIG = {
+        baseUrl: '<?= rtrim(base_url(), '/') ?>',
+        checkDuplicateUrl: '<?= base_url('pendataan/check-duplicate') ?>',
+        csrfToken: '<?= csrf_token() ?>',
+        csrfHash: '<?= csrf_hash() ?>'
+    };
+</script>
 <script src="<?= base_url('js/pendataan.js') ?>"></script>
 <?= $this->endSection() ?>

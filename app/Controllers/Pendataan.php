@@ -108,6 +108,19 @@ class Pendataan extends BaseController
                              ->with('error', 'Silakan periksa kembali formulir Anda. Masih ada data yang belum terisi dengan benar.');
         }
 
+        $name      = (string) $this->request->getPost('name');
+        $birthDate = (string) $this->request->getPost('birth_date');
+        $cabangId  = (int) $this->request->getPost('cabang_id');
+
+        // Autentikasi / Verifikasi Duplikasi Data (Nama, Tanggal Lahir, dan Cabang)
+        $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId);
+        if ($duplicate) {
+            $formattedBirth = date('d/m/Y', strtotime($birthDate));
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'Pendaftaran Ditolak: Data pemuda dengan nama <strong>"' . esc($name) . '"</strong>, tanggal lahir <strong>(' . $formattedBirth . ')</strong>, dan cabang yang dipilih sudah terdaftar di sistem. Mohon tidak melakukan input data ganda.');
+        }
+
         $db = Database::connect();
         $db->transStart();
 
@@ -185,15 +198,6 @@ class Pendataan extends BaseController
                             'position'          => $position,
                             'join_date'         => $joinDate,
                             'description'       => $desc,
-                        ]);
-                    } elseif (!empty($org['name']) && is_string($org['name'])) {
-                        // Fallback for custom array
-                        $this->organisasiModel->insert([
-                            'pemuda_id'         => $pemudaId,
-                            'organization_name' => $org['name'],
-                            'position'          => $org['position'] ?? 'Anggota',
-                            'join_date'         => !empty($org['join_date']) ? $org['join_date'] : null,
-                            'description'       => $org['description'] ?? null,
                         ]);
                     }
                 }
@@ -280,5 +284,47 @@ class Pendataan extends BaseController
         ];
 
         return view('pendataan/sukses', $data);
+    }
+
+    /**
+     * Endpoint AJAX untuk memeriksa duplikasi data pemuda (Nama, Tanggal Lahir, Cabang)
+     */
+    public function checkDuplicate()
+    {
+        $name      = trim((string) $this->request->getPost('name'));
+        $birthDate = trim((string) $this->request->getPost('birth_date'));
+        $cabangId  = (int) $this->request->getPost('cabang_id');
+
+        if ($name === '' || $birthDate === '' || $cabangId <= 0) {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'duplicate' => false,
+                'message'   => 'Parameter nama, tanggal lahir, dan cabang wajib diisi.',
+                'csrfHash'  => csrf_hash(),
+            ]);
+        }
+
+        $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId);
+
+        if ($duplicate) {
+            $formattedBirth = date('d/m/Y', strtotime($birthDate));
+            return $this->response->setJSON([
+                'status'    => 'duplicate',
+                'duplicate' => true,
+                'message'   => "Data pemuda dengan nama <strong>\"" . esc($name) . "\"</strong>, tanggal lahir <strong>({$formattedBirth})</strong>, dan cabang yang dipilih sudah terdaftar di sistem. Anda tidak dapat melanjutkan pengisian data untuk mencegah duplikasi.",
+                'data'      => [
+                    'registration_number' => $duplicate['registration_number'],
+                    'name'                => $duplicate['name'],
+                ],
+                'csrfHash'  => csrf_hash(),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status'    => 'success',
+            'duplicate' => false,
+            'message'   => 'Data belum terdaftar, silakan melanjutkan.',
+            'csrfHash'  => csrf_hash(),
+        ]);
     }
 }

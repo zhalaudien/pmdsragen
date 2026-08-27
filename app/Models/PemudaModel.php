@@ -81,6 +81,40 @@ class PemudaModel extends Model
     }
 
     /**
+     * Cari duplikat data pemuda berdasarkan nama, tanggal lahir, dan cabang.
+     *
+     * @param string   $name        Nama pemuda
+     * @param string   $birthDate   Tanggal lahir (string tanggal Y-m-d atau format tanggal valid)
+     * @param int      $cabangId    ID cabang
+     * @param int|null $excludeId   ID pemuda yang dikecualikan (misal saat edit)
+     *
+     * @return array|null Mengembalikan data pemuda yang duplikat atau null jika belum ada
+     */
+    public function findDuplicate(string $name, string $birthDate, int $cabangId, ?int $excludeId = null): ?array
+    {
+        $cleanName = trim($name);
+        $cleanBirthDate = trim($birthDate);
+
+        if ($cleanName === '' || $cleanBirthDate === '' || $cabangId <= 0) {
+            return null;
+        }
+
+        $timestamp = strtotime($cleanBirthDate);
+        $formattedDate = ($timestamp !== false && $timestamp > 0) ? date('Y-m-d', $timestamp) : $cleanBirthDate;
+
+        $builder = $this->builder();
+        $builder->where('cabang_id', $cabangId)
+                ->where('birth_date', $formattedDate)
+                ->where('LOWER(TRIM(name))', strtolower($cleanName));
+
+        if ($excludeId !== null && $excludeId > 0) {
+            $builder->where('id !=', $excludeId);
+        }
+
+        return $builder->get()->getRowArray();
+    }
+
+    /**
      * Apply Scope based on User Role (Superadmin, Admin Wilayah, Admin Cabang)
      */
     public function applyScope($builder, array $scope = [])

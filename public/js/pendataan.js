@@ -221,13 +221,120 @@ function updateProgress(step) {
     });
 }
 
-function goToStep(step) {
+/**
+ * Asynchronously checks if Pemuda with given name, birth_date, and cabang_id already exists.
+ * Returns true if available (no duplicate), false if duplicate exists.
+ */
+async function checkDuplicatePemuda() {
+    const nameEl = document.getElementById('name');
+    const birthDateEl = document.getElementById('birth_date');
+    const cabangEl = document.getElementById('cabang_id');
+    const warningBox = document.getElementById('duplicate-warning-box');
+    const warningMsg = document.getElementById('duplicate-warning-message');
+    const btnNext1 = document.getElementById('btnNextStep1') || document.querySelector('#step-1 button.btn-primary-pmd');
+
+    const name = nameEl ? nameEl.value.trim() : '';
+    const birthDate = birthDateEl ? birthDateEl.value.trim() : '';
+    let cabangId = cabangEl ? cabangEl.value.trim() : '';
+    if (typeof cabangTomSelect !== 'undefined' && cabangTomSelect) {
+        cabangId = cabangTomSelect.getValue();
+    }
+
+    if (!name || !birthDate || !cabangId) {
+        return true;
+    }
+
+    let originalBtnHtml = '';
+    if (btnNext1) {
+        originalBtnHtml = btnNext1.innerHTML;
+        btnNext1.disabled = true;
+        btnNext1.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memeriksa data...';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('birth_date', birthDate);
+        formData.append('cabang_id', cabangId);
+
+        if (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.csrfToken && PENDATAAN_CONFIG.csrfHash) {
+            formData.append(PENDATAAN_CONFIG.csrfToken, PENDATAAN_CONFIG.csrfHash);
+        }
+
+        const url = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.checkDuplicateUrl)
+            ? PENDATAAN_CONFIG.checkDuplicateUrl
+            : '/pendataan/check-duplicate';
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+
+        const res = await response.json();
+
+        if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
+            PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+        }
+
+        if (res.duplicate) {
+            if (warningBox && warningMsg) {
+                warningMsg.innerHTML = res.message;
+                warningBox.style.display = 'block';
+                warningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            if (nameEl) nameEl.classList.add('is-invalid');
+            if (birthDateEl) birthDateEl.classList.add('is-invalid');
+            if (cabangEl) {
+                cabangEl.classList.add('is-invalid');
+                const tsWrap = cabangEl.nextElementSibling;
+                if (tsWrap && tsWrap.classList.contains('ts-wrapper')) {
+                    tsWrap.classList.add('is-invalid');
+                }
+            }
+
+            return false;
+        } else {
+            if (warningBox) {
+                warningBox.style.display = 'none';
+            }
+            if (nameEl) nameEl.classList.remove('is-invalid');
+            if (birthDateEl) birthDateEl.classList.remove('is-invalid');
+            return true;
+        }
+    } catch (err) {
+        console.warn('Gagal memverifikasi duplikat data:', err);
+        return true;
+    } finally {
+        if (btnNext1) {
+            btnNext1.disabled = false;
+            btnNext1.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+async function goToStep(step) {
     if (step < 1 || step > totalSteps) return;
 
     // If trying to move forward, check validation of current step
     if (step > currentStep) {
         if (!validateStep(currentStep)) {
             return;
+        }
+
+        // If moving forward from Step 1, perform duplicate check
+        if (currentStep === 1) {
+            const isAvailable = await checkDuplicatePemuda();
+            if (!isAvailable) {
+                return;
+            }
         }
     }
 
@@ -242,6 +349,9 @@ function goToStep(step) {
         targetSection.classList.add('active');
         currentStep = step;
         updateProgress(step);
+        if (step === 8) {
+            prepareReview();
+        }
         window.scrollTo({ top: targetSection.offsetTop - 80, behavior: 'smooth' });
     }
 }
@@ -283,10 +393,19 @@ function validateStep(step) {
     return isValid;
 }
 
-function validateAndNext(step) {
-    if (validateStep(step)) {
-        goToStep(step + 1);
+async function validateAndNext(step) {
+    if (!validateStep(step)) {
+        return;
     }
+
+    if (step === 1) {
+        const isAvailable = await checkDuplicatePemuda();
+        if (!isAvailable) {
+            return;
+        }
+    }
+
+    goToStep(step + 1);
 }
 
 // Dependent Dropdown for Kecamatan -> Desa (handles both TomSelect and standard HTML select)
@@ -333,6 +452,9 @@ function toggleSkillLevel(skillId) {
     const levelBox = document.getElementById('skill_level_box_' + skillId);
     if (checkbox && levelBox) {
         levelBox.style.display = checkbox.checked ? 'block' : 'none';
+        levelBox.querySelectorAll('select, input').forEach(el => {
+            el.disabled = !checkbox.checked;
+        });
     }
 }
 
@@ -365,6 +487,9 @@ function toggleOrgDetail(orgKey) {
     if (checkbox) {
         if (detailBox) {
             detailBox.style.display = checkbox.checked ? 'block' : 'none';
+            detailBox.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = !checkbox.checked;
+            });
         }
         if (cardBox) {
             if (checkbox.checked) {
@@ -522,6 +647,50 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = this.value.replace(/[^0-9+]/g, '');
         });
     }
+
+    // Reset duplicate warning on user input
+    ['name', 'birth_date', 'cabang_id'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function() {
+                const warningBox = document.getElementById('duplicate-warning-box');
+                if (warningBox && warningBox.style.display !== 'none') {
+                    warningBox.style.display = 'none';
+                }
+                el.classList.remove('is-invalid');
+                const tsWrap = el.nextElementSibling;
+                if (tsWrap && tsWrap.classList.contains('ts-wrapper')) {
+                    tsWrap.classList.remove('is-invalid');
+                }
+            });
+            el.addEventListener('change', function() {
+                const warningBox = document.getElementById('duplicate-warning-box');
+                if (warningBox && warningBox.style.display !== 'none') {
+                    warningBox.style.display = 'none';
+                }
+                el.classList.remove('is-invalid');
+                const tsWrap = el.nextElementSibling;
+                if (tsWrap && tsWrap.classList.contains('ts-wrapper')) {
+                    tsWrap.classList.remove('is-invalid');
+                }
+            });
+        }
+    });
+
+    // Initialize Organization and Skill checkboxes state (in case of browser restore or validation bounce back)
+    document.querySelectorAll('.org-toggle-check').forEach(chk => {
+        const orgKey = chk.getAttribute('data-key');
+        if (orgKey) {
+            toggleOrgDetail(orgKey);
+        }
+    });
+
+    document.querySelectorAll('.skill-toggle-check').forEach(chk => {
+        const skillId = chk.value;
+        if (skillId) {
+            toggleSkillLevel(skillId);
+        }
+    });
 
     // Form Submit Handler
     const form = document.getElementById('formPendataanPemuda');

@@ -513,7 +513,8 @@ class PemudaImportService
         if (!in_array($defaultVerif, ['verified', 'pending', 'rejected'], true)) {
             $defaultVerif = 'verified';
         }
-        $skipErrors = !empty($options['skip_errors']);
+        $skipErrors  = !empty($options['skip_errors']);
+        $seenInBatch = [];
 
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, true, false)[0] ?? [];
@@ -531,10 +532,24 @@ class PemudaImportService
                     $rowErrors[] = "Baris {$row}: {$err}";
                 }
             } else {
-                $parsedRows[] = [
-                    'row_num' => $row,
-                    'data'    => $parsed['data'],
-                ];
+                // Cek duplikasi terhadap database
+                $duplicate = $this->pemudaModel->findDuplicate($parsed['data']['name'], $parsed['data']['birth_date'], $parsed['data']['cabang_id']);
+                if ($duplicate) {
+                    $rowErrors[] = "Baris {$row}: Data pemuda dengan nama \"{$parsed['data']['name']}\", tanggal lahir ({$parsed['data']['birth_date']}), dan cabang tersebut sudah terdaftar di sistem (No. Registrasi: {$duplicate['registration_number']}).";
+                    continue;
+                }
+
+                // Cek duplikasi di dalam file batch yang sama
+                $batchKey = strtolower(trim($parsed['data']['name'])) . '|' . $parsed['data']['birth_date'] . '|' . $parsed['data']['cabang_id'];
+                if (isset($seenInBatch[$batchKey])) {
+                    $rowErrors[] = "Baris {$row}: Data duplikat ditemukan dengan nama dan tanggal lahir yang sama pada baris {$seenInBatch[$batchKey]} dalam file Excel ini.";
+                } else {
+                    $seenInBatch[$batchKey] = $row;
+                    $parsedRows[] = [
+                        'row_num' => $row,
+                        'data'    => $parsed['data'],
+                    ];
+                }
             }
         }
 

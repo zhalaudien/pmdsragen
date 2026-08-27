@@ -195,16 +195,62 @@ class Pemuda extends BaseController
         $wilayahWithCabang = $this->wilayahModel->getWithCabang($filterWilayahId, $filterCabangId);
         $districts         = $districtModel->where('regency_id', 3314)->orderBy('name', 'ASC')->findAll();
 
+        $availableOrganizations = [
+            [
+                'key'         => 'satgas',
+                'name'        => 'Satgas',
+                'title'       => 'Satgas',
+                'badge'       => 'Satuan Tugas',
+                'description' => 'Satuan Tugas Pengamanan, Penertiban, dan Pengawalan Kegiatan',
+                'icon'        => 'fas fa-shield-alt text-danger',
+            ],
+            [
+                'key'         => 'bankom',
+                'name'        => 'Bankom',
+                'title'       => 'Bankom',
+                'badge'       => 'Bantuan Komunikasi',
+                'description' => 'Unit Bantuan Komunikasi, Radio Pancar Ulang, dan Informasi Lapangan',
+                'icon'        => 'fas fa-broadcast-tower text-primary',
+            ],
+            [
+                'key'         => 'parkir',
+                'name'        => 'Parkir',
+                'title'       => 'Parkir',
+                'badge'       => 'Tim Parkir',
+                'description' => 'Tim Pengaturan Parkir, Kelancaran Arus, dan Kerapian Kendaraan',
+                'icon'        => 'fas fa-parking text-warning',
+            ],
+            [
+                'key'         => 'pemuda',
+                'name'        => 'Pemuda',
+                'title'       => 'Pemuda',
+                'badge'       => 'Kepengurusan Pemuda',
+                'description' => 'Keaktifan Struktural / Anggota dalam Kegiatan Kepemudaan Cabang/Wilayah',
+                'icon'        => 'fas fa-users text-success',
+            ],
+            [
+                'key'         => 'tim_ikhrom',
+                'name'        => 'Tim Ikhrom',
+                'title'       => 'Tim Ikhrom',
+                'badge'       => 'Perawatan Jenazah',
+                'description' => 'Tim Khusus Pelayanan, Perawatan, dan Pengurusan Jenazah',
+                'icon'        => 'fas fa-heart text-info',
+            ],
+        ];
+
         $data = [
-            'title'             => 'Tambah Data Pemuda',
-            'wilayahWithCabang' => $wilayahWithCabang,
-            'educationLevels'   => $educationLevelModel->findAll(),
-            'jobStatuses'       => $jobStatusModel->findAll(),
-            'skills'            => $skillModel->findAll(),
-            'interests'         => $interestModel->findAll(),
-            'districts'         => $districts,
-            'user'              => session()->get(),
-            'mode'              => 'create',
+            'title'                  => 'Tambah Data Pemuda',
+            'wilayahWithCabang'      => $wilayahWithCabang,
+            'educationLevels'        => $educationLevelModel->findAll(),
+            'jobStatuses'            => $jobStatusModel->findAll(),
+            'skills'                 => $skillModel->findAll(),
+            'interests'              => $interestModel->findAll(),
+            'districts'              => $districts,
+            'availableOrganizations' => $availableOrganizations,
+            'activeOrganizations'    => [],
+            'otherOrganizations'     => '',
+            'user'                   => session()->get(),
+            'mode'                   => 'create',
         ];
 
         return view('admin/pemuda/form', $data);
@@ -268,6 +314,18 @@ class Pemuda extends BaseController
             $statusVerifikasi = 'pending';
         } else {
             $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: 'verified';
+        }
+
+        $name      = (string) $this->request->getPost('name');
+        $birthDate = (string) $this->request->getPost('birth_date');
+
+        // Pengecekan data ganda (nama, tanggal lahir, dan cabang)
+        $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId);
+        if ($duplicate) {
+            $formattedBirth = date('d/m/Y', strtotime($birthDate));
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'Gagal menyimpan: Data pemuda dengan nama "' . esc($name) . '", tanggal lahir (' . $formattedBirth . '), dan cabang tersebut sudah terdaftar di sistem (No. Registrasi: ' . esc($duplicate['registration_number']) . '). Input data ganda ditolak.');
         }
 
         $db = Database::connect();
@@ -450,21 +508,101 @@ class Pemuda extends BaseController
             $activeInterestIds[] = $i['interest_id'];
         }
 
+        // Map existing organizations
+        $availableOrganizations = [
+            [
+                'key'         => 'satgas',
+                'name'        => 'Satgas',
+                'title'       => 'Satgas',
+                'badge'       => 'Satuan Tugas',
+                'description' => 'Satuan Tugas Pengamanan, Penertiban, dan Pengawalan Kegiatan',
+                'icon'        => 'fas fa-shield-alt text-danger',
+            ],
+            [
+                'key'         => 'bankom',
+                'name'        => 'Bankom',
+                'title'       => 'Bankom',
+                'badge'       => 'Bantuan Komunikasi',
+                'description' => 'Unit Bantuan Komunikasi, Radio Pancar Ulang, dan Informasi Lapangan',
+                'icon'        => 'fas fa-broadcast-tower text-primary',
+            ],
+            [
+                'key'         => 'parkir',
+                'name'        => 'Parkir',
+                'title'       => 'Parkir',
+                'badge'       => 'Tim Parkir',
+                'description' => 'Tim Pengaturan Parkir, Kelancaran Arus, dan Kerapian Kendaraan',
+                'icon'        => 'fas fa-parking text-warning',
+            ],
+            [
+                'key'         => 'pemuda',
+                'name'        => 'Pemuda',
+                'title'       => 'Pemuda',
+                'badge'       => 'Kepengurusan Pemuda',
+                'description' => 'Keaktifan Struktural / Anggota dalam Kegiatan Kepemudaan Cabang/Wilayah',
+                'icon'        => 'fas fa-users text-success',
+            ],
+            [
+                'key'         => 'tim_ikhrom',
+                'name'        => 'Tim Ikhrom',
+                'title'       => 'Tim Ikhrom',
+                'badge'       => 'Perawatan Jenazah',
+                'description' => 'Tim Khusus Pelayanan, Perawatan, dan Pengurusan Jenazah',
+                'icon'        => 'fas fa-heart text-info',
+            ],
+        ];
+
+        $activeOrgs = [];
+        $otherOrgsList = [];
+        $knownOrgKeys = [
+            'satgas'     => 'Satgas',
+            'bankom'     => 'Bankom',
+            'parkir'     => 'Parkir',
+            'pemuda'     => 'Pemuda',
+            'tim_ikhrom' => 'Tim Ikhrom',
+        ];
+
+        if (!empty($pemuda['organisasi'])) {
+            foreach ($pemuda['organisasi'] as $o) {
+                $matchedKey = null;
+                foreach ($knownOrgKeys as $k => $name) {
+                    if (strcasecmp($o['organization_name'], $name) === 0 || strcasecmp(str_replace([' ', '_', '-'], '', $o['organization_name']), str_replace([' ', '_', '-'], '', $name)) === 0) {
+                        $matchedKey = $k;
+                        break;
+                    }
+                }
+                if ($matchedKey) {
+                    $activeOrgs[$matchedKey] = [
+                        'selected'    => true,
+                        'name'        => $o['organization_name'],
+                        'position'    => $o['position'] ?? 'Anggota',
+                        'join_year'   => !empty($o['join_date']) ? date('Y', strtotime($o['join_date'])) : date('Y'),
+                        'description' => $o['description'] ?? '',
+                    ];
+                } else {
+                    $otherOrgsList[] = $o['organization_name'];
+                }
+            }
+        }
+
         $data = [
-            'title'              => 'Edit Data Pemuda - ' . $pemuda['name'],
-            'pemuda'             => $pemuda,
-            'wilayahWithCabang'  => $wilayahWithCabang,
-            'educationLevels'    => $educationLevelModel->findAll(),
-            'jobStatuses'        => $jobStatusModel->findAll(),
-            'skills'             => $skillModel->findAll(),
-            'interests'          => $interestModel->findAll(),
-            'districts'          => $districts,
-            'villages'           => $villages,
-            'activeSkillIds'     => $activeSkillIds,
-            'activeSkillLevels'  => $activeSkillLevels,
-            'activeInterestIds'  => $activeInterestIds,
-            'user'               => session()->get(),
-            'mode'               => 'edit',
+            'title'                  => 'Edit Data Pemuda - ' . $pemuda['name'],
+            'pemuda'                 => $pemuda,
+            'wilayahWithCabang'      => $wilayahWithCabang,
+            'educationLevels'        => $educationLevelModel->findAll(),
+            'jobStatuses'            => $jobStatusModel->findAll(),
+            'skills'                 => $skillModel->findAll(),
+            'interests'              => $interestModel->findAll(),
+            'districts'              => $districts,
+            'villages'               => $villages,
+            'activeSkillIds'         => $activeSkillIds,
+            'activeSkillLevels'      => $activeSkillLevels,
+            'activeInterestIds'      => $activeInterestIds,
+            'availableOrganizations' => $availableOrganizations,
+            'activeOrganizations'    => $activeOrgs,
+            'otherOrganizations'     => implode(', ', $otherOrgsList),
+            'user'                   => session()->get(),
+            'mode'                   => 'edit',
         ];
 
         return view('admin/pemuda/form', $data);
@@ -532,6 +670,18 @@ class Pemuda extends BaseController
             $statusVerifikasi = $existing['status_verifikasi'];
         } else {
             $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: $existing['status_verifikasi'];
+        }
+
+        $name      = (string) $this->request->getPost('name');
+        $birthDate = (string) $this->request->getPost('birth_date');
+
+        // Pengecekan data ganda (nama, tanggal lahir, dan cabang) mengecualikan pemuda yang sedang diedit
+        $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId, $id);
+        if ($duplicate) {
+            $formattedBirth = date('d/m/Y', strtotime($birthDate));
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'Gagal memperbarui: Data pemuda dengan nama "' . esc($name) . '", tanggal lahir (' . $formattedBirth . '), dan cabang tersebut sudah digunakan oleh pemuda lain (No. Registrasi: ' . esc($duplicate['registration_number']) . ').');
         }
 
         $db = Database::connect();

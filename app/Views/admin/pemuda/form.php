@@ -344,10 +344,84 @@
                 </div>
             </div>
 
-            <!-- 5. KEAHLIAN & MINAT -->
+            <!-- 5. KEIKUTSERTAAN ORGANISASI -->
             <div class="mb-4">
                 <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                     <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">5</span>
+                    <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Keikutsertaan Organisasi / Unit Tugas</h6>
+                </div>
+
+                <div class="row mb-3">
+                    <?php foreach ($availableOrganizations as $org): 
+                        $isOrgChecked = isset($activeOrganizations[$org['key']]['selected']);
+                        $orgPos       = $activeOrganizations[$org['key']]['position'] ?? 'Anggota';
+                        $orgYear      = $activeOrganizations[$org['key']]['join_year'] ?? date('Y');
+                        $orgDesc      = $activeOrganizations[$org['key']]['description'] ?? '';
+                    ?>
+                        <div class="col-12 col-lg-6 mb-3">
+                            <div class="p-3 border rounded bg-light h-100">
+                                <div class="custom-control custom-checkbox mb-2">
+                                    <input class="custom-control-input admin-org-check" 
+                                           type="checkbox" 
+                                           name="organizations[<?= $org['key'] ?>][selected]" 
+                                           value="<?= esc($org['name']) ?>" 
+                                           id="admin_org_<?= $org['key'] ?>"
+                                           data-key="<?= $org['key'] ?>"
+                                           <?= $isOrgChecked ? 'checked' : '' ?>>
+                                    <label class="custom-control-label font-weight-bold text-xs d-flex align-items-center justify-content-between" for="admin_org_<?= $org['key'] ?>">
+                                        <span>
+                                            <i class="<?= $org['icon'] ?> mr-1"></i> <?= esc($org['title']) ?>
+                                        </span>
+                                        <span class="badge badge-secondary font-weight-normal"><?= esc($org['badge']) ?></span>
+                                    </label>
+                                </div>
+                                <div class="text-muted text-xs mb-2"><?= esc($org['description']) ?></div>
+                                <div class="admin-org-detail border-top pt-2" id="admin_org_detail_<?= $org['key'] ?>" style="<?= $isOrgChecked ? '' : 'display: none;' ?>">
+                                    <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= esc($org['name']) ?>" <?= $isOrgChecked ? '' : 'disabled' ?>>
+                                    <div class="row">
+                                        <div class="col-7 form-group mb-1">
+                                            <label class="text-xs text-muted mb-1">Jabatan / Posisi</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   name="organizations[<?= $org['key'] ?>][position]" 
+                                                   value="<?= esc($orgPos) ?>" 
+                                                   placeholder="Anggota" <?= $isOrgChecked ? '' : 'disabled' ?>>
+                                        </div>
+                                        <div class="col-5 form-group mb-1">
+                                            <label class="text-xs text-muted mb-1">Tahun Gabung</label>
+                                            <input type="number" class="form-control form-control-sm" 
+                                                   name="organizations[<?= $org['key'] ?>][join_year]" 
+                                                   value="<?= esc($orgYear) ?>" 
+                                                   min="1990" max="<?= date('Y') ?>" <?= $isOrgChecked ? '' : 'disabled' ?>>
+                                        </div>
+                                        <div class="col-12 form-group mb-0">
+                                            <label class="text-xs text-muted mb-1">Keterangan Tambahan</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   name="organizations[<?= $org['key'] ?>][description]" 
+                                                   value="<?= esc($orgDesc) ?>" 
+                                                   placeholder="Opsional" <?= $isOrgChecked ? '' : 'disabled' ?>>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label class="text-xs text-muted font-weight-bold">
+                        <i class="fas fa-plus-circle mr-1"></i> Organisasi / Komunitas Lainnya:
+                    </label>
+                    <input type="text" class="form-control form-control-sm" 
+                           name="other_organization" 
+                           value="<?= old('other_organization', $otherOrganizations ?? '') ?>" 
+                           placeholder="Contoh: Karang Taruna, OSIS, Relawan BPBD (pisahkan dengan koma jika lebih dari satu)">
+                </div>
+            </div>
+
+            <!-- 6. KEAHLIAN & MINAT -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                    <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">6</span>
                     <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Keahlian (Skills) &amp; Minat (Interests)</h6>
                 </div>
 
@@ -408,10 +482,10 @@
                 </div>
             </div>
 
-            <!-- 6. STATUS DATA & VERIFIKASI -->
+            <!-- 7. STATUS DATA & VERIFIKASI -->
             <div class="mb-4">
                 <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
-                    <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">6</span>
+                    <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">7</span>
                     <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Status Verifikasi &amp; Status Data</h6>
                 </div>
 
@@ -512,6 +586,23 @@
             }).fail(function () {
                 $village.html('<option value="">-- Gagal memuat data desa --</option>');
             });
+        });
+
+        // Organization toggle in Admin Form
+        function toggleAdminOrg(key) {
+            const isChecked = $('#admin_org_' + key).is(':checked');
+            const $detail = $('#admin_org_detail_' + key);
+            if (isChecked) {
+                $detail.slideDown(150);
+                $detail.find('input, select').prop('disabled', false);
+            } else {
+                $detail.slideUp(150);
+                $detail.find('input, select').prop('disabled', true);
+            }
+        }
+
+        $('.admin-org-check').on('change', function () {
+            toggleAdminOrg($(this).data('key'));
         });
     });
 </script>
