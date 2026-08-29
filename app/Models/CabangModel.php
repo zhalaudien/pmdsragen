@@ -16,6 +16,13 @@ class CabangModel extends Model
         'code',
         'name',
         'description',
+        'alamat',
+        'pimpinan_nama',
+        'no_wa',
+        'has_gelombang',
+        'gelombang_hari',
+        'gelombang_jam',
+        'gelombang_ustadz',
     ];
 
     protected $useTimestamps = true;

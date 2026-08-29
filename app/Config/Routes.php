@@ -63,6 +63,7 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     // Master Cabang (Superadmin)
     $routes->group('cabang', ['filter' => 'role:superadmin'], function ($routes) {
         $routes->get('/', 'Admin\Cabang::index');
+        $routes->get('detail/(:num)', 'Admin\Cabang::detail/$1');
         $routes->post('simpan', 'Admin\Cabang::simpan');
         $routes->post('update/(:num)', 'Admin\Cabang::update/$1');
         $routes->post('delete/(:num)', 'Admin\Cabang::delete/$1');

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +13,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     <!-- Auth Stylesheet -->
     <link rel="stylesheet" href="<?= base_url('css/auth.css') ?>">
 </head>
+
 <body class="auth-body">
     <div class="container p-3">
         <div class="row justify-content-center">
@@ -28,7 +30,7 @@
                         <h5 class="fw-bold mb-1 text-white">Pemuda MTA Perwakilan Sragen</h5>
                         <p class="mb-0 text-white-50 small">Portal Administrator &amp; Pengurus</p>
                     </div>
-                    
+
                     <div class="p-4 p-md-5">
                         <h5 class="fw-bold text-dark mb-4 text-center">Masuk ke Dashboard</h5>
 
@@ -63,14 +65,13 @@
                                 <label for="login" class="form-label small fw-semibold text-secondary">Username atau Email</label>
                                 <div class="input-group">
                                     <span class="input-group-text auth-input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" 
-                                           class="form-control auth-form-control" 
-                                           id="login" 
-                                           name="login" 
-                                           value="<?= old('login', 'superadmin') ?>" 
-                                           placeholder="Masukkan username atau email" 
-                                           required 
-                                           autofocus>
+                                    <input type="text"
+                                        class="form-control auth-form-control"
+                                        id="login"
+                                        name="login"
+                                        placeholder="Masukkan username atau email"
+                                        required
+                                        autofocus>
                                 </div>
                             </div>
 
@@ -78,15 +79,15 @@
                                 <label for="password" class="form-label small fw-semibold text-secondary">Password</label>
                                 <div class="input-group">
                                     <span class="input-group-text auth-input-group-text"><i class="bi bi-lock"></i></span>
-                                    <input type="password" 
-                                           class="form-control auth-form-control" 
-                                           id="password" 
-                                           name="password" 
-                                           placeholder="Masukkan password" 
-                                           required>
-                                    <button class="btn btn-outline-secondary auth-toggle-password" 
-                                            type="button" 
-                                            id="togglePassword">
+                                    <input type="password"
+                                        class="form-control auth-form-control"
+                                        id="password"
+                                        name="password"
+                                        placeholder="Masukkan password"
+                                        required>
+                                    <button class="btn btn-outline-secondary auth-toggle-password"
+                                        type="button"
+                                        id="togglePassword">
                                         <i class="bi bi-eye" id="eyeIcon"></i>
                                     </button>
                                 </div>
@@ -96,12 +97,6 @@
                                 <i class="bi bi-box-arrow-in-right me-2"></i> Masuk Sekarang
                             </button>
                         </form>
-
-                        <div class="demo-credentials mt-4">
-                            <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle me-1 text-primary"></i> Info Akun Superadmin:</div>
-                            <div class="text-secondary">Username: <code class="text-primary fw-semibold">superadmin</code></div>
-                            <div class="text-secondary">Password: <code class="text-primary fw-semibold">admin123</code></div>
-                        </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top small">
                             <a href="<?= base_url('/') ?>" class="text-decoration-none text-muted">
@@ -137,4 +132,5 @@
         });
     </script>
 </body>
+
 </html>

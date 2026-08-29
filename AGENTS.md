@@ -253,6 +253,22 @@ cabang
 pemuda
 ```
 
+### 5.1.1 Detail Data Cabang
+
+Tabel `cabang` menyimpan data struktural dan operasional setiap cabang pemuda:
+- `id`: INT UNSIGNED AUTO_INCREMENT
+- `wilayah_id`: INT UNSIGNED (FK ke `wilayah.id`)
+- `code`: VARCHAR(50) (Kode cabang, misal: CBG-001)
+- `name`: VARCHAR(100) (Nama cabang)
+- `description`: TEXT (Deskripsi/catatan cabang)
+- `alamat`: TEXT (Alamat lengkap/sekretariat cabang)
+- `pimpinan_nama`: VARCHAR(100) (Nama pimpinan cabang)
+- `no_wa`: VARCHAR(20) (Nomor WhatsApp/kontak pimpinan)
+- `has_gelombang`: ENUM('sudah', 'belum') (Status ketersediaan gelombang pemuda)
+- `gelombang_hari`: VARCHAR(100) (Hari pelaksanaan pengajian/gelombang pemuda)
+- `gelombang_jam`: VARCHAR(50) (Waktu/jam masuk pelaksanaan kegiatan)
+- `gelombang_ustadz`: VARCHAR(150) (Nama ustadz yang mengampu)
+
 ## 5.2 Relasi user
 
 ```text
@@ -1260,3 +1276,30 @@ Saat mengerjakan project ini:
 - Response
 - Answer
 - Public form URL
+
+---
+
+# 32. Catatan Perubahan & Pembaruan Fitur (Changelog)
+
+Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
+
+### 2026-08-29 — Penambahan Detail Informasi Cabang & Gelombang Pemuda
+- **Penambahan Kolom Database pada Tabel `cabang`:**
+  - `alamat` (TEXT): Alamat lengkap atau sekretariat cabang.
+  - `pimpinan_nama` (VARCHAR 100): Nama pimpinan cabang.
+  - `no_wa` (VARCHAR 20): Nomor WhatsApp atau kontak pimpinan cabang.
+  - `has_gelombang` (ENUM 'sudah', 'belum'): Status ketersediaan gelombang pemuda di cabang terkait.
+  - `gelombang_hari` (VARCHAR 100): Hari pengajian / kegiatan gelombang pemuda (jika sudah ada).
+  - `gelombang_jam` (VARCHAR 50): Jam masuk / waktu pelaksanaan kegiatan (jika sudah ada).
+  - `gelombang_ustadz` (VARCHAR 150): Nama ustadz yang mengampu kegiatan pemuda (jika sudah ada).
+- **Migration & Model:**
+  - Dibuat migration `2026-08-29-185000_AddDetailsToCabang.php` beserta index `idx_cabang_has_gelombang`.
+  - Diperbarui `CabangModel.php` whitelist `$allowedFields`.
+- **Controller & UI Cabang:**
+  - Ditambahkan filter status gelombang pemuda (`sudah` / `belum`) dan pencarian pimpinan/ustadz/alamat di `Admin\Cabang::index`.
+  - Ditambahkan endpoint `Admin\Cabang::detail($id)` untuk AJAX detail modal.
+  - Diperbarui UI `app/Views/admin/cabang/index.php`:
+    - Ringkasan statistik (Total Cabang, Sudah Ada Gelombang, Belum Ada Gelombang).
+    - Tampilan tabel dengan informasi pimpinan, link WhatsApp langsung, status gelombang beserta jadwal/ustadz, dan alamat.
+    - Modal Tambah & Edit Cabang dengan toggle interaktif untuk detail jadwal dan ustadz pengampu gelombang.
+    - Modal Detail Cabang interaktif untuk melihat informasi lengkap cabang dalam satu klik.
