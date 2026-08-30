@@ -2,18 +2,6 @@
 
 <?= $this->section('content') ?>
 
-<?php
-function formatWaNumber($phone) {
-    if (empty($phone)) return null;
-    $clean = preg_replace('/[^0-9]/', '', $phone);
-    if (str_starts_with($clean, '0')) {
-        $clean = '62' . substr($clean, 1);
-    } elseif (str_starts_with($clean, '8')) {
-        $clean = '62' . $clean;
-    }
-    return 'https://wa.me/' . $clean;
-}
-?>
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3">
     <div>
@@ -158,11 +146,13 @@ function formatWaNumber($phone) {
 
                                     <?php if (!empty($c['no_wa'])): ?>
                                         <?php $waLink = formatWaNumber($c['no_wa']); ?>
+                                        <?php if (!empty($waLink)): ?>
                                         <div>
-                                            <a href="<?= $waLink ?>" target="_blank" class="badge badge-success text-white font-weight-normal px-2 py-1 text-decoration-none">
+                                            <a href="<?= esc($waLink) ?>" target="_blank" rel="noopener noreferrer" class="badge badge-success text-white font-weight-normal px-2 py-1 text-decoration-none">
                                                 <i class="fab fa-whatsapp mr-1"></i><?= esc($c['no_wa']) ?>
                                             </a>
                                         </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>

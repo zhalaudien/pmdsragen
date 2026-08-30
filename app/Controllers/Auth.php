@@ -24,6 +24,18 @@ class Auth extends BaseController
         }
 
         if ($this->request->is('post')) {
+            $throttler   = \Config\Services::throttler();
+            $ipAddress   = $this->request->getIPAddress();
+            $throttleKey = md5($ipAddress . '_admin_login');
+
+            // Allow 5 login attempts per minute per IP
+            if ($throttler->check($throttleKey, 5, MINUTE) === false) {
+                $seconds = $throttler->getTokentime();
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', "Terlalu banyak percobaan login. Demi keamanan, silakan tunggu {$seconds} detik sebelum mencoba lagi.");
+            }
+
             $rules = [
                 'login'    => 'required|min_length[3]',
                 'password' => 'required|min_length[5]',

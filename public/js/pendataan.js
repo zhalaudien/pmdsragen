@@ -277,10 +277,14 @@ async function checkDuplicatePemuda() {
             throw new Error('HTTP error ' + response.status);
         }
 
-        const res = await response.json();
-
-        if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
-            PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+        if (res.csrfHash) {
+            if (typeof PENDATAAN_CONFIG !== 'undefined') {
+                PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+            }
+            const tokenName = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.csrfToken) ? PENDATAAN_CONFIG.csrfToken : 'csrf_test_name';
+            document.querySelectorAll('input[name="' + tokenName + '"]').forEach(el => {
+                el.value = res.csrfHash;
+            });
         }
 
         if (res.duplicate) {

@@ -85,6 +85,12 @@ class Wilayah extends BaseController
             return redirect()->back()->with('error', "Tidak dapat menghapus wilayah ini karena masih memiliki {$cabangCount} cabang aktif.");
         }
 
+        $db = \Config\Database::connect();
+        $userCount = $db->table('users')->where('wilayah_id', $id)->countAllResults();
+        if ($userCount > 0) {
+            return redirect()->back()->with('error', "Tidak dapat menghapus wilayah ini karena masih terdapat {$userCount} akun admin yang terhubung.");
+        }
+
         $this->wilayahModel->delete($id);
         return redirect()->to(base_url('admin/wilayah'))->with('success', 'Wilayah berhasil dihapus.');
     }

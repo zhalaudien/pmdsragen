@@ -256,6 +256,7 @@ pemuda
 ### 5.1.1 Detail Data Cabang
 
 Tabel `cabang` menyimpan data struktural dan operasional setiap cabang pemuda:
+
 - `id`: INT UNSIGNED AUTO_INCREMENT
 - `wilayah_id`: INT UNSIGNED (FK ke `wilayah.id`)
 - `code`: VARCHAR(50) (Kode cabang, misal: CBG-001)
@@ -1284,6 +1285,7 @@ Saat mengerjakan project ini:
 Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 
 ### 2026-08-29 — Penambahan Detail Informasi Cabang & Gelombang Pemuda
+
 - **Penambahan Kolom Database pada Tabel `cabang`:**
   - `alamat` (TEXT): Alamat lengkap atau sekretariat cabang.
   - `pimpinan_nama` (VARCHAR 100): Nama pimpinan cabang.
@@ -1303,3 +1305,29 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
     - Tampilan tabel dengan informasi pimpinan, link WhatsApp langsung, status gelombang beserta jadwal/ustadz, dan alamat.
     - Modal Tambah & Edit Cabang dengan toggle interaktif untuk detail jadwal dan ustadz pengampu gelombang.
     - Modal Detail Cabang interaktif untuk melihat informasi lengkap cabang dalam satu klik.
+
+### 2026-08-30 — Audit & Penguatan\*
+
+- Dilengkapi otomatisasi sinkronisasi token CSRF pada form public (`public/js/pendataan.js`) saat verifikasi duplikasi berlangsung.
+- Ditambahkan meta tag CSRF dan konfigurasi `$.ajaxSetup` global pada template admin (`app/Views/admin/layou Keamanan Sistem (Security Hardening)
+- **Pengaktifan Global Security Filters:**
+  - `csrf`: Proteksi Cross-Site Request Forgery diaktifkan secara global di `app/Config/Filters.php`.
+  - `secureheaders`: Header keamanan HTTP (`X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`) diaktifkan di global after filter.
+  - `invalidchars`: Filter pembersih karakter kontrol berbahaya diaktifkan di global before filter.
+- \**CSRF Token Synchronization & AJAX:*ts/main.php`).
+- **Pencegahan Brute-Force & DoS (Rate Limiting / Throttling):**
+  - Ditambahkan throttler pada `Auth::login` (maksimal 5 percobaan per menit per IP).
+  - Ditambahkan throttler pada `Pendataan::simpan` (maksimal 10 pendaftaran per menit per IP) dan `Pendataan::checkDuplicate` (maksimal 30 pengecekan per menit per IP).
+- **Pengamanan Manajemen Pengguna (Users & Roles):**
+  - Validasi wajib scope wilayah untuk `admin_wilayah` dan scope cabang untuk `admin_cabang`.
+  - Proteksi anti self-lockout: Admin yang sedang login tidak dapat menurunkan role atau menonaktifkan akunnya sendiri.
+  - Proteksi penghapusan Superadmin terakhir: Mencegah sistem kehilangan seluruh akun Superadmin aktif.
+- **Integritas Relasional Penghapusan Data:**
+  - Ditambahkan validasi cek akun admin terkait sebelum menghapus data wilayah atau cabang.
+- **Pencegahan CSV / Spreadsheet Formula Injection (CWE-1236):**
+  - Ditambahkan helper `sanitizeCsvField()` pada `app/Common.php` dan diimplementasikan pada `Admin\Pemuda::export()` untuk menetralkan karakter formula (`=`, `+`, `-`, `@`, `\t`, `\r`).
+- **Pengamanan Upload File Spreadsheet:**
+  - Ditambahkan validasi MIME type (`mime_in`) pada `Admin\Pemuda::prosesImport()`.
+- **Penguatan Session & Cookie:**
+  - Diaktifkan `$regenerateDestroy = true` di `app/Config/Session.php` untuk mencegah session fixation.
+  - Dikonfigurasi `$appTimezone = 'Asia/Jakarta'` di `app/Config/App.php`.

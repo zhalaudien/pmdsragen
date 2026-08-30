@@ -182,6 +182,11 @@ class Cabang extends BaseController
             return redirect()->back()->with('error', "Tidak dapat menghapus cabang ini karena masih terdapat {$pemudaCount} data pemuda terdaftar.");
         }
 
+        $userCount = $db->table('users')->where('cabang_id', $id)->countAllResults();
+        if ($userCount > 0) {
+            return redirect()->back()->with('error', "Tidak dapat menghapus cabang ini karena masih terdapat {$userCount} akun admin cabang yang terhubung.");
+        }
+
         $this->cabangModel->delete($id);
         return redirect()->to(base_url('admin/cabang'))->with('success', 'Cabang berhasil dihapus.');
     }

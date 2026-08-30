@@ -81,6 +81,16 @@ class Pendataan extends BaseController
      */
     public function simpan()
     {
+        $throttler = \Config\Services::throttler();
+        $ipAddress = $this->request->getIPAddress();
+        // Allow max 10 submissions per minute per IP
+        if ($throttler->check(md5($ipAddress . '_public_register'), 10, MINUTE) === false) {
+            $seconds = $throttler->getTokentime();
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', "Terlalu banyak permintaan pendaftaran. Demi keamanan, silakan tunggu {$seconds} detik sebelum mencoba kembali.");
+        }
+
         // 1. Server-side Validation
         $rules = [
             'cabang_id'          => 'required|is_natural_no_zero',
@@ -291,6 +301,18 @@ class Pendataan extends BaseController
      */
     public function checkDuplicate()
     {
+        $throttler = \Config\Services::throttler();
+        $ipAddress = $this->request->getIPAddress();
+        // Allow max 30 duplicate checks per minute per IP
+        if ($throttler->check(md5($ipAddress . '_check_duplicate'), 30, MINUTE) === false) {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'duplicate' => false,
+                'message'   => 'Terlalu banyak permintaan verifikasi. Silakan tunggu sebentar.',
+                'csrfHash'  => csrf_hash(),
+            ]);
+        }
+
         $name      = trim((string) $this->request->getPost('name'));
         $birthDate = trim((string) $this->request->getPost('birth_date'));
         $cabangId  = (int) $this->request->getPost('cabang_id');

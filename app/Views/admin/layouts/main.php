@@ -2,7 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token-name" content="<?= csrf_token() ?>">
+    <meta name="csrf-token-hash" content="<?= csrf_hash() ?>">
     <title><?= esc($title ?? 'Dashboard') ?> | Pemuda MTA Perwakilan Sragen</title>
 
     <!-- Google Font: Source Sans Pro & Plus Jakarta Sans -->
@@ -353,6 +354,18 @@
 <!-- Compatibility Shim for Bootstrap 5 data-bs-* attributes & Modals -->
 <script>
     $(document).ready(function() {
+        // Global CSRF configuration for AJAX requests
+        const csrfHeader = '<?= config('Security')->headerName ?>';
+        const csrfHash = $('meta[name="csrf-token-hash"]').attr('content');
+        
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader(csrfHeader, $('meta[name="csrf-token-hash"]').attr('content') || csrfHash);
+                }
+            }
+        });
+
         // Auto-bridge data-bs-toggle="modal" & data-bs-target
         $(document).on('click', '[data-bs-toggle="modal"]', function(e) {
             e.preventDefault();
