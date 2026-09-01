@@ -25,8 +25,46 @@ class PemudaModel extends Model
         'email',
         'status_verifikasi',
         'status_data',
+        'mta_warga_uuid',
+        'mta_status_warga',
+        'mta_ayah_uuid',
+        'mta_ibu_uuid',
+        'mta_foto_url',
+        'mta_synced_at',
         'created_by',
     ];
+
+    // Callbacks
+    protected $beforeInsert = ['formatLowercaseFields'];
+    protected $beforeUpdate = ['formatLowercaseFields'];
+
+    protected function formatLowercaseFields(array $data): array
+    {
+        if (isset($data['data']) && is_array($data['data'])) {
+            $fieldsToLower = [
+                'name',
+                'marital_status',
+                'blood_type',
+                'birth_place',
+                'email',
+                'status_verifikasi',
+                'status_data',
+                'mta_warga_uuid',
+                'mta_status_warga',
+                'mta_ayah_uuid',
+                'mta_ibu_uuid',
+            ];
+
+            foreach ($fieldsToLower as $f) {
+                if (array_key_exists($f, $data['data']) && is_string($data['data'][$f])) {
+                    $trimmed = trim($data['data'][$f]);
+                    $data['data'][$f] = ($trimmed === '') ? null : mb_strtolower($trimmed, 'UTF-8');
+                }
+            }
+        }
+
+        return $data;
+    }
 
     // Dates
     protected $useTimestamps = true;
@@ -81,18 +119,20 @@ class PemudaModel extends Model
     }
 
     /**
-     * Cari duplikat data pemuda berdasarkan nama, tanggal lahir, dan cabang.
+     * Cari pemuda untuk verifikasi/pengecekan data berdasarkan nama, jenis kelamin, tanggal lahir, dan cabang.
      *
-     * @param string   $name        Nama pemuda
-     * @param string   $birthDate   Tanggal lahir (string tanggal Y-m-d atau format tanggal valid)
-     * @param int      $cabangId    ID cabang
-     * @param int|null $excludeId   ID pemuda yang dikecualikan (misal saat edit)
+     * @param string      $name        Nama pemuda
+     * @param string|null $gender      Jenis kelamin ('L' atau 'P', opsional)
+     * @param string      $birthDate   Tanggal lahir (string tanggal Y-m-d atau format tanggal valid)
+     * @param int         $cabangId    ID cabang
+     * @param int|null    $excludeId   ID pemuda yang dikecualikan (misal saat edit)
      *
-     * @return array|null Mengembalikan data pemuda yang duplikat atau null jika belum ada
+     * @return array|null Mengembalikan data pemuda atau null jika belum ada
      */
-    public function findDuplicate(string $name, string $birthDate, int $cabangId, ?int $excludeId = null): ?array
+    public function findExistingPemuda(string $name, ?string $gender, string $birthDate, int $cabangId, ?int $excludeId = null): ?array
     {
-        $cleanName = trim($name);
+        $cleanName      = trim($name);
+        $cleanGender    = $gender ? trim(strtoupper($gender)) : null;
         $cleanBirthDate = trim($birthDate);
 
         if ($cleanName === '' || $cleanBirthDate === '' || $cabangId <= 0) {
@@ -107,11 +147,43 @@ class PemudaModel extends Model
                 ->where('birth_date', $formattedDate)
                 ->where('LOWER(TRIM(name))', strtolower($cleanName));
 
+        if (!empty($cleanGender) && in_array($cleanGender, ['L', 'P'], true)) {
+            $builder->where('gender', $cleanGender);
+        }
+
         if ($excludeId !== null && $excludeId > 0) {
             $builder->where('id !=', $excludeId);
         }
 
         return $builder->get()->getRowArray();
+    }
+
+    /**
+     * Cari duplikat data pemuda berdasarkan nama, tanggal lahir, dan cabang.
+     *
+     * @param string      $name        Nama pemuda
+     * @param string      $birthDate   Tanggal lahir (string tanggal Y-m-d atau format tanggal valid)
+     * @param int         $cabangId    ID cabang
+     * @param int|null    $excludeId   ID pemuda yang dikecualikan (misal saat edit)
+     * @param string|null $gender      Jenis kelamin ('L' / 'P', opsional)
+     *
+     * @return array|null Mengembalikan data pemuda yang duplikat atau null jika belum ada
+     */
+    public function findDuplicate(string $name, string $birthDate, int $cabangId, ?int $excludeId = null, ?string $gender = null): ?array
+    {
+        return $this->findExistingPemuda($name, $gender, $birthDate, $cabangId, $excludeId);
+    }
+
+    /**
+     * Cari pemuda berdasarkan MTA Warga UUID
+     */
+    public function findByMtaWargaUuid(string $uuid): ?array
+    {
+        $cleanUuid = trim($uuid);
+        if ($cleanUuid === '') {
+            return null;
+        }
+        return $this->where('mta_warga_uuid', $cleanUuid)->first();
     }
 
     /**

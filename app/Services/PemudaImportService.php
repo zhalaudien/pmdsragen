@@ -62,45 +62,47 @@ class PemudaImportService
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Format Import Pemuda');
 
-        // Header Columns
+        // Header Columns (5 Kolom Utama di awal, diikuti kolom pelengkap)
         $headers = [
-            'A1' => 'Nama Lengkap *',
-            'B1' => 'Jenis Kelamin * (L/P)',
-            'C1' => 'Cabang * (Nama/Kode)',
-            'D1' => 'Tempat Lahir *',
-            'E1' => 'Tanggal Lahir * (YYYY-MM-DD)',
-            'F1' => 'No. Telepon / WA *',
-            'G1' => 'Email',
-            'H1' => 'Status Nikah (belum_menikah/sudah_menikah/janda/duda)',
-            'I1' => 'Golongan Darah (A/B/AB/O)',
-            'J1' => 'Kecamatan *',
-            'K1' => 'Desa / Kelurahan *',
-            'L1' => 'Dusun / Dukuh',
-            'M1' => 'RT',
-            'N1' => 'RW',
-            'O1' => 'Alamat Detail *',
-            'P1' => 'Jenjang Pendidikan * (SMA/S1/dsb)',
-            'Q1' => 'Nama Sekolah / Kampus *',
-            'R1' => 'Jurusan',
-            'S1' => 'Status Pendidikan * (lulus/sedang_sekolah/putus_sekolah)',
-            'T1' => 'Tahun Lulus',
-            'U1' => 'Status Pekerjaan *',
-            'V1' => 'Profesi / Jabatan',
-            'W1' => 'Nama Perusahaan / Tempat Usaha',
-            'X1' => 'Bidang Usaha',
-            'Y1' => 'Organisasi',
-            'Z1' => 'Keahlian (Pisahkan Koma)',
-            'AA1' => 'Minat (Pisahkan Koma)',
-            'AB1' => 'Status Verifikasi (verified/pending)',
+            // 5 KOLOM UTAMA WAJIB
+            'A1' => 'Nama Lengkap * (WAJIB)',
+            'B1' => 'Cabang * (WAJIB: Nama / Kode)',
+            'C1' => 'Jenis Kelamin * (WAJIB: L/P)',
+            'D1' => 'Status Pernikahan * (WAJIB: belum_menikah/sudah_menikah/janda/duda)',
+            'E1' => 'Tanggal Lahir * (WAJIB: YYYY-MM-DD)',
+
+            // KOLOM PELENGKAP (OPSIONAL / BISA MENYUSUL)
+            'F1' => 'Tempat Lahir (Opsional)',
+            'G1' => 'No. Telepon / WA (Opsional)',
+            'H1' => 'Email (Opsional)',
+            'I1' => 'Golongan Darah (Opsional: A/B/AB/O/tidak_tahu)',
+            'J1' => 'Kecamatan (Opsional)',
+            'K1' => 'Desa / Kelurahan (Opsional)',
+            'L1' => 'Dusun / Dukuh (Opsional)',
+            'M1' => 'RT (Opsional)',
+            'N1' => 'RW (Opsional)',
+            'O1' => 'Alamat Detail (Opsional)',
+            'P1' => 'Jenjang Pendidikan (Opsional: SMA/S1/dsb)',
+            'Q1' => 'Nama Sekolah / Kampus (Opsional)',
+            'R1' => 'Jurusan (Opsional)',
+            'S1' => 'Status Pendidikan (Opsional: lulus/sedang_sekolah/putus_sekolah)',
+            'T1' => 'Tahun Lulus (Opsional)',
+            'U1' => 'Status Pekerjaan (Opsional: Karyawan/Wirausaha/dsb)',
+            'V1' => 'Profesi / Jabatan (Opsional)',
+            'W1' => 'Nama Perusahaan / Tempat Usaha (Opsional)',
+            'X1' => 'Bidang Usaha (Opsional)',
+            'Y1' => 'Organisasi (Opsional)',
+            'Z1' => 'Keahlian (Opsional: Pisahkan Koma)',
+            'AA1' => 'Minat (Opsional: Pisahkan Koma)',
+            'AB1' => 'Status Verifikasi (Opsional: verified/pending)',
         ];
 
         foreach ($headers as $cell => $text) {
             $sheet->setCellValue($cell, $text);
         }
 
-        // Header Styling
-        $headerRange = 'A1:AB1';
-        $sheet->getStyle($headerRange)->applyFromArray([
+        // Header Styling 1: 5 Kolom Utama Wajib (A1:E1) - Hijau Emerald Sukses
+        $sheet->getStyle('A1:E1')->applyFromArray([
             'font' => [
                 'bold'  => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -108,7 +110,7 @@ class PemudaImportService
             ],
             'fill' => [
                 'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '0D6EFD'], // Bootstrap Primary
+                'startColor' => ['rgb' => '198754'], // Hijau Emerald (Data Utama Wajib)
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -118,23 +120,48 @@ class PemudaImportService
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color'       => ['rgb' => 'B0C4DE'],
+                    'color'       => ['rgb' => '146C43'],
                 ],
             ],
         ]);
-        $sheet->getRowDimension(1)->setRowHeight(36);
+
+        // Header Styling 2: Kolom Pelengkap (F1:AB1) - Biru/Abu Modern
+        $sheet->getStyle('F1:AB1')->applyFromArray([
+            'font' => [
+                'bold'  => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size'  => 10,
+            ],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '495057'], // Abu-abu gelap (Pelengkap / Opsional)
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
+                'wrapText'   => true,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color'       => ['rgb' => '6C757D'],
+                ],
+            ],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(40);
 
         // Contoh Data Baris 2 & 3
         $sampleData = [
+            // Baris 2: Contoh pengisian data LENGKAP
             [
                 'Muhammad Yusuf',
-                'L',
                 'Sragen 1',
-                'Sragen',
+                'L',
+                'belum_menikah',
                 '2001-05-14',
+                'Sragen',
                 '081234567890',
                 'yusuf@example.com',
-                'belum_menikah',
                 'O',
                 'Sragen',
                 'Sragen Tengah',
@@ -156,35 +183,36 @@ class PemudaImportService
                 'Teknologi & Robotika, Kewirausahaan & UMKM',
                 'verified',
             ],
+            // Baris 3: Contoh pengisian HANYA 5 DATA UTAMA WAJIB (Kolom pelengkap dikosongkan/menyusul)
             [
-                'Aisyah Nur Rahma',
-                'P',
+                'Fatimah Azzahra',
                 'Gemolong 1',
-                'Sragen',
-                '2003-11-20',
-                '085712345678',
-                'aisyah@example.com',
+                'P',
                 'belum_menikah',
-                'A',
-                'Gemolong',
-                'Gemolong',
-                'Kauman',
-                '01',
-                '02',
-                'Jl. Gemolong-Sragen KM 2',
-                'SMA / SMK / MA',
-                'SMA Negeri 1 Gemolong',
-                'MIPA',
-                'lulus',
-                '2021',
-                'Pelajar / Mahasiswa',
-                'Mahasiswi',
-                'Universitas Muhammadiyah Surakarta',
-                'Pendidikan',
-                'IPPNU',
-                'Public Speaking & Komunikasi, Administrasi & Pembukuan',
-                'Kajian & Keagamaan, Literasi & Buku',
-                'verified',
+                '2003-11-20',
+                '', // Tempat Lahir (Bisa menyusul)
+                '', // No. Telepon / WA (Bisa menyusul)
+                '', // Email
+                '', // Golongan Darah
+                '', // Kecamatan
+                '', // Desa
+                '', // Dusun
+                '', // RT
+                '', // RW
+                '', // Alamat Detail
+                '', // Jenjang Pendidikan
+                '', // Nama Sekolah
+                '', // Jurusan
+                '', // Status Pendidikan
+                '', // Tahun Lulus
+                '', // Status Pekerjaan
+                '', // Profesi
+                '', // Nama Perusahaan
+                '', // Bidang Usaha
+                '', // Organisasi
+                '', // Keahlian
+                '', // Minat
+                '', // Status Verifikasi
             ],
         ];
 
@@ -225,20 +253,20 @@ class PemudaImportService
         $refSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
         // Section 1: Aturan Pengisian
-        $refSheet->setCellValue('A3', '1. ATURAN PENGISIAN FORMAT:');
+        $refSheet->setCellValue('A3', '1. ATURAN PENGISIAN & PRIORITAS DATA:');
         $refSheet->getStyle('A3')->getFont()->setBold(true);
 
         $rules = [
-            ['A4', 'Kolom dengan tanda bintang (*) wajib diisi. Kolom lainnya bersifat opsional.'],
-            ['A5', 'Jenis Kelamin: Isi dengan "L" (Laki-laki) atau "P" (Perempuan).'],
-            ['A6', 'Cabang: Dapat diisi dengan Nama Cabang (contoh: "Sragen 1", "Gemolong 1") atau Kode Cabang (contoh: "CBG-001").'],
-            ['A7', 'Tanggal Lahir: Format YYYY-MM-DD (contoh: 2002-08-17) atau DD/MM/YYYY (contoh: 17/08/2002).'],
-            ['A8', 'No. Telepon / WA: Nomor kontak aktif (contoh: 081234567890 atau 6281234567890).'],
-            ['A9', 'Status Nikah: "belum_menikah", "sudah_menikah", "janda", atau "duda".'],
-            ['A10', 'Golongan Darah: "A", "B", "AB", "O", atau "tidak_tahu".'],
-            ['A11', 'Status Pendidikan: "lulus", "sedang_sekolah", atau "putus_sekolah".'],
-            ['A12', 'Keahlian & Minat: Jika lebih dari satu, pisahkan dengan tanda koma (,).'],
-            ['A13', 'Status Verifikasi: "verified" (langsung diverifikasi) atau "pending" (menunggu verifikasi). Default: "verified".'],
+            ['A4', 'A. 5 DATA UTAMA WAJIB DIISI (KOLOM A s/d E WARNA HIJAU):'],
+            ['A5', '   1. Nama Lengkap: Nama lengkap pemuda (minimal 3 karakter).'],
+            ['A6', '   2. Cabang: Nama Cabang (misal: "Sragen 1", "Gemolong 1") atau Kode Cabang (misal: "CBG-001").'],
+            ['A7', '   3. Jenis Kelamin: Isi dengan "L" (Laki-laki) atau "P" (Perempuan).'],
+            ['A8', '   4. Status Pernikahan: "belum_menikah", "sudah_menikah", "janda", atau "duda". (Jika kosong, default "belum_menikah").'],
+            ['A9', '   5. Tanggal Lahir: Format YYYY-MM-DD (contoh: 2001-05-14) atau DD/MM/YYYY (contoh: 14/05/2001).'],
+            ['A11', 'B. DATA PELENGKAP (KOLOM F s/d AB WARNA ABU-ABU - BISA MENYUSUL / OPSIONAL):'],
+            ['A12', '   • No. Telepon/WA, Tempat Lahir, Email, Golongan Darah, Alamat Lengkap, Pendidikan, Pekerjaan, Keahlian, dan Minat bersifat opsional.'],
+            ['A13', '   • Jika data pelengkap belum tersedia saat import, kolom tersebut dapat dikosongkan dan dilengkapi kemudian hari melalui dashboard admin.'],
+            ['A14', '   • Status Verifikasi: "verified" (langsung diverifikasi) atau "pending" (menunggu verifikasi). Default: "verified".'],
         ];
 
         foreach ($rules as $r) {
@@ -246,12 +274,12 @@ class PemudaImportService
         }
 
         // Section 2: Daftar Wilayah & Cabang
-        $refSheet->setCellValue('A15', '2. DAFTAR WILAYAH & CABANG');
-        $refSheet->getStyle('A15')->getFont()->setBold(true);
+        $refSheet->setCellValue('A16', '2. DAFTAR WILAYAH & CABANG SRAGEN');
+        $refSheet->getStyle('A16')->getFont()->setBold(true);
 
-        $refSheet->setCellValue('A16', 'Wilayah');
-        $refSheet->setCellValue('B16', 'Kode Cabang');
-        $refSheet->setCellValue('C16', 'Nama Cabang');
+        $refSheet->setCellValue('A17', 'Wilayah');
+        $refSheet->setCellValue('B17', 'Kode Cabang');
+        $refSheet->setCellValue('C17', 'Nama Cabang');
 
         $refSheet->getStyle('A16:C16')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -660,8 +688,8 @@ class PemudaImportService
                         if (!empty($orgName)) {
                             $this->organisasiModel->insert([
                                 'pemuda_id'         => $pemudaId,
-                                'organization_name' => $orgName,
-                                'position'          => 'Anggota',
+                                'organization_name' => mb_strtolower($orgName, 'UTF-8'),
+                                'position'          => 'anggota',
                             ]);
                         }
                     }
@@ -1035,7 +1063,7 @@ class PemudaImportService
         if (empty($rawName) || mb_strlen($rawName) < 3) {
             $errors[] = 'Kolom "Nama Lengkap" wajib diisi (minimal 3 karakter).';
         }
-        $data['name'] = $rawName;
+        $data['name'] = mb_strtolower($rawName, 'UTF-8');
 
         // 2. Jenis Kelamin (Wajib, L/P)
         $rawGender = isset($map['gender']) ? strtoupper(trim((string) ($row[$map['gender']] ?? ''))) : '';
@@ -1078,7 +1106,7 @@ class PemudaImportService
 
         // 4. Tempat Lahir
         $rawBirthPlace = isset($map['birth_place']) ? trim((string) ($row[$map['birth_place']] ?? '')) : '';
-        $data['birth_place'] = $rawBirthPlace ?: 'Sragen';
+        $data['birth_place'] = mb_strtolower($rawBirthPlace ?: 'sragen', 'UTF-8');
 
         // 5. Tanggal Lahir (Wajib)
         $rawBirthDate = isset($map['birth_date']) ? $row[$map['birth_date']] ?? null : null;
@@ -1088,32 +1116,33 @@ class PemudaImportService
         }
         $data['birth_date'] = $birthDate;
 
-        // 6. No. Telepon / WA (Wajib)
+        // 6. No. Telepon / WA (Opsional / Bisa Menyusul)
         $rawPhone = isset($map['phone']) ? trim((string) ($row[$map['phone']] ?? '')) : '';
         $rawPhone = ltrim($rawPhone, "'`\" ");
         $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
-        if (empty($cleanPhone) || strlen($cleanPhone) < 8) {
-            $errors[] = 'Kolom "No. Telepon / WA" wajib diisi dengan nomor telepon yang valid.';
+        if (!empty($cleanPhone) && strlen($cleanPhone) >= 7) {
+            if (str_starts_with($cleanPhone, '62')) {
+                $cleanPhone = '0' . substr($cleanPhone, 2);
+            }
+            $data['phone'] = $cleanPhone;
+        } else {
+            $data['phone'] = null;
         }
-        if (str_starts_with($cleanPhone, '62')) {
-            $cleanPhone = '0' . substr($cleanPhone, 2);
-        }
-        $data['phone'] = $cleanPhone ?: $rawPhone;
 
-        // 7. Email (Opsional)
+        // 7. Email (Opsional / Bisa Menyusul)
         $rawEmail = isset($map['email']) ? trim((string) ($row[$map['email']] ?? '')) : '';
         if (!empty($rawEmail) && !filter_var($rawEmail, FILTER_VALIDATE_EMAIL)) {
             $rawEmail = null;
         }
-        $data['email'] = $rawEmail ?: null;
+        $data['email'] = $rawEmail ? mb_strtolower($rawEmail, 'UTF-8') : null;
 
-        // 8. Status Pernikahan
+        // 8. Status Pernikahan (Data Utama)
         $rawMarital = isset($map['marital_status']) ? strtolower(trim((string) ($row[$map['marital_status']] ?? ''))) : '';
-        if (str_contains($rawMarital, 'sudah') || str_contains($rawMarital, 'menikah') && !str_contains($rawMarital, 'belum')) {
+        if (str_contains($rawMarital, 'sudah') || str_contains($rawMarital, 'kawin') || (str_contains($rawMarital, 'menikah') && !str_contains($rawMarital, 'belum')) || $rawMarital === 'sm' || $rawMarital === 's' || $rawMarital === 'k' || $rawMarital === 'nikah') {
             $marital = 'sudah_menikah';
-        } elseif (str_contains($rawMarital, 'janda')) {
+        } elseif (str_contains($rawMarital, 'janda') || $rawMarital === 'j') {
             $marital = 'janda';
-        } elseif (str_contains($rawMarital, 'duda')) {
+        } elseif (str_contains($rawMarital, 'duda') || $rawMarital === 'd') {
             $marital = 'duda';
         } else {
             $marital = 'belum_menikah';
@@ -1123,7 +1152,7 @@ class PemudaImportService
         // 9. Golongan Darah
         $rawBlood = isset($map['blood_type']) ? strtoupper(trim((string) ($row[$map['blood_type']] ?? ''))) : '';
         if (in_array($rawBlood, ['A', 'B', 'AB', 'O'], true)) {
-            $blood = $rawBlood;
+            $blood = strtolower($rawBlood);
         } else {
             $blood = 'tidak_tahu';
         }
@@ -1189,15 +1218,15 @@ class PemudaImportService
         $data['village_id'] = (int) $matchedVillage['id'];
 
         // 12. Dusun, RT, RW, Alamat Detail
-        $data['dusun'] = isset($map['dusun']) ? (trim((string) ($row[$map['dusun']] ?? '')) ?: null) : null;
-        $data['rt']    = isset($map['rt']) ? (substr(trim((string) ($row[$map['rt']] ?? '')), 0, 5) ?: null) : null;
-        $data['rw']    = isset($map['rw']) ? (substr(trim((string) ($row[$map['rw']] ?? '')), 0, 5) ?: null) : null;
+        $data['dusun'] = isset($map['dusun']) ? toLowerTrim((string) ($row[$map['dusun']] ?? '')) : null;
+        $data['rt']    = isset($map['rt']) ? toLowerTrim(substr((string) ($row[$map['rt']] ?? ''), 0, 5)) : null;
+        $data['rw']    = isset($map['rw']) ? toLowerTrim(substr((string) ($row[$map['rw']] ?? ''), 0, 5)) : null;
         
         $rawAddress = isset($map['address_detail']) ? trim((string) ($row[$map['address_detail']] ?? '')) : '';
         if (empty($rawAddress)) {
-            $rawAddress = 'Dusun ' . ($data['dusun'] ?: '-') . ' RT ' . ($data['rt'] ?: '01') . '/RW ' . ($data['rw'] ?: '01');
+            $rawAddress = 'dusun ' . ($data['dusun'] ?: '-') . ' rt ' . ($data['rt'] ?: '01') . '/rw ' . ($data['rw'] ?: '01');
         }
-        $data['address_detail'] = $rawAddress;
+        $data['address_detail'] = mb_strtolower($rawAddress, 'UTF-8');
 
         // 13. Jenjang Pendidikan
         $rawEdu = isset($map['education_level']) ? trim((string) ($row[$map['education_level']] ?? '')) : '';
@@ -1234,10 +1263,10 @@ class PemudaImportService
 
         // 14. Nama Sekolah / Kampus
         $rawSchool = isset($map['school_name']) ? trim((string) ($row[$map['school_name']] ?? '')) : '';
-        $data['school_name'] = $rawSchool ?: ($matchedEdu['name'] . ' Sragen');
+        $data['school_name'] = mb_strtolower($rawSchool ?: ($matchedEdu['name'] . ' sragen'), 'UTF-8');
 
         // 15. Jurusan
-        $data['major'] = isset($map['major']) ? (trim((string) ($row[$map['major']] ?? '')) ?: null) : null;
+        $data['major'] = isset($map['major']) ? toLowerTrim((string) ($row[$map['major']] ?? '')) : null;
 
         // 16. Status Pendidikan
         $rawEduStatus = isset($map['education_status']) ? strtolower(trim((string) ($row[$map['education_status']] ?? ''))) : '';
@@ -1292,9 +1321,9 @@ class PemudaImportService
         $data['job_status_id'] = (int) $matchedJob['id'];
 
         // 19. Profesi, Perusahaan, Bidang Usaha
-        $data['job_title']      = isset($map['job_title']) ? (trim((string) ($row[$map['job_title']] ?? '')) ?: null) : null;
-        $data['company_name']   = isset($map['company_name']) ? (trim((string) ($row[$map['company_name']] ?? '')) ?: null) : null;
-        $data['business_field'] = isset($map['business_field']) ? (trim((string) ($row[$map['business_field']] ?? '')) ?: null) : null;
+        $data['job_title']      = isset($map['job_title']) ? toLowerTrim((string) ($row[$map['job_title']] ?? '')) : null;
+        $data['company_name']   = isset($map['company_name']) ? toLowerTrim((string) ($row[$map['company_name']] ?? '')) : null;
+        $data['business_field'] = isset($map['business_field']) ? toLowerTrim((string) ($row[$map['business_field']] ?? '')) : null;
 
         // 20. Organisasi
         $rawOrg = isset($map['organisasi']) ? trim((string) ($row[$map['organisasi']] ?? '')) : '';
@@ -1304,7 +1333,7 @@ class PemudaImportService
             foreach ($parts as $p) {
                 $p = trim($p);
                 if (!empty($p)) {
-                    $orgList[] = $p;
+                    $orgList[] = mb_strtolower($p, 'UTF-8');
                 }
             }
         }

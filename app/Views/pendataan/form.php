@@ -112,9 +112,11 @@
         <!-- Form Element -->
         <form id="formPendataanPemuda" action="<?= base_url('pendataan/simpan') ?>" method="POST" class="needs-validation" novalidate>
             <?= csrf_field() ?>
+            <input type="hidden" id="existing_pemuda_id" name="existing_pemuda_id" value="<?= old('existing_pemuda_id') ?>">
+            <input type="hidden" id="mta_warga_uuid" name="mta_warga_uuid" value="<?= old('mta_warga_uuid') ?>">
 
             <!-- ================================================================= -->
-            <!-- SECTION 1: DATA PRIBADI -->
+            <!-- SECTION 1: DATA PRIBADI & PENGECEKAN DATA -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section active" id="step-1">
                 <div class="card-body p-4 p-md-5">
@@ -123,22 +125,101 @@
                             <i class="bi bi-person-vcard"></i>
                         </div>
                         <div>
-                            <h4 class="card-title fw-bold mb-0">1. Data Pribadi</h4>
-                            <p class="text-muted small mb-0">Informasi identitas kependudukan dan kontak utama</p>
+                            <h4 class="card-title fw-bold mb-0">1. Data Pribadi &amp; Pengecekan Data</h4>
+                            <p class="text-muted small mb-0">Pilih cabang dan ketikkan nama Anda untuk memilih data dari Database Warga MTA</p>
+                        </div>
+                    </div>
+
+                    <!-- Banner Info Warga MTA Terpilih -->
+                    <div class="alert alert-success card-custom border-success mb-4" id="warga-mta-selected-banner" style="display: none;" role="alert">
+                        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-patch-check-fill text-success fs-4 flex-shrink-0 mt-1"></i>
+                                <div>
+                                    <strong class="text-success" id="warga-selected-title">Data Warga MTA Berhasil Dimuat!</strong>
+                                    <div class="small text-dark mb-1" id="warga-selected-desc">
+                                        Data warga atas nama <strong id="warga-selected-name">-</strong> (Nomor: <strong id="warga-selected-nomor">-</strong>) berhasil dimuat.
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-1 px-2 small">
+                                            <i class="bi bi-shield-check me-1"></i> Terhubung Database MTA Pusat
+                                        </span>
+                                        <small class="text-muted">Silakan periksa kembali dan lengkapi data yang belum terisi pada formulir ini.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetWargaMtaSelection()" title="Batal memilih data warga ini dan ketik manual">
+                                <i class="bi bi-x-lg me-1"></i> Batal / Ketik Manual
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mode Indicator Banner (Updated Dynamically) -->
+                    <div id="form-mode-banner" class="alert alert-success card-custom border-success mb-4" style="display: none;" role="alert">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-patch-check-fill fs-5 text-success"></i>
+                                <div>
+                                    <strong class="text-success">Mode Melengkapi &amp; Memperbarui Data Terdaftar</strong>
+                                    <div class="small text-dark" id="form-mode-desc">Data Anda ditemukan di sistem. Anda dapat memperbarui data pada formulir ini.</div>
+                                </div>
+                            </div>
+                            <span class="badge bg-success rounded-pill px-3 py-2" id="form-mode-reg">No. Reg: -</span>
                         </div>
                     </div>
 
                     <div class="row g-3">
-                        <!-- Nama Lengkap -->
+                        <!-- Wilayah & Cabang Domisili Organisasi -->
                         <div class="col-md-6">
+                            <label for="cabang_id" class="form-label">Cabang Pemuda MTA (Wilayah)<span class="required-star">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-diagram-2"></i></span>
+                                <select class="form-select" id="cabang_id" name="cabang_id" required>
+                                    <option value="" selected disabled>-- Pilih Cabang Pemuda MTA Terdaftar --</option>
+                                    <?php if (!empty($wilayahList)): ?>
+                                        <?php foreach ($wilayahList as $w): ?>
+                                            <optgroup label="<?= esc($w['name']) ?> (<?= esc($w['code']) ?>)">
+                                                <?php if (!empty($w['cabang'])): ?>
+                                                    <?php foreach ($w['cabang'] as $c): ?>
+                                                        <option value="<?= $c['id'] ?>" 
+                                                                data-name="<?= esc($c['name']) ?>" 
+                                                                data-mta-uuid="<?= esc($c['mta_uuid'] ?? '') ?>" 
+                                                                <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
+                                                            <?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback">Pilih cabang Pemuda MTA yang sesuai.</div>
+                            <small class="form-text text-muted">Pilih cabang terlebih dahulu agar pencarian nama warga dapat otomatis disesuaikan.</small>
+                        </div>
+
+                        <!-- Nama Lengkap dengan Autocomplete Warga MTA -->
+                        <div class="col-md-6 position-relative">
                             <label for="name" class="form-label">Nama Lengkap<span class="required-star">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
                                 <input type="text" class="form-control" id="name" name="name"
-                                    placeholder="Nama lengkap sesuai identitas"
-                                    value="<?= old('name') ?>" required minlength="3" maxlength="150">
+                                    placeholder="Ketik nama untuk mencari data warga MTA..."
+                                    value="<?= old('name') ?>" required minlength="3" maxlength="150" autocomplete="off">
+                                <span class="input-group-text bg-white" id="name-search-spinner" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm text-success" role="status"></span>
+                                </span>
                             </div>
                             <div class="invalid-feedback">Nama lengkap wajib diisi (minimal 3 karakter).</div>
+                            <small class="form-text text-muted" id="warga-search-hint">
+                                <i class="bi bi-lightbulb text-warning me-1"></i>Pilih cabang di samping, lalu ketik nama Anda untuk memilih dari data Warga MTA.
+                            </small>
+
+                            <!-- AUTOCOMPLETE SUGGESTIONS DROPDOWN -->
+                            <div id="warga-suggestions-dropdown" class="card shadow-lg border-success border-opacity-50 position-absolute w-100 mt-1" 
+                                 style="display: none; z-index: 1060; max-height: 360px; overflow-y: auto; left: 0; top: 100%;">
+                                <div id="warga-suggestions-list"></div>
+                            </div>
                         </div>
 
                         <!-- Jenis Kelamin -->
@@ -161,6 +242,45 @@
                                 </div>
                             </div>
                             <div class="invalid-feedback d-block" id="gender-error" style="display: none !important;">Pilih jenis kelamin.</div>
+                        </div>
+
+                        <!-- Tanggal Lahir -->
+                        <div class="col-md-6">
+                            <label for="birth_date" class="form-label">Tanggal Lahir<span class="required-star">*</span></label>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date"
+                                value="<?= old('birth_date') ?>" required max="<?= date('Y-m-d') ?>">
+                            <div class="invalid-feedback">Tanggal lahir wajib diisi.</div>
+                        </div>
+
+                        <!-- Kotak Aksi Pengecekan Data Pemuda -->
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 border d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 my-1">
+                                <div>
+                                    <div class="fw-bold text-slate-900 small mb-1">
+                                        <i class="bi bi-person-bounding-box me-1 text-danger"></i> Fitur Pengecekan Data Pemuda
+                                    </div>
+                                    <div class="text-muted small">
+                                        Periksa apakah data nama, jenis kelamin, dan tanggal lahir Anda sudah terdaftar di cabang yang dipilih untuk <strong>melengkapi data</strong> atau melanjutkan pendataan baru.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger fw-semibold px-4 py-2 text-nowrap flex-shrink-0" id="btnCekData" onclick="handleManualCheckData()">
+                                    <i class="bi bi-search me-1"></i> Cek Data Pemuda
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hasil Pengecekan Data Interaktif -->
+                        <div class="col-12" id="check-data-result-wrapper" style="display: none;">
+                            <div id="check-data-result-content"></div>
+                        </div>
+
+                        <!-- Tempat Lahir -->
+                        <div class="col-md-6">
+                            <label for="birth_place" class="form-label">Tempat Lahir<span class="required-star">*</span></label>
+                            <input type="text" class="form-control" id="birth_place" name="birth_place"
+                                placeholder="Contoh: Sragen"
+                                value="<?= old('birth_place') ?>" required maxlength="100">
+                            <div class="invalid-feedback">Tempat lahir wajib diisi.</div>
                         </div>
 
                         <!-- Status Pernikahan -->
@@ -195,133 +315,6 @@
                             </div>
                         </div>
 
-                        <!-- Wilayah & Cabang Domisili Organisasi -->
-                        <div class="col-md-6">
-                            <label for="cabang_id" class="form-label">Cabang Pemuda MTA (Wilayah)<span class="required-star">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="bi bi-diagram-2"></i></span>
-                                <select class="form-select" id="cabang_id" name="cabang_id" required>
-                                    <option value="" selected disabled>-- Pilih Cabang Pemuda MTA Terdaftar --</option>
-                                    <?php if (!empty($wilayahList)): ?>
-                                        <?php foreach ($wilayahList as $w): ?>
-                                            <optgroup label="<?= esc($w['name']) ?> (<?= esc($w['code']) ?>)">
-                                                <?php if (!empty($w['cabang'])): ?>
-                                                    <?php foreach ($w['cabang'] as $c): ?>
-                                                        <option value="<?= $c['id'] ?>" <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
-                                                            <?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </optgroup>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <!-- Wilayah 1 (18 Cabang) -->
-                                        <optgroup label="Wilayah 1 (W01)">
-                                            <option value="1" <?= old('cabang_id') == '1' ? 'selected' : '' ?>>Gesi</option>
-                                            <option value="2" <?= old('cabang_id') == '2' ? 'selected' : '' ?>>Jenar</option>
-                                            <option value="3" <?= old('cabang_id') == '3' ? 'selected' : '' ?>>Mondokan 1</option>
-                                            <option value="4" <?= old('cabang_id') == '4' ? 'selected' : '' ?>>Mondokan 2</option>
-                                            <option value="5" <?= old('cabang_id') == '5' ? 'selected' : '' ?>>Mondokan 3</option>
-                                            <option value="6" <?= old('cabang_id') == '6' ? 'selected' : '' ?>>Sukodono 1</option>
-                                            <option value="7" <?= old('cabang_id') == '7' ? 'selected' : '' ?>>Sukodono 2</option>
-                                            <option value="8" <?= old('cabang_id') == '8' ? 'selected' : '' ?>>Sukodono 3</option>
-                                            <option value="9" <?= old('cabang_id') == '9' ? 'selected' : '' ?>>Sukodono 4</option>
-                                            <option value="10" <?= old('cabang_id') == '10' ? 'selected' : '' ?>>Sumberlawang 1</option>
-                                            <option value="11" <?= old('cabang_id') == '11' ? 'selected' : '' ?>>Sumberlawang 2</option>
-                                            <option value="12" <?= old('cabang_id') == '12' ? 'selected' : '' ?>>Sumberlawang 3</option>
-                                            <option value="13" <?= old('cabang_id') == '13' ? 'selected' : '' ?>>Sumberlawang 4</option>
-                                            <option value="14" <?= old('cabang_id') == '14' ? 'selected' : '' ?>>Tangen 1</option>
-                                            <option value="15" <?= old('cabang_id') == '15' ? 'selected' : '' ?>>Tangen 2</option>
-                                            <option value="16" <?= old('cabang_id') == '16' ? 'selected' : '' ?>>Tanon 1</option>
-                                            <option value="17" <?= old('cabang_id') == '17' ? 'selected' : '' ?>>Tanon 2</option>
-                                            <option value="18" <?= old('cabang_id') == '18' ? 'selected' : '' ?>>Tanon 3</option>
-                                        </optgroup>
-
-                                        <!-- Wilayah 2 (17 Cabang) -->
-                                        <optgroup label="Wilayah 2 (W02)">
-                                            <option value="19" <?= old('cabang_id') == '19' ? 'selected' : '' ?>>Gemolong 1</option>
-                                            <option value="20" <?= old('cabang_id') == '20' ? 'selected' : '' ?>>Gemolong 2</option>
-                                            <option value="21" <?= old('cabang_id') == '21' ? 'selected' : '' ?>>Gemolong 3</option>
-                                            <option value="22" <?= old('cabang_id') == '22' ? 'selected' : '' ?>>Gemolong 4</option>
-                                            <option value="23" <?= old('cabang_id') == '23' ? 'selected' : '' ?>>Gemolong 5</option>
-                                            <option value="24" <?= old('cabang_id') == '24' ? 'selected' : '' ?>>Kalijambe 1</option>
-                                            <option value="25" <?= old('cabang_id') == '25' ? 'selected' : '' ?>>Kalijambe 2</option>
-                                            <option value="26" <?= old('cabang_id') == '26' ? 'selected' : '' ?>>Kalijambe 3</option>
-                                            <option value="27" <?= old('cabang_id') == '27' ? 'selected' : '' ?>>Kalijambe 4</option>
-                                            <option value="28" <?= old('cabang_id') == '28' ? 'selected' : '' ?>>Miri 1</option>
-                                            <option value="29" <?= old('cabang_id') == '29' ? 'selected' : '' ?>>Miri 2</option>
-                                            <option value="30" <?= old('cabang_id') == '30' ? 'selected' : '' ?>>Plupuh 1</option>
-                                            <option value="31" <?= old('cabang_id') == '31' ? 'selected' : '' ?>>Plupuh 2</option>
-                                            <option value="32" <?= old('cabang_id') == '32' ? 'selected' : '' ?>>Plupuh 3</option>
-                                            <option value="33" <?= old('cabang_id') == '33' ? 'selected' : '' ?>>Plupuh 4</option>
-                                            <option value="34" <?= old('cabang_id') == '34' ? 'selected' : '' ?>>Plupuh 5</option>
-                                            <option value="35" <?= old('cabang_id') == '35' ? 'selected' : '' ?>>Plupuh 6</option>
-                                        </optgroup>
-
-                                        <!-- Wilayah 3 (20 Cabang) -->
-                                        <optgroup label="Wilayah 3 (W03)">
-                                            <option value="36" <?= old('cabang_id') == '36' ? 'selected' : '' ?>>Karangmalang 1</option>
-                                            <option value="37" <?= old('cabang_id') == '37' ? 'selected' : '' ?>>Karangmalang 2</option>
-                                            <option value="38" <?= old('cabang_id') == '38' ? 'selected' : '' ?>>Karangmalang 3</option>
-                                            <option value="39" <?= old('cabang_id') == '39' ? 'selected' : '' ?>>Karangmalang 4</option>
-                                            <option value="40" <?= old('cabang_id') == '40' ? 'selected' : '' ?>>Karangmalang 5</option>
-                                            <option value="41" <?= old('cabang_id') == '41' ? 'selected' : '' ?>>Masaran 1</option>
-                                            <option value="42" <?= old('cabang_id') == '42' ? 'selected' : '' ?>>Masaran 2</option>
-                                            <option value="43" <?= old('cabang_id') == '43' ? 'selected' : '' ?>>Masaran 3</option>
-                                            <option value="44" <?= old('cabang_id') == '44' ? 'selected' : '' ?>>Masaran 4</option>
-                                            <option value="45" <?= old('cabang_id') == '45' ? 'selected' : '' ?>>Masaran 5</option>
-                                            <option value="46" <?= old('cabang_id') == '46' ? 'selected' : '' ?>>Masaran 6</option>
-                                            <option value="47" <?= old('cabang_id') == '47' ? 'selected' : '' ?>>Sambungmacan 1</option>
-                                            <option value="48" <?= old('cabang_id') == '48' ? 'selected' : '' ?>>Sambungmacan 2</option>
-                                            <option value="49" <?= old('cabang_id') == '49' ? 'selected' : '' ?>>Sambungmacan 3</option>
-                                            <option value="50" <?= old('cabang_id') == '50' ? 'selected' : '' ?>>Sidoharjo 1</option>
-                                            <option value="51" <?= old('cabang_id') == '51' ? 'selected' : '' ?>>Sidoharjo 2</option>
-                                            <option value="52" <?= old('cabang_id') == '52' ? 'selected' : '' ?>>Sidoharjo 3</option>
-                                            <option value="53" <?= old('cabang_id') == '53' ? 'selected' : '' ?>>Sidoharjo 4</option>
-                                            <option value="54" <?= old('cabang_id') == '54' ? 'selected' : '' ?>>Sragen 1</option>
-                                            <option value="55" <?= old('cabang_id') == '55' ? 'selected' : '' ?>>Sragen 2</option>
-                                        </optgroup>
-
-                                        <!-- Wilayah 4 (14 Cabang) -->
-                                        <optgroup label="Wilayah 4 (W04)">
-                                            <option value="56" <?= old('cabang_id') == '56' ? 'selected' : '' ?>>Gondang 1</option>
-                                            <option value="57" <?= old('cabang_id') == '57' ? 'selected' : '' ?>>Gondang 2</option>
-                                            <option value="58" <?= old('cabang_id') == '58' ? 'selected' : '' ?>>Gondang 3</option>
-                                            <option value="59" <?= old('cabang_id') == '59' ? 'selected' : '' ?>>Gondang 4</option>
-                                            <option value="60" <?= old('cabang_id') == '60' ? 'selected' : '' ?>>Kedawung 1</option>
-                                            <option value="61" <?= old('cabang_id') == '61' ? 'selected' : '' ?>>Kedawung 2</option>
-                                            <option value="62" <?= old('cabang_id') == '62' ? 'selected' : '' ?>>Kedawung 3</option>
-                                            <option value="63" <?= old('cabang_id') == '63' ? 'selected' : '' ?>>Kedawung 4</option>
-                                            <option value="64" <?= old('cabang_id') == '64' ? 'selected' : '' ?>>Kedawung 5</option>
-                                            <option value="65" <?= old('cabang_id') == '65' ? 'selected' : '' ?>>Ngrampal 1</option>
-                                            <option value="66" <?= old('cabang_id') == '66' ? 'selected' : '' ?>>Ngrampal 2</option>
-                                            <option value="67" <?= old('cabang_id') == '67' ? 'selected' : '' ?>>Ngrampal 3</option>
-                                            <option value="68" <?= old('cabang_id') == '68' ? 'selected' : '' ?>>Sambirejo 1</option>
-                                            <option value="69" <?= old('cabang_id') == '69' ? 'selected' : '' ?>>Sambirejo 2</option>
-                                        </optgroup>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                            <div class="invalid-feedback">Pilih cabang Pemuda MTA yang sesuai.</div>
-                        </div>
-
-                        <!-- Tempat Lahir -->
-                        <div class="col-md-6">
-                            <label for="birth_place" class="form-label">Tempat Lahir<span class="required-star">*</span></label>
-                            <input type="text" class="form-control" id="birth_place" name="birth_place"
-                                placeholder="Contoh: Sragen"
-                                value="<?= old('birth_place') ?>" required maxlength="100">
-                            <div class="invalid-feedback">Tempat lahir wajib diisi.</div>
-                        </div>
-
-                        <!-- Tanggal Lahir -->
-                        <div class="col-md-6">
-                            <label for="birth_date" class="form-label">Tanggal Lahir<span class="required-star">*</span></label>
-                            <input type="date" class="form-control" id="birth_date" name="birth_date"
-                                value="<?= old('birth_date') ?>" required max="<?= date('Y-m-d') ?>">
-                            <div class="invalid-feedback">Tanggal lahir wajib diisi.</div>
-                        </div>
-
                         <!-- Nomor WhatsApp / HP -->
                         <div class="col-md-6">
                             <label for="phone" class="form-label">Nomor WhatsApp / HP<span class="required-star">*</span></label>
@@ -344,17 +337,6 @@
                                     value="<?= old('email') ?>" maxlength="100">
                             </div>
                             <div class="invalid-feedback">Masukkan format email yang valid.</div>
-                        </div>
-                    </div>
-
-                    <!-- Peringatan Duplikasi Data Pribadi -->
-                    <div id="duplicate-warning-box" class="alert alert-danger card-custom border-danger mt-4 mb-0" style="display: none;" role="alert">
-                        <div class="d-flex align-items-start gap-2">
-                            <i class="bi bi-exclamation-octagon-fill fs-4 text-danger flex-shrink-0"></i>
-                            <div>
-                                <h6 class="fw-bold mb-1 text-danger">Data Pemuda Sudah Terdaftar!</h6>
-                                <div id="duplicate-warning-message" class="small text-dark"></div>
-                            </div>
                         </div>
                     </div>
 
@@ -1020,6 +1002,17 @@
                         </div>
                     </div>
 
+                    <!-- Mode Banner on Step 8 -->
+                    <div id="review-mode-banner" class="alert alert-success card-custom border-success mb-4" style="display: none;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-patch-check-fill fs-5 text-success"></i>
+                            <div>
+                                <strong>Mode: Melengkapi &amp; Memperbarui Data Terdaftar</strong> (<span id="review-mode-reg">-</span>)
+                                <div class="small text-muted">Data pemuda ini akan diperbarui dan dilengkapi di sistem basis data cabang.</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Statement Checkbox -->
                     <div class="card bg-light border-0 p-3 mb-4 rounded-3">
                         <div class="form-check">
@@ -1037,7 +1030,7 @@
                             <i class="bi bi-arrow-left me-1"></i> Kembali Ubah Data
                         </button>
                         <button type="submit" class="btn btn-primary-pmd px-4 py-2" id="btnSubmitForm">
-                            <i class="bi bi-send-fill me-1"></i> Kirim Data Pendataan
+                            <i class="bi bi-send-fill me-1"></i> <span id="btnSubmitFormText">Kirim Data Pendataan</span>
                         </button>
                     </div>
                 </div>
@@ -1057,7 +1050,10 @@
 <script>
     const PENDATAAN_CONFIG = {
         baseUrl: '<?= rtrim(base_url(), '/') ?>',
+        checkDataUrl: '<?= base_url('pendataan/check-data') ?>',
         checkDuplicateUrl: '<?= base_url('pendataan/check-duplicate') ?>',
+        searchWargaUrl: '<?= base_url('pendataan/search-warga') ?>',
+        wargaDetailUrl: '<?= base_url('pendataan/warga-detail') ?>',
         csrfToken: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>'
     };

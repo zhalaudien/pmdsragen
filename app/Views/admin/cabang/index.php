@@ -244,9 +244,14 @@
     </div>
     
     <?php if ($pager->getPageCount('cabang') > 1): ?>
-        <div class="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
-            <div class="text-xs text-muted">Halaman <?= $pager->getCurrentPage('cabang') ?> dari <?= $pager->getPageCount('cabang') ?></div>
-            <div><?= $pager->links('cabang', 'default_full') ?></div>
+        <div class="card-footer bg-white border-top py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="text-sm text-muted mb-2 mb-md-0 font-weight-500">
+                <i class="fas fa-sitemap mr-1 text-warning"></i>
+                Halaman <strong class="text-dark"><?= $pager->getCurrentPage('cabang') ?></strong> dari <strong class="text-dark"><?= $pager->getPageCount('cabang') ?></strong>
+                <span class="mx-2 text-muted">|</span>
+                Total <strong class="text-dark"><?= number_format($pager->getTotal('cabang'), 0, ',', '.') ?></strong> cabang
+            </div>
+            <div><?= $pager->links('cabang', 'bootstrap_full') ?></div>
         </div>
     <?php endif; ?>
 </div>

@@ -5,18 +5,21 @@ namespace App\Controllers;
 use App\Models\PemudaModel;
 use App\Models\WilayahModel;
 use App\Models\CabangModel;
+use App\Models\HomepageSettingModel;
 
 class Home extends BaseController
 {
     protected PemudaModel $pemudaModel;
     protected WilayahModel $wilayahModel;
     protected CabangModel $cabangModel;
+    protected HomepageSettingModel $settingModel;
 
     public function __construct()
     {
-        $this->pemudaModel  = new PemudaModel();
-        $this->wilayahModel = new WilayahModel();
-        $this->cabangModel  = new CabangModel();
+        $this->pemudaModel   = new PemudaModel();
+        $this->wilayahModel  = new WilayahModel();
+        $this->cabangModel   = new CabangModel();
+        $this->settingModel  = new HomepageSettingModel();
     }
 
     /**
@@ -40,6 +43,17 @@ class Home extends BaseController
             // Fallback gracefully jika database belum ter-seed
         }
 
+        // Ambil pengaturan konten homepage
+        $settings = $this->settingModel->getAllSettings();
+
+        // Parse format JSON & multiline
+        $heroChips = json_decode($settings['hero_chips'] ?? '[]', true) ?: [];
+        $heroFeatures = array_filter(array_map('trim', explode("\n", (string) ($settings['hero_card_features'] ?? ''))));
+        $misiList  = json_decode($settings['misi_list'] ?? '[]', true) ?: [];
+        $programs  = json_decode($settings['program_list'] ?? '[]', true) ?: [];
+        $alurSteps = json_decode($settings['alur_steps'] ?? '[]', true) ?: [];
+        $faqs      = json_decode($settings['faq_list'] ?? '[]', true) ?: [];
+
         $data = [
             'title'         => 'Pemuda MTA Perwakilan Sragen | Pusat Informasi & Pendataan Pemuda',
             'totalPemuda'   => $totalPemuda,
@@ -47,6 +61,13 @@ class Home extends BaseController
             'totalCabang'   => $totalCabang > 0 ? $totalCabang : 61,
             'totalWilayah'  => $totalWilayah,
             'wilayahList'   => $wilayahList,
+            'settings'      => $settings,
+            'heroChips'     => $heroChips,
+            'heroFeatures'  => $heroFeatures,
+            'misiList'      => $misiList,
+            'programs'      => $programs,
+            'alurSteps'     => $alurSteps,
+            'faqs'          => $faqs,
         ];
 
         return view('landing', $data);

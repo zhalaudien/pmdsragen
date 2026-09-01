@@ -48,7 +48,10 @@
 
             <!-- Action buttons -->
             <div class="col-12 col-xl-auto text-xl-right mt-3 mt-xl-0">
-                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-info btn-sm" id="btnLiveSyncMta" title="Sinkronkan dengan Database Warga MTA">
+                        <i class="fas fa-sync-alt mr-1" id="iconSyncMta"></i> Sinkronkan MTA
+                    </button>
+
                     <a href="<?= base_url('admin/pemuda/cetak/' . $pemuda['id']) ?>" target="_blank" class="btn btn-default btn-sm">
                         <i class="fas fa-print mr-1"></i> Cetak Dokumen
                     </a>
@@ -348,7 +351,83 @@
                 </div>
             </div>
         </div>
+
+        <!-- 6. INTEGRASI DATABASE WARGA MTA -->
+        <div class="card card-outline <?= !empty($pemuda['mta_warga_uuid']) ? 'card-success' : 'card-secondary' ?> shadow-sm mb-3">
+            <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                <h3 class="card-title font-weight-bold text-sm">
+                    <i class="fas fa-network-wired text-primary mr-1"></i> Status Database Warga MTA
+                </h3>
+                <?php if (!empty($pemuda['mta_warga_uuid'])): ?>
+                    <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Terhubung</span>
+                <?php else: ?>
+                    <span class="badge badge-secondary">Belum Terhubung</span>
+                <?php endif; ?>
+            </div>
+            <div class="card-body p-3 text-sm">
+                <?php if (!empty($pemuda['mta_warga_uuid'])): ?>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted" style="width: 140px;">Status di MTA</td>
+                            <td>: <span class="badge badge-light border font-weight-bold"><?= esc($pemuda['mta_status_warga'] ?? 'Warga') ?></span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">UUID Warga MTA</td>
+                            <td>: <code class="text-xs"><?= esc($pemuda['mta_warga_uuid']) ?></code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Terakhir Sinkron</td>
+                            <td class="text-dark">: <?= !empty($pemuda['mta_synced_at']) ? date('d/m/Y H:i:s', strtotime($pemuda['mta_synced_at'])) : '-' ?> WIB</td>
+                        </tr>
+                    </table>
+                <?php else: ?>
+                    <p class="text-muted text-xs mb-2">
+                        Data pemuda ini belum terhubung dengan UUID di Database Warga MTA. Anda dapat menekan tombol <strong>Sinkronkan MTA</strong> untuk mencari dan menghubungkan data warga secara otomatis.
+                    </p>
+                <?php endif; ?>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+$(document).ready(function() {
+    $('#btnLiveSyncMta').on('click', function() {
+        if (!confirm('Apakah Anda ingin menyinkronkan data pemuda ini dengan Database Warga MTA?')) {
+            return;
+        }
+
+        const btn = $(this);
+        const icon = $('#iconSyncMta');
+        btn.prop('disabled', true);
+        icon.addClass('fa-spin');
+
+        $.ajax({
+            url: '<?= base_url('admin/mta-sync/sync-pemuda/' . $pemuda['id']) ?>',
+            type: 'POST',
+            dataType: 'json',
+            success: function(res) {
+                btn.prop('disabled', false);
+                icon.removeClass('fa-spin');
+                if (res.success) {
+                    alert('Sukses: ' + res.message);
+                    location.reload();
+                } else {
+                    alert('Informasi Sinkronisasi: ' + res.message);
+                }
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false);
+                icon.removeClass('fa-spin');
+                alert('Gagal melakukan sinkronisasi: ' + (xhr.responseJSON ? xhr.responseJSON.message : xhr.statusText));
+            }
+        });
+    });
+});
+</script>
+<?= $this->endSection() ?>
+

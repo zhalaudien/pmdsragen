@@ -15,6 +15,8 @@ class WilayahModel extends Model
         'code',
         'name',
         'description',
+        'mta_uuid',
+        'mta_code',
     ];
 
     protected $useTimestamps = true;

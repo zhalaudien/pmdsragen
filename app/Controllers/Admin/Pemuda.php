@@ -338,16 +338,18 @@ class Pemuda extends BaseController
             $pemudaData = [
                 'cabang_id'           => $cabangId,
                 'registration_number' => $regNumber,
-                'name'                => $this->request->getPost('name'),
+                'name'                => mb_strtolower(trim((string) $this->request->getPost('name')), 'UTF-8'),
                 'gender'              => $this->request->getPost('gender'),
-                'marital_status'      => $this->request->getPost('marital_status') ?: 'belum_menikah',
-                'blood_type'          => $this->request->getPost('blood_type') ?: null,
-                'birth_place'         => $this->request->getPost('birth_place'),
+                'marital_status'      => toLowerTrim($this->request->getPost('marital_status')) ?: 'belum_menikah',
+                'blood_type'          => toLowerTrim($this->request->getPost('blood_type')),
+                'birth_place'         => toLowerTrim($this->request->getPost('birth_place')) ?: 'sragen',
                 'birth_date'          => $this->request->getPost('birth_date'),
-                'phone'               => $this->request->getPost('phone'),
-                'email'               => $this->request->getPost('email') ?: null,
+                'phone'               => trim((string) $this->request->getPost('phone')),
+                'email'               => toLowerTrim($this->request->getPost('email')),
                 'status_verifikasi'   => $statusVerifikasi,
-                'status_data'         => $this->request->getPost('status_data') ?: 'active',
+                'status_data'         => toLowerTrim($this->request->getPost('status_data')) ?: 'active',
+                'mta_warga_uuid'      => toLowerTrim($this->request->getPost('mta_warga_uuid')),
+                'mta_synced_at'       => $this->request->getPost('mta_warga_uuid') ? date('Y-m-d H:i:s') : null,
                 'created_by'          => session()->get('user_id'),
             ];
 
@@ -361,19 +363,19 @@ class Pemuda extends BaseController
                 'regency_id'     => 3314, // Sragen
                 'district_id'    => (int) $this->request->getPost('district_id'),
                 'village_id'     => (int) $this->request->getPost('village_id'),
-                'dusun'          => $this->request->getPost('dusun') ?: null,
-                'rt'             => $this->request->getPost('rt') ?: null,
-                'rw'             => $this->request->getPost('rw') ?: null,
-                'address_detail' => $this->request->getPost('address_detail'),
+                'dusun'          => toLowerTrim($this->request->getPost('dusun')),
+                'rt'             => toLowerTrim($this->request->getPost('rt')),
+                'rw'             => toLowerTrim($this->request->getPost('rw')),
+                'address_detail' => mb_strtolower(trim((string) $this->request->getPost('address_detail')), 'UTF-8'),
             ]);
 
             // 3. Insert Pendidikan
             $this->pendidikanModel->insert([
                 'pemuda_id'          => $pemudaId,
                 'education_level_id' => (int) $this->request->getPost('education_level_id'),
-                'school_name'        => $this->request->getPost('school_name'),
-                'major'              => $this->request->getPost('major') ?: null,
-                'education_status'   => $this->request->getPost('education_status'),
+                'school_name'        => mb_strtolower(trim((string) $this->request->getPost('school_name')), 'UTF-8'),
+                'major'              => toLowerTrim($this->request->getPost('major')),
+                'education_status'   => toLowerTrim($this->request->getPost('education_status')) ?: 'lulus',
                 'graduation_year'    => $this->request->getPost('graduation_year') ? (int) $this->request->getPost('graduation_year') : null,
             ]);
 
@@ -381,9 +383,9 @@ class Pemuda extends BaseController
             $this->pekerjaanModel->insert([
                 'pemuda_id'      => $pemudaId,
                 'job_status_id'  => (int) $this->request->getPost('job_status_id'),
-                'job_title'      => $this->request->getPost('job_title') ?: null,
-                'company_name'   => $this->request->getPost('company_name') ?: null,
-                'business_field' => $this->request->getPost('business_field') ?: null,
+                'job_title'      => toLowerTrim($this->request->getPost('job_title')),
+                'company_name'   => toLowerTrim($this->request->getPost('company_name')),
+                'business_field' => toLowerTrim($this->request->getPost('business_field')),
             ]);
 
             // 5. Insert Organisasi
@@ -398,10 +400,10 @@ class Pemuda extends BaseController
 
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
-                            'organization_name' => $orgName,
-                            'position'          => $position,
+                            'organization_name' => mb_strtolower(trim($orgName), 'UTF-8'),
+                            'position'          => mb_strtolower(trim($position), 'UTF-8'),
                             'join_date'         => $joinDate,
-                            'description'       => $desc,
+                            'description'       => toLowerTrim($desc),
                         ]);
                     }
                 }
@@ -415,8 +417,8 @@ class Pemuda extends BaseController
                     if (!empty($name)) {
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
-                            'organization_name' => $name,
-                            'position'          => 'Anggota',
+                            'organization_name' => mb_strtolower(trim($name), 'UTF-8'),
+                            'position'          => 'anggota',
                         ]);
                     }
                 }
@@ -691,16 +693,17 @@ class Pemuda extends BaseController
             // 1. Update Pemuda
             $pemudaData = [
                 'cabang_id'         => $cabangId,
-                'name'              => $this->request->getPost('name'),
+                'name'              => mb_strtolower(trim((string) $this->request->getPost('name')), 'UTF-8'),
                 'gender'            => $this->request->getPost('gender'),
-                'marital_status'    => $this->request->getPost('marital_status') ?: 'belum_menikah',
-                'blood_type'        => $this->request->getPost('blood_type') ?: null,
-                'birth_place'       => $this->request->getPost('birth_place'),
+                'marital_status'    => toLowerTrim($this->request->getPost('marital_status')) ?: 'belum_menikah',
+                'blood_type'        => toLowerTrim($this->request->getPost('blood_type')),
+                'birth_place'       => toLowerTrim($this->request->getPost('birth_place')) ?: 'sragen',
                 'birth_date'        => $this->request->getPost('birth_date'),
-                'phone'             => $this->request->getPost('phone'),
-                'email'             => $this->request->getPost('email') ?: null,
+                'phone'             => trim((string) $this->request->getPost('phone')),
+                'email'             => toLowerTrim($this->request->getPost('email')),
                 'status_verifikasi' => $statusVerifikasi,
-                'status_data'       => $this->request->getPost('status_data'),
+                'status_data'       => toLowerTrim($this->request->getPost('status_data')) ?: 'active',
+                'mta_warga_uuid'    => toLowerTrim($this->request->getPost('mta_warga_uuid')) ?: ($existing['mta_warga_uuid'] ?? null),
             ];
 
             $this->pemudaModel->update($id, $pemudaData);
@@ -713,10 +716,10 @@ class Pemuda extends BaseController
                 'regency_id'     => 3314,
                 'district_id'    => (int) $this->request->getPost('district_id'),
                 'village_id'     => (int) $this->request->getPost('village_id'),
-                'dusun'          => $this->request->getPost('dusun') ?: null,
-                'rt'             => $this->request->getPost('rt') ?: null,
-                'rw'             => $this->request->getPost('rw') ?: null,
-                'address_detail' => $this->request->getPost('address_detail'),
+                'dusun'          => toLowerTrim($this->request->getPost('dusun')),
+                'rt'             => toLowerTrim($this->request->getPost('rt')),
+                'rw'             => toLowerTrim($this->request->getPost('rw')),
+                'address_detail' => mb_strtolower(trim((string) $this->request->getPost('address_detail')), 'UTF-8'),
             ];
             if ($alamat) {
                 $this->alamatModel->update($alamat['id'], $alamatData);
@@ -729,9 +732,9 @@ class Pemuda extends BaseController
             $pendidikanData = [
                 'pemuda_id'          => $id,
                 'education_level_id' => (int) $this->request->getPost('education_level_id'),
-                'school_name'        => $this->request->getPost('school_name'),
-                'major'              => $this->request->getPost('major') ?: null,
-                'education_status'   => $this->request->getPost('education_status'),
+                'school_name'        => mb_strtolower(trim((string) $this->request->getPost('school_name')), 'UTF-8'),
+                'major'              => toLowerTrim($this->request->getPost('major')),
+                'education_status'   => toLowerTrim($this->request->getPost('education_status')) ?: 'lulus',
                 'graduation_year'    => $this->request->getPost('graduation_year') ? (int) $this->request->getPost('graduation_year') : null,
             ];
             if ($pendidikan) {
@@ -745,9 +748,9 @@ class Pemuda extends BaseController
             $pekerjaanData = [
                 'pemuda_id'      => $id,
                 'job_status_id'  => (int) $this->request->getPost('job_status_id'),
-                'job_title'      => $this->request->getPost('job_title') ?: null,
-                'company_name'   => $this->request->getPost('company_name') ?: null,
-                'business_field' => $this->request->getPost('business_field') ?: null,
+                'job_title'      => toLowerTrim($this->request->getPost('job_title')),
+                'company_name'   => toLowerTrim($this->request->getPost('company_name')),
+                'business_field' => toLowerTrim($this->request->getPost('business_field')),
             ];
             if ($pekerjaan) {
                 $this->pekerjaanModel->update($pekerjaan['id'], $pekerjaanData);
@@ -768,10 +771,10 @@ class Pemuda extends BaseController
 
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $id,
-                            'organization_name' => $orgName,
-                            'position'          => $position,
+                            'organization_name' => mb_strtolower(trim($orgName), 'UTF-8'),
+                            'position'          => mb_strtolower(trim($position), 'UTF-8'),
                             'join_date'         => $joinDate,
-                            'description'       => $desc,
+                            'description'       => toLowerTrim($desc),
                         ]);
                     }
                 }
@@ -784,8 +787,8 @@ class Pemuda extends BaseController
                     if (!empty($name)) {
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $id,
-                            'organization_name' => $name,
-                            'position'          => 'Anggota',
+                            'organization_name' => mb_strtolower(trim($name), 'UTF-8'),
+                            'position'          => 'anggota',
                         ]);
                     }
                 }

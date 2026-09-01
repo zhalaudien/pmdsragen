@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call('JobStatusSeeder');
         $this->call('SkillSeeder');
         $this->call('InterestSeeder');
+        $this->call('HomepageSettingSeeder');
 
         $this->db->enableForeignKeyChecks();
     }

@@ -67,3 +67,12 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# DATABASE WARGA MTA API INTEGRATION
+#--------------------------------------------------------------------
+
+# MTA_API_BASE_URL = 'https://api.mta.or.id/api/v1'
+# MTA_API_TOKEN = 'your_token_here'
+# MTA_API_TIMEOUT = 15
+# MTA_API_ENABLED = true

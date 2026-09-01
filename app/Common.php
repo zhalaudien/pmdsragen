@@ -63,3 +63,22 @@ if (!function_exists('sanitizeCsvField')) {
         return $str;
     }
 }
+
+if (!function_exists('toLowerTrim')) {
+    /**
+     * Safely trim and convert a string or nullable string to lowercase UTF-8
+     */
+    function toLowerTrim(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return mb_strtolower($trimmed, 'UTF-8');
+    }
+}

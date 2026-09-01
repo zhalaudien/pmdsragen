@@ -92,23 +92,38 @@ final class PendataanFormTest extends CIUnitTestCase
         $this->assertSame('Sie Acara', $inserted[1]['position']);
     }
 
-    public function testFindDuplicateMethodBehavior(): void
+    public function testFindDuplicateAndFindExistingMethodBehavior(): void
     {
         $model = new PemudaModel();
 
-        // Testing empty parameter validation handling in findDuplicate
+        // Testing empty parameter validation handling in findExistingPemuda
+        $this->assertNull($model->findExistingPemuda('', 'L', '2000-01-01', 1));
+        $this->assertNull($model->findExistingPemuda('Budi', 'L', '', 1));
+        $this->assertNull($model->findExistingPemuda('Budi', 'L', '2000-01-01', 0));
+        
+        // Testing findDuplicate compatibility
         $this->assertNull($model->findDuplicate('', '2000-01-01', 1));
         $this->assertNull($model->findDuplicate('Budi', '', 1));
         $this->assertNull($model->findDuplicate('Budi', '2000-01-01', 0));
     }
 
-    public function testCheckDuplicateRouteRegistered(): void
+    public function testToLowerTrimHelper(): void
+    {
+        $this->assertSame('budi santoso', toLowerTrim('  Budi Santoso  '));
+        $this->assertSame('jawa tengah', toLowerTrim('JAWA TENGAH'));
+        $this->assertNull(toLowerTrim(null));
+        $this->assertNull(toLowerTrim('   '));
+    }
+
+    public function testCheckDataRoutesRegistered(): void
     {
         $routes = \Config\Services::routes();
         require APPPATH . 'Config/Routes.php';
 
         $postRoutes = $routes->getRoutes('POST');
+        $this->assertArrayHasKey('pendataan/check-data', $postRoutes);
+        $this->assertEquals('\App\Controllers\Pendataan::checkData', $postRoutes['pendataan/check-data']);
         $this->assertArrayHasKey('pendataan/check-duplicate', $postRoutes);
-        $this->assertEquals('\App\Controllers\Pendataan::checkDuplicate', $postRoutes['pendataan/check-duplicate']);
+        $this->assertEquals('\App\Controllers\Pendataan::checkData', $postRoutes['pendataan/check-duplicate']);
     }
 }

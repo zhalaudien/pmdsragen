@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 
-<?= $this->section('title') ?>Pendaftaran Berhasil<?= $this->endSection() ?>
+<?= $this->section('title') ?><?= !empty($isUpdate) ? 'Pembaruan Data Berhasil' : 'Pendaftaran Berhasil' ?><?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 <div class="container py-4 py-md-5">
@@ -13,7 +13,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 small">
                     <li class="breadcrumb-item"><a href="<?= base_url('/') ?>" class="text-decoration-none text-muted">Beranda</a></li>
-                    <li class="breadcrumb-item active text-success fw-semibold" aria-current="page">Pendaftaran Sukses</li>
+                    <li class="breadcrumb-item active text-success fw-semibold" aria-current="page"><?= !empty($isUpdate) ? 'Pembaruan Data Sukses' : 'Pendaftaran Sukses' ?></li>
                 </ol>
             </nav>
         </div>
@@ -28,9 +28,14 @@
                     <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
                         <i class="bi bi-check-circle-fill display-4"></i>
                     </div>
-                    <h2 class="fw-bold text-slate-900 mb-2">Pendaftaran Pemuda Berhasil!</h2>
+                    <h2 class="fw-bold text-slate-900 mb-2">
+                        <?= !empty($isUpdate) ? 'Data Pemuda Berhasil Diperbarui &amp; Dilengkapi!' : 'Pendaftaran Pemuda Berhasil!' ?>
+                    </h2>
                     <p class="text-muted mx-auto" style="max-width: 540px;">
-                        Data profil dan potensi diri Anda telah tersimpan dengan aman dalam sistem basis data <strong>Pemuda MTA Perwakilan Sragen</strong>.
+                        <?= !empty($isUpdate) 
+                            ? 'Data profil dan potensi diri Anda telah berhasil diperbarui dan diselaraskan dalam sistem basis data <strong>Pemuda MTA Perwakilan Sragen</strong>.'
+                            : 'Data profil dan potensi diri Anda telah tersimpan dengan aman dalam sistem basis data <strong>Pemuda MTA Perwakilan Sragen</strong>.' 
+                        ?>
                     </p>
                 </div>
 
@@ -41,7 +46,7 @@
                         <?= esc($registration_number ?? (session()->getFlashdata('registration_number') ?? 'PMD-' . date('Ymd') . '-0001')) ?>
                     </div>
                     <div class="small text-muted mt-2">
-                        <i class="bi bi-info-circle me-1"></i> Simpan nomor registrasi ini sebagai bukti pendaftaran resmi Anda.
+                        <i class="bi bi-info-circle me-1"></i> Simpan nomor registrasi ini sebagai bukti resmi data pendataan Anda.
                     </div>
                 </div>
 
@@ -58,7 +63,15 @@
 
                             <div class="col-sm-4 text-muted">Status Verifikasi:</div>
                             <div class="col-sm-8">
-                                <span class="badge bg-warning bg-opacity-25 text-warning-emphasis fw-bold">Menunggu Verifikasi Admin</span>
+                                <?php if (($pemuda['status_verifikasi'] ?? '') === 'verified'): ?>
+                                    <span class="badge bg-success bg-opacity-25 text-success fw-bold">
+                                        <i class="bi bi-patch-check-fill me-1"></i> Terverifikasi Otomatis (Tercatat di MTA Pusat)
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge bg-warning bg-opacity-25 text-warning-emphasis fw-bold">
+                                        <i class="bi bi-hourglass-split me-1"></i> Menunggu Verifikasi Admin
+                                    </span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

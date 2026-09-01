@@ -201,6 +201,14 @@
                     </li>
 
                     <?php if (session()->get('role') === 'superadmin'): ?>
+                        <li class="nav-item">
+                            <a href="<?= base_url('admin/warga-mta') ?>" 
+                               class="nav-link <?= url_is('admin/warga-mta*') ? 'active' : '' ?>">
+                                <i class="nav-icon fas fa-id-card text-success"></i>
+                                <p>Warga MTA <span class="badge badge-success right">Sragen</span></p>
+                            </a>
+                        </li>
+
                         <li class="nav-header mt-2">MASTER &amp; PENGATURAN</li>
 
                         <li class="nav-item">
@@ -228,10 +236,26 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="<?= base_url('admin/mta-sync') ?>" 
+                               class="nav-link <?= url_is('admin/mta-sync*') ? 'active' : '' ?>">
+                                <i class="nav-icon fas fa-network-wired text-primary"></i>
+                                <p>Integrasi Database MTA</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a href="<?= base_url('admin/users') ?>" 
                                class="nav-link <?= url_is('admin/users*') ? 'active' : '' ?>">
                                 <i class="nav-icon fas fa-user-shield text-danger"></i>
                                 <p>Pengguna &amp; Akses</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="<?= base_url('admin/homepage') ?>" 
+                               class="nav-link <?= url_is('admin/homepage*') ? 'active' : '' ?>">
+                                <i class="nav-icon fas fa-desktop text-warning"></i>
+                                <p>Kelola Homepage</p>
                             </a>
                         </li>
                     <?php endif; ?>

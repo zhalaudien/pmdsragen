@@ -23,6 +23,8 @@ class CabangModel extends Model
         'gelombang_hari',
         'gelombang_jam',
         'gelombang_ustadz',
+        'mta_uuid',
+        'mta_last_synced_at',
     ];
 
     protected $useTimestamps = true;

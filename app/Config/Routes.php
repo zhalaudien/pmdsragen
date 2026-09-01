@@ -9,8 +9,11 @@ use CodeIgniter\Router\RouteCollection;
 // ==========================================
 $routes->get('/', 'Home::index');
 $routes->get('pendataan', 'Pendataan::index');
+$routes->get('pendataan/search-warga', 'Pendataan::searchWarga');
+$routes->get('pendataan/warga-detail/(:segment)', 'Pendataan::wargaDetail/$1');
 $routes->post('pendataan/simpan', 'Pendataan::simpan');
-$routes->post('pendataan/check-duplicate', 'Pendataan::checkDuplicate');
+$routes->post('pendataan/check-data', 'Pendataan::checkData');
+$routes->post('pendataan/check-duplicate', 'Pendataan::checkData');
 $routes->get('pendataan/sukses', 'Pendataan::sukses');
 
 // Public API for dropdowns
@@ -75,6 +78,33 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
         $routes->post('simpan', 'Admin\Users::simpan');
         $routes->post('update/(:num)', 'Admin\Users::update/$1');
         $routes->post('delete/(:num)', 'Admin\Users::delete/$1');
+    });
+
+    // Data Warga MTA Sragen dari api.mta.or.id (Superadmin)
+    $routes->group('warga-mta', ['filter' => 'role:superadmin'], function ($routes) {
+        $routes->get('/', 'Admin\WargaMta::index');
+        $routes->get('detail/(:segment)', 'Admin\WargaMta::detail/$1');
+        $routes->post('import', 'Admin\WargaMta::import');
+    });
+
+    // Integrasi & Sinkronisasi Database Warga MTA (Superadmin)
+    $routes->group('mta-sync', ['filter' => 'role:superadmin'], function ($routes) {
+        $routes->get('/', 'Admin\MtaSync::index');
+        $routes->get('test-connection', 'Admin\MtaSync::testConnection');
+        $routes->post('sync-cabang', 'Admin\MtaSync::syncCabang');
+        $routes->get('search-warga', 'Admin\MtaSync::searchWarga');
+        $routes->get('warga-detail/(:segment)', 'Admin\MtaSync::wargaDetail/$1');
+        $routes->get('cabang-warga/(:segment)', 'Admin\MtaSync::cabangWarga/$1');
+        $routes->post('import-warga', 'Admin\MtaSync::importWarga');
+        $routes->post('sync-pemuda/(:num)', 'Admin\MtaSync::syncPemuda/$1');
+        $routes->post('sync-verify-all', 'Admin\MtaSync::syncVerifyAll');
+    });
+
+    // Kelola Konten Beranda / Homepage (Superadmin)
+    $routes->group('homepage', ['filter' => 'role:superadmin'], function ($routes) {
+        $routes->get('/', 'Admin\HomepageSetting::index');
+        $routes->post('update', 'Admin\HomepageSetting::update');
+        $routes->post('reset', 'Admin\HomepageSetting::reset');
     });
 
     // Ajax Helpers

@@ -94,10 +94,19 @@
 
             <!-- 2. DATA PRIBADI -->
             <div class="mb-4">
-                <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
-                    <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">2</span>
-                    <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Data Pribadi</h6>
+                <div class="d-flex align-items-center mb-3 pb-2 border-bottom justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">2</span>
+                        <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Data Pribadi</h6>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-xs btn-outline-primary font-weight-bold" data-toggle="modal" data-target="#modalLookupMta">
+                            <i class="fas fa-search mr-1"></i> Cari di Database Warga MTA
+                        </button>
+                    </div>
                 </div>
+
+                <input type="hidden" name="mta_warga_uuid" id="mta_warga_uuid" value="<?= esc($pemuda['mta_warga_uuid'] ?? '') ?>">
 
                 <div class="row">
                     <div class="col-12 col-md-6 form-group mb-2">
@@ -604,6 +613,146 @@
         $('.admin-org-check').on('change', function () {
             toggleAdminOrg($(this).data('key'));
         });
+
+        // MTA Lookup Search & Autofill
+        $('#formSearchLookupMta').on('submit', function(e) {
+            e.preventDefault();
+            const q = $('#lookupQuery').val().trim();
+            const btn = $('#btnExecuteLookup');
+            if (q.length < 2) {
+                alert('Kata kunci pencarian minimal 2 karakter.');
+                return;
+            }
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Mencari...');
+            $('#lookupResultsBody').html('<tr><td colspan="6" class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i> Menghubungi API MTA...</td></tr>');
+
+            $.ajax({
+                url: '<?= base_url('admin/mta-sync/search-warga') ?>',
+                type: 'GET',
+                data: { q: q, limit: 15 },
+                dataType: 'json',
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i class="fas fa-search mr-1"></i> Cari');
+
+                    if (res.success && res.data && res.data.length > 0) {
+                        let html = '';
+                        res.data.forEach(function(item, idx) {
+                            const genderBadge = item.kelamin === 'L' ? '<span class="badge badge-primary">L</span>' : '<span class="badge badge-danger">P</span>';
+                            html += '<tr>' +
+                                '<td class="text-center">' + (idx + 1) + '</td>' +
+                                '<td><strong class="text-dark">' + (item.nama || '-') + '</strong></td>' +
+                                '<td class="text-center">' + genderBadge + '</td>' +
+                                '<td>' + (item.nohp || '-') + '</td>' +
+                                '<td class="text-xs">' + (item.cabang || '-') + ' (' + (item.alamat || '-') + ')</td>' +
+                                '<td class="text-center">' +
+                                    '<button type="button" class="btn btn-xs btn-success font-weight-bold btn-apply-warga" data-warga=\'' + JSON.stringify(item) + '\'>' +
+                                        '<i class="fas fa-check mr-1"></i> Gunakan' +
+                                    '</button>' +
+                                '</td>' +
+                            '</tr>';
+                        });
+                        $('#lookupResultsBody').html(html);
+                    } else {
+                        $('#lookupResultsBody').html('<tr><td colspan="6" class="text-center py-3 text-muted"><i class="fas fa-info-circle mr-1"></i> Tidak ditemukan warga MTA dengan kata kunci tersebut.</td></tr>');
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html('<i class="fas fa-search mr-1"></i> Cari');
+                    $('#lookupResultsBody').html('<tr><td colspan="6" class="text-center py-3 text-danger"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal menghubungi API MTA.</td></tr>');
+                }
+            });
+        });
+
+        // Event handler klik "Gunakan Data Ini"
+        $(document).on('click', '.btn-apply-warga', function() {
+            const data = $(this).data('warga');
+            if (!data) return;
+
+            // Isi form otomatis
+            if (data.uuid) $('#mta_warga_uuid').val(data.uuid);
+            if (data.nama) $('#name').val(data.nama);
+            if (data.kelamin) $('select[name="gender"]').val(data.kelamin);
+            if (data.nohp) $('#phone').val(data.nohp);
+            if (data.lahir) $('#birth_date').val(data.lahir);
+            if (data.goldar) $('select[name="blood_type"]').val(data.goldar.toUpperCase());
+            if (data.alamat) $('#address_detail').val(data.alamat);
+
+            if (data.menikah) {
+                const m = data.menikah.toLowerCase();
+                if (m.includes('sudah') || (m.includes('menikah') && !m.includes('belum'))) {
+                    $('select[name="marital_status"]').val('sudah_menikah');
+                } else if (m.includes('janda')) {
+                    $('select[name="marital_status"]').val('janda');
+                } else if (m.includes('duda')) {
+                    $('select[name="marital_status"]').val('duda');
+                } else {
+                    $('select[name="marital_status"]').val('belum_menikah');
+                }
+            }
+
+            if (data.pekerjaan) {
+                $('#job_title').val(data.pekerjaan);
+            }
+
+            // Notifikasi sukses
+            alert('Data warga "' + data.nama + '" berhasil diterapkan ke dalam formulir!');
+            $('#modalLookupMta').modal('hide');
+        });
     });
 </script>
+
+<!-- MODAL LOOKUP WARGA MTA -->
+<div class="modal fade" id="modalLookupMta" tabindex="-1" role="dialog" aria-labelledby="modalLookupMtaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title font-weight-bold" id="modalLookupMtaLabel">
+                    <i class="fas fa-search mr-1"></i> Cari &amp; Isi Otomatis dari Database Warga MTA
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formSearchLookupMta" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" id="lookupQuery" class="form-control" placeholder="Ketik nama lengkap atau nomor HP warga MTA..." required minlength="2">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary font-weight-bold" type="submit" id="btnExecuteLookup">
+                                <i class="fas fa-search mr-1"></i> Cari
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive" style="max-height: 350px;">
+                    <table class="table table-bordered table-sm table-hover text-sm bg-white mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="5%">No</th>
+                                <th>Nama Lengkap</th>
+                                <th width="8%" class="text-center">JK</th>
+                                <th>No. HP</th>
+                                <th>Cabang &amp; Alamat</th>
+                                <th width="15%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lookupResultsBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-3 text-muted">
+                                    Masukkan nama atau nomor HP pada kolom di atas lalu klik <strong>Cari</strong>.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>

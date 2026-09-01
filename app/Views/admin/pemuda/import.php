@@ -70,15 +70,17 @@
                     <?= csrf_field() ?>
 
                     <!-- STEP 1: DOWNLOAD TEMPLATE BANNER -->
-                    <div class="callout callout-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between flex-wrap">
+                    <div class="callout callout-success py-2 px-3 mb-3 d-flex align-items-center justify-content-between flex-wrap">
                         <div>
                             <h6 class="font-weight-bold text-dark mb-1 text-sm">
-                                <i class="fas fa-file-excel text-success mr-1"></i> 1. Gunakan Template Standar
+                                <i class="fas fa-file-excel text-success mr-1"></i> 1. Gunakan Template Standar Import
                             </h6>
-                            <p class="text-muted text-xs mb-0">Pastikan format kolom sesuai dengan template resmi agar data terbaca sempurna.</p>
+                            <p class="text-muted text-xs mb-0">
+                                <strong>Prioritas Utama:</strong> Cukup isi <strong>Nama Lengkap</strong>, <strong>Cabang</strong>, <strong>Jenis Kelamin</strong>, <strong>Status Pernikahan</strong>, dan <strong>Tanggal Lahir</strong>. Data lainnya bersifat opsional dan dapat menyusul.
+                            </p>
                         </div>
-                        <a href="<?= base_url('admin/pemuda/template-import') ?>" class="btn btn-outline-success btn-xs font-weight-bold mt-2 mt-sm-0">
-                            <i class="fas fa-download mr-1"></i> Unduh Template
+                        <a href="<?= base_url('admin/pemuda/template-import') ?>" class="btn btn-success btn-xs font-weight-bold mt-2 mt-sm-0 shadow-sm">
+                            <i class="fas fa-download mr-1"></i> Unduh Template Excel
                         </a>
                     </div>
 
@@ -130,7 +132,7 @@
                                     Lewati baris data yang error (Import baris yang valid saja)
                                 </label>
                                 <div class="text-muted text-xs">
-                                    Jika dicentang, data baris yang valid akan tetap disimpan ke database, dan baris yang tidak lengkap akan dilaporkan pada ringkasan hasil.
+                                    Jika dicentang, data baris yang valid akan tetap disimpan ke database, dan baris yang bermasalah akan dilaporkan pada ringkasan hasil.
                                 </div>
                             </div>
                         </div>
@@ -141,7 +143,7 @@
                         <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-default btn-sm">
                             Batal
                         </a>
-                        <button type="submit" class="btn btn-primary btn-sm px-3" id="btnSubmitImport">
+                        <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm font-weight-bold" id="btnSubmitImport">
                             <i class="fas fa-cloud-upload-alt mr-1"></i> Mulai Proses Import Data
                         </button>
                     </div>
@@ -152,47 +154,61 @@
 
     <!-- KOLOM KANAN: PANDUAN & PETUNJUK KOLOM -->
     <div class="col-12 col-lg-5">
-        <div class="card card-info card-outline shadow-sm mb-3">
+        <div class="card card-success card-outline shadow-sm mb-3">
             <div class="card-header border-0">
                 <h3 class="card-title font-weight-bold text-sm">
-                    <i class="fas fa-lightbulb text-warning mr-1"></i>
-                    Panduan Format Kolom Excel
+                    <i class="fas fa-check-double text-success mr-1"></i>
+                    Prioritas Format Kolom Excel
                 </h3>
             </div>
             <div class="card-body p-3">
-                <!-- Kolom Wajib -->
-                <div class="mb-3">
-                    <h6 class="font-weight-bold text-primary text-xs text-uppercase mb-2">
-                        <i class="fas fa-check-square mr-1"></i> Kolom Wajib Diisi (*)
-                    </h6>
-                    <ul class="list-unstyled text-xs text-muted mb-0 pl-1">
-                        <li class="mb-1"><strong class="text-dark">Nama Lengkap</strong> — Nama pemuda (min. 3 karakter).</li>
-                        <li class="mb-1"><strong class="text-dark">Jenis Kelamin</strong> — Isi <span class="badge badge-light border">L</span> atau <span class="badge badge-light border">P</span>.</li>
-                        <li class="mb-1"><strong class="text-dark">Cabang</strong> — Nama Cabang (contoh: <code>Sragen 1</code>) atau Kode (contoh: <code>CBG-001</code>).</li>
-                        <li class="mb-1"><strong class="text-dark">Tanggal Lahir</strong> — Format <code>YYYY-MM-DD</code> atau <code>DD/MM/YYYY</code>.</li>
-                        <li class="mb-1"><strong class="text-dark">No. Telepon / WA</strong> — Nomor kontak aktif (contoh: <code>081234567890</code>).</li>
-                        <li class="mb-1"><strong class="text-dark">Kecamatan &amp; Desa</strong> — Nama Kecamatan dan Desa di Kabupaten Sragen.</li>
-                        <li class="mb-1"><strong class="text-dark">Jenjang Pendidikan</strong> — Contoh: <code>SMA / SMK / MA</code>, <code>Sarjana (S1 / D4)</code>.</li>
-                        <li class="mb-1"><strong class="text-dark">Status Pendidikan</strong> — <code>lulus</code>, <code>sedang_sekolah</code>, atau <code>putus_sekolah</code>.</li>
-                        <li class="mb-0"><strong class="text-dark">Status Pekerjaan</strong> — Contoh: <code>Karyawan Swasta</code>, <code>Pelajar / Mahasiswa</code>, <code>Wirausaha</code>.</li>
-                    </ul>
-                </div>
-
-                <hr class="my-2">
-
-                <!-- Kolom Opsional -->
+                <!-- 5 Data Wajib Utama -->
                 <div class="mb-3">
                     <h6 class="font-weight-bold text-success text-xs text-uppercase mb-2">
-                        <i class="fas fa-plus-circle mr-1"></i> Kolom Opsional
+                        <i class="fas fa-star text-warning mr-1"></i> 5 Data Inti Wajib Diisi (*)
                     </h6>
-                    <ul class="list-unstyled text-xs text-muted mb-0 pl-1">
-                        <li class="mb-1"><strong class="text-dark">Email</strong> — Alamat surel pemuda.</li>
-                        <li class="mb-1"><strong class="text-dark">Status Nikah</strong> — <code>belum_menikah</code>, <code>sudah_menikah</code>, <code>janda</code>, <code>duda</code>.</li>
-                        <li class="mb-1"><strong class="text-dark">Golongan Darah</strong> — <code>A</code>, <code>B</code>, <code>AB</code>, <code>O</code>, atau <code>tidak_tahu</code>.</li>
-                        <li class="mb-1"><strong class="text-dark">Organisasi</strong> — Pisahkan dengan koma (<code>,</code>).</li>
-                        <li class="mb-1"><strong class="text-dark">Keahlian</strong> — Pisahkan dengan koma (contoh: <code>Desain Grafis, Pemrograman</code>).</li>
-                        <li class="mb-0"><strong class="text-dark">Minat</strong> — Pisahkan dengan koma (contoh: <code>Teknologi, Olahraga</code>).</li>
-                    </ul>
+                    <div class="bg-light p-2 rounded border mb-2">
+                        <ul class="list-unstyled text-xs text-muted mb-0 pl-1">
+                            <li class="mb-1">
+                                <strong class="text-dark"><i class="fas fa-user text-primary mr-1"></i> 1. Nama Lengkap</strong> — Nama pemuda (min. 3 karakter).
+                            </li>
+                            <li class="mb-1">
+                                <strong class="text-dark"><i class="fas fa-sitemap text-warning mr-1"></i> 2. Cabang</strong> — Nama Cabang (contoh: <code>Sragen 1</code>, <code>Gemolong 1</code>) atau Kode (contoh: <code>CBG-001</code>).
+                            </li>
+                            <li class="mb-1">
+                                <strong class="text-dark"><i class="fas fa-venus-mars text-info mr-1"></i> 3. Jenis Kelamin</strong> — Isi <span class="badge badge-primary">L</span> (Laki-laki) atau <span class="badge badge-danger">P</span> (Perempuan).
+                            </li>
+                            <li class="mb-1">
+                                <strong class="text-dark"><i class="fas fa-heart text-danger mr-1"></i> 4. Status Pernikahan</strong> — <code>belum_menikah</code>, <code>sudah_menikah</code>, <code>janda</code>, <code>duda</code> (default: <code>belum_menikah</code>).
+                            </li>
+                            <li class="mb-0">
+                                <strong class="text-dark"><i class="fas fa-calendar-alt text-success mr-1"></i> 5. Tanggal Lahir</strong> — Format <code>YYYY-MM-DD</code> atau <code>DD/MM/YYYY</code>.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Kolom Pelengkap (Bisa Menyusul) -->
+                <div class="mb-3">
+                    <h6 class="font-weight-bold text-secondary text-xs text-uppercase mb-2">
+                        <i class="fas fa-info-circle text-info mr-1"></i> Data Pelengkap (Opsional / Bisa Menyusul)
+                    </h6>
+                    <p class="text-muted text-xs mb-1">
+                        Seluruh kolom di bawah ini <strong>boleh dikosongkan</strong> dan dapat dilengkapi kemudian hari melalui menu edit data:
+                    </p>
+                    <div class="text-xs text-muted">
+                        <span class="badge badge-light border mb-1">No. Telepon / WA</span>
+                        <span class="badge badge-light border mb-1">Tempat Lahir</span>
+                        <span class="badge badge-light border mb-1">Email</span>
+                        <span class="badge badge-light border mb-1">Golongan Darah</span>
+                        <span class="badge badge-light border mb-1">Kecamatan &amp; Desa</span>
+                        <span class="badge badge-light border mb-1">Alamat Lengkap / RT / RW</span>
+                        <span class="badge badge-light border mb-1">Jenjang &amp; Nama Sekolah</span>
+                        <span class="badge badge-light border mb-1">Status Pekerjaan</span>
+                        <span class="badge badge-light border mb-1">Organisasi</span>
+                        <span class="badge badge-light border mb-1">Keahlian</span>
+                        <span class="badge badge-light border mb-1">Minat</span>
+                    </div>
                 </div>
 
                 <hr class="my-2">

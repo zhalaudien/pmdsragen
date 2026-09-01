@@ -54,13 +54,13 @@ final class PemudaImportTest extends CIUnitTestCase
         $sheet1 = $spreadsheet->getSheet(0);
         $this->assertEquals('Format Import Pemuda', $sheet1->getTitle());
 
-        // Verify Essential Headers
+        // Verify Essential Headers (5 Kolom Utama di awal)
         $this->assertStringContainsString('Nama Lengkap', (string) $sheet1->getCell('A1')->getValue());
-        $this->assertStringContainsString('Jenis Kelamin', (string) $sheet1->getCell('B1')->getValue());
-        $this->assertStringContainsString('Cabang', (string) $sheet1->getCell('C1')->getValue());
-        $this->assertStringContainsString('Tempat Lahir', (string) $sheet1->getCell('D1')->getValue());
+        $this->assertStringContainsString('Cabang', (string) $sheet1->getCell('B1')->getValue());
+        $this->assertStringContainsString('Jenis Kelamin', (string) $sheet1->getCell('C1')->getValue());
+        $this->assertStringContainsString('Status Pernikahan', (string) $sheet1->getCell('D1')->getValue());
         $this->assertStringContainsString('Tanggal Lahir', (string) $sheet1->getCell('E1')->getValue());
-        $this->assertStringContainsString('Telepon', (string) $sheet1->getCell('F1')->getValue());
+        $this->assertStringContainsString('Telepon', (string) $sheet1->getCell('G1')->getValue());
         $this->assertStringContainsString('Kecamatan', (string) $sheet1->getCell('J1')->getValue());
         $this->assertStringContainsString('Desa', (string) $sheet1->getCell('K1')->getValue());
         $this->assertStringContainsString('Pendidikan', (string) $sheet1->getCell('P1')->getValue());
@@ -68,17 +68,18 @@ final class PemudaImportTest extends CIUnitTestCase
 
         // Verify Sample Rows are present
         $this->assertEquals('Muhammad Yusuf', $sheet1->getCell('A2')->getValue());
-        $this->assertEquals('L', $sheet1->getCell('B2')->getValue());
-        $this->assertEquals('Sragen 1', $sheet1->getCell('C2')->getValue());
+        $this->assertEquals('Sragen 1', $sheet1->getCell('B2')->getValue());
+        $this->assertEquals('L', $sheet1->getCell('C2')->getValue());
 
-        $this->assertEquals('Aisyah Nur Rahma', $sheet1->getCell('A3')->getValue());
-        $this->assertEquals('P', $sheet1->getCell('B3')->getValue());
+        $this->assertEquals('Fatimah Azzahra', $sheet1->getCell('A3')->getValue());
+        $this->assertEquals('Gemolong 1', $sheet1->getCell('B3')->getValue());
+        $this->assertEquals('P', $sheet1->getCell('C3')->getValue());
 
         // Sheet 2: Referensi & Petunjuk
         $sheet2 = $spreadsheet->getSheet(1);
         $this->assertEquals('Referensi & Petunjuk', $sheet2->getTitle());
         $this->assertStringContainsString('PANDUAN', (string) $sheet2->getCell('A1')->getValue());
-        $this->assertStringContainsString('WILAYAH & CABANG', (string) $sheet2->getCell('A15')->getValue());
+        $this->assertStringContainsString('WILAYAH & CABANG', (string) $sheet2->getCell('A16')->getValue());
     }
 
     public function testHeaderMappingMethod(): void
@@ -254,15 +255,15 @@ final class PemudaImportTest extends CIUnitTestCase
         $res = $parseMethod->invoke($this->importService, $rowValues, $map, 2, $lookups, 'verified');
 
         $this->assertEmpty($res['errors']);
-        $this->assertEquals('Ahmad Fauzi', $res['data']['name']);
+        $this->assertEquals('ahmad fauzi', $res['data']['name']);
         $this->assertEquals('L', $res['data']['gender']);
         $this->assertEquals('2000-01-15', $res['data']['birth_date']);
         $this->assertEquals('081299887766', $res['data']['phone']);
         $this->assertEquals('belum_menikah', $res['data']['marital_status']);
-        $this->assertEquals('B', $res['data']['blood_type']);
+        $this->assertEquals('b', $res['data']['blood_type']);
         $this->assertEquals('verified', $res['data']['status_verifikasi']);
         $this->assertCount(2, $res['data']['organisasi_list']);
-        $this->assertContains('Karang Taruna', $res['data']['organisasi_list']);
+        $this->assertContains('karang taruna', $res['data']['organisasi_list']);
     }
 
     public function testParseAndValidateInvalidRowDetectsErrors(): void
@@ -280,7 +281,7 @@ final class PemudaImportTest extends CIUnitTestCase
             'Jenis Kelamin *',
             'Cabang *',
             'Tanggal Lahir *',
-            'No. Telepon / WA *',
+            'No. Telepon / WA',
         ];
 
         $map = $mapMethod->invoke($this->importService, $headers);
@@ -292,7 +293,7 @@ final class PemudaImportTest extends CIUnitTestCase
             'X', // Invalid gender
             'Cabang Tidak Ada', // Invalid cabang
             'tanggal-salah', // Invalid date
-            '123', // Phone too short
+            '123', // Phone too short (optional)
         ];
 
         $res = $parseMethod->invoke($this->importService, $rowValues, $map, 5, $lookups, 'verified');
@@ -303,6 +304,5 @@ final class PemudaImportTest extends CIUnitTestCase
         $this->assertStringContainsString('Jenis Kelamin', $errorStr);
         $this->assertStringContainsString('Cabang', $errorStr);
         $this->assertStringContainsString('Tanggal Lahir', $errorStr);
-        $this->assertStringContainsString('Telepon', $errorStr);
     }
 }

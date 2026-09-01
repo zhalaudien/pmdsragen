@@ -1331,3 +1331,163 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 - **Penguatan Session & Cookie:**
   - Diaktifkan `$regenerateDestroy = true` di `app/Config/Session.php` untuk mencegah session fixation.
   - Dikonfigurasi `$appTimezone = 'Asia/Jakarta'` di `app/Config/App.php`.
+
+### 2026-08-31 — Integrasi & Sinkronisasi Database Warga MTA API (v1) — Khusus Perwakilan Sragen
+
+- **Konfigurasi & Scope Wilayah:**
+  - Dibuat `app/Config/MtaApi.php` dan ditambahkan konfigurasi environment (`MTA_API_BASE_URL`, `MTA_API_TOKEN`, `MTA_API_TIMEOUT`, `MTA_API_ENABLED`, `MTA_PERWAKILAN_UUID`, `MTA_PERWAKILAN_NAMA`) di `.env` dan `env`.
+  - **Penguncian Scope Data:** Seluruh proses pencarian warga, pengambilan daftar cabang, dan sinkronisasi data dikunci secara ketat hanya untuk **Perwakilan Sragen** (Kode: `86`, UUID: `3246792b-f0a7-48ca-95fa-379e3bee777d`).
+- **Service Layer:**
+  - `app/Services/MtaApiService.php`: Ditambahkan helper `getSragenUuid()`, `getPerwakilanSragenDetail()`, `getCabangSragenList()`, `getCabangWarga()`, dan default filter Perwakilan Sragen pada `searchWarga()` dan `getWargaList()`.
+  - `app/Services/MtaSyncService.php`:
+    - Sinkronisasi cabang otomatis diarahkan ke 65+ cabang Perwakilan Sragen.
+    - Ditambahkan `verifyYouthAgainstMta(array $inputData)`: Pengecekan otomatis apakah pemuda yang diinput sudah ada di Database Warga MTA Pusat. Jika ada -> status `verified`, jika tidak ada -> status `pending`.
+    - Ditambahkan `syncAndVerifyAllPemudaSragen(?int $cabangId, bool $onlyPending)`: Fitur verifikasi dan sinkronisasi massal seluruh data pemuda terdaftar di PMD Sragen terhadap Database Warga MTA Pusat.
+- **Database & Migration:**
+  - Dibuat migration `2026-08-31-220000_AddMtaSyncFields.php`:
+    - Tabel `wilayah`: penambahan kolom `mta_uuid`, `mta_code` (indexed).
+    - Tabel `cabang`: penambahan kolom `mta_uuid`, `mta_last_synced_at` (indexed).
+    - Tabel `pemuda`: penambahan kolom `mta_warga_uuid`, `mta_status_warga`, `mta_ayah_uuid`, `mta_ibu_uuid`, `mta_foto_url`, `mta_synced_at` (indexed).
+    - Tabel baru `mta_sync_logs` untuk audit trail riwayat sinkronisasi.
+  - Diperbarui `$allowedFields` pada `WilayahModel.php`, `CabangModel.php`, dan `PemudaModel.php`.
+  - Dibuat model `MtaSyncLogModel.php`.
+- **Form Public & Controller:**
+  - `app/Controllers/Pendataan.php`: Pada saat pemuda mendaftar mandiri via form publik (`simpan()`), sistem langsung memverifikasi otomatis ke API MTA Pusat. Jika ditemukan di server MTA, status registrasi langsung menjadi `verified`, jika tidak ditemukan berstatus `pending`.
+  - `app/Views/pendataan/sukses.php`: Badge status dinamis ("Terverifikasi Otomatis (Tercatat di MTA Pusat)" vs "Menunggu Verifikasi Admin").
+  - `app/Controllers/Admin/MtaSync.php`: Ditambahkan endpoint `POST admin/mta-sync/sync-verify-all` untuk pemindaian dan verifikasi massal seluruh pemuda.
+- **User Interface & UX Admin Panel:**
+  - `app/Views/admin/mta_sync/index.php`: Ditambahkan card fitur & modal "Sinkronisasi & Verifikasi Otomatis Pemuda Sragen".
+  - `app/Views/admin/pemuda/index.php`: Ditambahkan shortcut tombol "Sinkron & Verifikasi MTA".
+
+### 2026-08-31 — Penyederhanaan & Prioritas Data Import Excel Pemuda
+
+- **Prioritas 5 Data Inti Wajib:**
+  - Fitur Import Excel difokuskan pada 5 kolom data utama yang esensial:
+    1. `name` (Nama Lengkap)
+    2. `cabang` (Nama / Kode Cabang)
+    3. `gender` (Jenis Kelamin: `L` / `P`)
+    4. `marital_status` (Status Pernikahan: `belum_menikah`, `sudah_menikah`, `janda`, `duda`)
+    5. `birth_date` (Tanggal Lahir: `YYYY-MM-DD` / `DD/MM/YYYY`)
+- **Data Pelengkap Bersifat Opsional & Menyusul:**
+  - `phone` (Nomor Telepon/WA), tempat lahir, email, golongan darah, alamat lengkap, jenjang pendidikan, pekerjaan, organisasi, keahlian, dan minat dijadikan opsional (nullable/fallback otomatis) sehingga tidak memblokir proses import jika belum terisi.
+- **Template Excel & UI Panduan:**
+  - Template `Template_Import_Pemuda_MTA_Sragen.xlsx` diperbarui dengan visualisasi header hijau untuk 5 kolom utama wajib dan warna netral untuk kolom pelengkap yang bisa menyusul.
+  - Halaman `app/Views/admin/pemuda/import.php` diperbarui dengan panduan prioritas data yang jelas.
+
+### 2026-09-01 — Fitur Pengecekan Data Pemuda & Pelengkapan Data Otomatis pada Form Pendataan
+
+- **Pengecekan Data Pemuda (Nama, Jenis Kelamin, Tanggal Lahir, dan Cabang):**
+  - Ditambahkan method `findExistingPemuda($name, $gender, $birthDate, $cabangId, $excludeId)` pada `PemudaModel.php` untuk mencocokkan data pemuda secara akurat.
+  - Ditambahkan endpoint AJAX `POST /pendataan/check-data` (serta alias legacy `POST /pendataan/check-duplicate`) pada `Pendataan::checkData`.
+  - Jika data **sudah terdaftar** di cabang terkait:
+    - Mengembalikan `status: 'found'` beserta data lengkap pemuda (identitas pribadi, alamat, pendidikan, pekerjaan, organisasi, keahlian, dan minat).
+    - Form secara otomatis dimuat dan diisikan dengan data yang ada di database.
+    - Menampilkan notifikasi visual interaktif mode "Melengkapi & Memperbarui Data Terdaftar" dengan No. Registrasi.
+    - User dapat langsung melanjutkan ke langkah berikutnya untuk melengkapi atau memperbarui kolom yang belum terisi.
+  - Jika data **belum terdaftar**:
+    - Mengembalikan `status: 'not_found'`.
+    - Menampilkan feedback informatif "Data Belum Terdaftar" dan mengizinkan user melanjutkan pengisian form pendataan baru sampai langkah konfirmasi selesai.
+- **Pembaruan Alur Penyimpanan (`Pendataan::simpan`):**
+  - Mendukung penyelesaian/pembaruan data terdaftar (`isUpdate = true`) dengan operasi upsert pada `alamat`, `pendidikan`, `pekerjaan`, serta sinkronisasi ulang `organisasi`, `skills`, dan `interests` tanpa memicu penolakan duplikasi.
+  - Pembuatan data baru tetap meng-generate nomor registrasi unik `PMD-YYYYMMDD-XXXX`.
+- **UI/UX Form Pendataan Publik (`app/Views/pendataan/form.php` & `public/js/pendataan.js`):**
+  - Penataan 4 parameter verifikasi utama (Cabang, Nama Lengkap, Jenis Kelamin, Tanggal Lahir) di bagian atas Step 1.
+  - Tombol aksi interaktif "Cek Data Pemuda" beserta indikator spinner dan kontainer feedback dinamis.
+  - Integrasi otomatis saat klik "Selanjutnya: Alamat" jika pengecekan data belum dijalankan secara manual.
+  - Adaptasi dinamis tombol konfirmasi dan halaman sukses (`app/Views/pendataan/sukses.php`).
+
+### 2026-09-01 — Standarisasi Penyimpanan Data Pemuda dalam Format Huruf Kecil (Lowercase)
+
+- **Format Lowercase pada Database:**
+  - Seluruh data teks pemuda (nama lengkap, tempat lahir, email, golongan darah, status pernikahan, dusun, RT, RW, alamat detail, nama sekolah/kampus, jurusan, status pendidikan, profesi/jabatan, nama perusahaan/usaha, bidang usaha, nama organisasi, posisi/jabatan, deskripsi) distandarisasi untuk disimpan dalam format **lowercase** (huruf kecil) menggunakan UTF-8 `mb_strtolower()`.
+- **Implementasi Multi-Layer:**
+  1. **Helper & Form Public/Admin:** Helper `toLowerTrim()` di `app/Common.php` digunakan pada `Pendataan::simpan` dan `Admin\Pemuda::simpan` serta `Admin\Pemuda::update`.
+  2. **Model Callbacks (`beforeInsert` & `beforeUpdate`):** Diterapkan otomatis pada `PemudaModel`, `AlamatModel`, `PendidikanModel`, `PekerjaanModel`, dan `OrganisasiModel` sehingga seluruh penyimpanan data dijamin konsisten berformat lowercase.
+  3. **Import Spreadsheet (`PemudaImportService`):** Seluruh data hasil parsing file Excel/CSV otomatis dinormalisasi ke format lowercase sebelum disimpan ke database.
+
+### 2026-09-01 — Penambahan Menu Warga MTA pada Superadmin (Data Warga Sragen dari api.mta.or.id)
+
+- **Menu Navigasi Sidebar Superadmin:**
+  - Ditambahkan menu **Warga MTA** pada navigasi sidebar (`app/Views/admin/layouts/main.php`) di bawah Menu Utama khusus bagi user dengan role `superadmin`, dilengkapi ikon kartu identitas (`fas fa-id-card text-success`) dan label badge `Sragen`.
+- **Routing & Controller:**
+  - Didaftarkan route group `admin/warga-mta` dengan proteksi filter `auth` dan `role:superadmin` pada `app/Config/Routes.php`.
+  - Dibuat controller `App\Controllers\Admin\WargaMta.php` yang berinteraksi langsung dengan API Pusat `api.mta.or.id`:
+    - `index()`: Mengambil daftar warga MTA khusus Perwakilan Sragen (Kode `86`, UUID: `3246792b-f0a7-48ca-95fa-379e3bee777d`). Menyediakan pagination terintegrasi, pencarian cepat (nama/no. HP/alamat), filter 70 Cabang MTA di Sragen, filter jenis kelamin (Putra/Putri), dan filter status PMD lokal.
+    - Cross-referencing otomatis dengan database PMD Sragen lokal untuk mendeteksi apakah warga MTA tersebut sudah tercatat sebagai pemuda atau belum.
+    - `detail($uuid)`: Mengambil profil lengkap warga MTA (foto, identitas, kontak, orang tua, pernikahan, pekerjaan, dan domisili) dari API MTA baik melalui AJAX Modal interaktif maupun halaman detail mandiri.
+    - `import()`: Mendaftarkan/mengimpor warga MTA terpilih menjadi pemuda PMD Sragen ke cabang lokal tujuan secara instan, lengkap dengan alamat, pekerjaan, dan verifikasi otomatis (`verified`).
+- **User Interface & UX:**
+  - Dibuat view `app/Views/admin/warga_mta/index.php` dan `app/Views/admin/warga_mta/detail.php`.
+  - Dilengkapi widget statistik ringkas (Total Warga MTA Sragen, Total Cabang MTA di Sragen, Warga Tersinkron PMD, Status Sumber API).
+  - Tampilan tabel responsif dengan badge status PMD, tautan WhatsApp instan, modal detail AJAX, dan modal impor ke PMD dengan auto-match cabang lokal.
+- **Testing & Validasi:**
+  - Dibuat unit test `tests/unit/WargaMtaTest.php` untuk memverifikasi controller, endpoint routes, ketersediaan view, keberadaan menu sidebar, dan scope API Sragen. Seluruh 39 unit test berjalan sukses 100%.
+
+### 2026-09-01 — Autocomplete Pencarian Warga MTA pada Form Pendataan Publik Berdasarkan Cabang Terpilih
+
+- **Alur & Interaksi Pengguna (User Flow):**
+  - Pada formulir pendataan publik (`/pendataan`), setelah pengguna memilih **Cabang Pemuda MTA**, kolom **Nama Lengkap** mengaktifkan pencarian live autocomplete yang terhubung langsung ke API MTA Pusat (`api.mta.or.id/api/v1/warga/search`) dengan filter cabang lokal yang dipilih (`mta_uuid`).
+  - Saat pengguna mengetikkan huruf/nama (minimal 2 karakter) dengan mekanisme debouncing (300ms), muncul dropdown interaktif yang menampilkan daftar nama warga MTA di cabang tersebut beserta nomor warga, jenis kelamin (Putra/Putri), usia, alamat, serta penanda status apakah sudah terdaftar di sistem PMD lokal atau belum.
+  - Pengguna dapat mengeklik salah satu warga yang sesuai dari daftar saran.
+- **Auto-Populate Data Formulir:**
+  - Begitu warga dipilih, sistem memanggil endpoint detail dan otomatis mengisikan data ke formulir:
+    - Nama Lengkap (`name`)
+    - Jenis Kelamin (`gender`: L / P)
+    - Tanggal Lahir (`birth_date`)
+    - Tempat Lahir (`birth_place`)
+    - Nomor HP / WhatsApp (`phone`)
+    - Status Pernikahan (`marital_status`)
+    - Golongan Darah (`blood_type`)
+    - Alamat Lengkap (`address_detail`), Dusun (`dusun`), RT (`rt`), RW (`rw`)
+    - Pencocokan otomatis Kecamatan (`district_id`) dan Desa (`village_id`) di Sragen
+    - Identitas keterhubungan UUID Warga MTA (`mta_warga_uuid`)
+  - Jika warga tersebut sudah pernah terdaftar di PMD Sragen, sistem otomatis memuat data profil lengkapnya (pendidikan, pekerjaan, organisasi, keahlian, minat) dalam mode "Melengkapi & Memperbarui Data Terdaftar".
+  - Jika belum terdaftar di PMD Sragen, ditampilkan banner notifikasi hijau bahwa data warga MTA berhasil dimuat dan pengguna tinggal melengkapi langkah data berikutnya (Pendidikan, Pekerjaan, Organisasi, Keahlian, Minat) sampai selesai.
+  - Pengguna tetap memiliki fleksibilitas untuk membatalkan pilihan atau melanjutkan pendaftaran baru secara mandiri jika nama yang diketik tidak terdaftar di data warga MTA cabang tersebut.
+- **Backend & Endpoint:**
+  - Ditambahkan endpoint publik:
+    - `GET /pendataan/search-warga`: menerima parameter `cabang_id` dan `q`, memetakan UUID cabang ke API MTA, serta melakukan cross-check dengan data pemuda lokal.
+    - `GET /pendataan/warga-detail/(:segment)`: mengambil detail warga MTA berdasarkan UUID dan memformatnya sesuai kebutuhan field formulir pendaftaran.
+  - Ditambahkan proteksi rate limiting/throttling pada endpoint AJAX pencarian.
+- **Testing & Validasi:**
+  - Dibuat unit test `tests/unit/WargaMtaAutocompleteTest.php` untuk memverifikasi metode controller, definisi rute publik, komponen UI view, dan ketersediaan fungsi JavaScript.
+  - Seluruh 43 unit test proyek lulus 100% tanpa error.
+
+### 2026-09-01 — Portal Pengaturan Konten Beranda (Homepage) Khusus Superadmin
+
+- **Database Migration & Seeder:**
+  - Dibuat migration `app/Database/Migrations/2026-09-01-231500_CreateHomepageSettingsTable.php` untuk tabel `homepage_settings` dengan kolom:
+    - `id` (INT UNSIGNED AUTO_INCREMENT PRIMARY KEY)
+    - `group` (VARCHAR 50, indexed)
+    - `key` (VARCHAR 100, UNIQUE)
+    - `value` (LONGTEXT, nullable)
+    - `type` (ENUM 'text', 'textarea', 'json', 'number', 'boolean', 'image')
+    - `label` (VARCHAR 255)
+    - `created_at` & `updated_at` (DATETIME)
+  - Dibuat model `App\Models\HomepageSettingModel` yang memuat konfigurasi nilai bawaan (`getDefaults()`), getter/setter dinamis (`getAllSettings()`, `getSetting()`, `setSetting()`), dan fungsi pemulihan (`resetToDefaults()`).
+  - Dibuat seeder `App\Database\Seeds\HomepageSettingSeeder` yang didaftarkan ke `DatabaseSeeder.php` untuk menginisialisasi 41 item pengaturan bawaan landing page.
+- **Controller & Authorization Superadmin:**
+  - Dibuat controller `App\Controllers\Admin\HomepageSetting.php` dengan pembatasan hak akses strictly khusus role `superadmin` via route filter `role:superadmin` dan method guard `ensureSuperadmin()`.
+  - Metode `index()`: Membaca seluruh pengaturan dari database, mendekode format JSON (highlight chips, 4 misi strategis, 6 divisi program kerja, 4 langkah alur pendataan, dan daftar tanya jawab FAQ) untuk dimuat ke dalam tab portal.
+  - Metode `update()`: Memvalidasi dan menyimpan perubahan teks, textarea, serta struktur array/JSON secara terpadu, dilengkapi token CSRF dan flash notification.
+  - Metode `reset()`: Mengembalikan seluruh konten halaman muka ke setelan bawaan sistem.
+- **Tampilan Portal Pengaturan AdminLTE 3:**
+  - Dibuat view `app/Views/admin/homepage/index.php` yang terstruktur dalam 7 tab navigasi tematik:
+    1. **Header & Hero Banner:** Badge pill, Judul Hero, Subjudul, Teks Tombol Pendaftaran, Kartu Samping (Keuntungan/Manfaat), Angka Counter Bidang Pengabdian, dan Highlight Chips interaktif (bisa tambah/hapus baris).
+    2. **Tentang & Visi Misi:** Tag Section, Judul Profil, Paragraf 1 & 2, Teks Visi Organisasi, dan 4 Pilar Misi Strategis.
+    3. **Struktur Wilayah:** Tag Section, Judul Wilayah, dan Deskripsi Pengantar Wilayah & Cabang.
+    4. **Bidang & Program Kerja:** Tag Section, Judul Program, Deskripsi Pengantar, serta Kartu Program Kerja (ikon, warna tema, judul, deskripsi, dan jadwal/badge) dengan tombol tambah/hapus kartu.
+    5. **Alur & Banner CTA:** Tag Section, Judul Alur, 4 Tahapan Langkah Pengisian Form, dan Banner Ajakan Besar (CTA strip).
+    6. **Tanya Jawab (FAQ):** Tag Section, Judul FAQ, Deskripsi Pengantar, serta accordion Q&A dengan tombol tambah/hapus pertanyaan baru.
+    7. **Kontak & Sekretariat:** Alamat Fisik Kantor Sekretariat, Nomor WhatsApp Helpdesk, dan Label Keterangan Layanan.
+  - Ditambahkan menu navigasi baru **Kelola Homepage** (`fas fa-desktop text-warning`) pada sidebar superadmin (`app/Views/admin/layouts/main.php`).
+- **Penerapan Dinamis pada Halaman Depan Publik:**
+  - Diperbarui `App\Controllers\Home::index()` untuk memuat data pengaturan homepage dan mengirimkannya ke view.
+  - Diperbarui `app/Views/landing.php` agar setiap bagian teks, badge, kartu, misi, program, FAQ, dan link WhatsApp mengambil data dari database secara dinamis dengan fallback nilai default yang aman.
+- **Testing & Validasi:**
+  - Dibuat unit test suite `tests/unit/HomepageSettingTest.php` (6 test, 40 assertions) untuk menguji model, controller, route definitions, ketersediaan menu sidebar, integritas view portal, dan binding pada landing page.
+  - Seluruh 49 unit test proyek lulus 100%.
+  - Diverifikasi secara langsung via HTTP curl ke server lokal, pengujian update konten secara live, dan pengujian reset ke default.
+
+
+

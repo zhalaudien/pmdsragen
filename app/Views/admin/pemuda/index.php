@@ -11,6 +11,9 @@
     <div class="mt-2 mt-md-0">
         <div class="btn-group">
             <?php if (session()->get('role') === 'superadmin'): ?>
+                <a href="<?= base_url('admin/mta-sync') ?>" class="btn btn-outline-info btn-sm font-weight-bold">
+                    <i class="fas fa-sync-alt mr-1"></i> Sinkron &amp; Verifikasi MTA
+                </a>
                 <a href="<?= base_url('admin/pemuda/import') ?>" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-file-excel mr-1"></i> Import Excel
                 </a>
@@ -272,6 +275,11 @@
                                     <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="font-weight-bold text-primary">
                                         <?= esc($p['registration_number']) ?>
                                     </a>
+                                    <?php if (!empty($p['mta_warga_uuid'])): ?>
+                                        <span class="badge badge-info ml-1" title="Tersinkron dengan Database Warga MTA" style="font-size: 0.65rem;">
+                                            <i class="fas fa-check-double mr-1"></i>MTA
+                                        </span>
+                                    <?php endif; ?>
                                     <?php if ($p['status_data'] === 'archived'): ?>
                                         <span class="badge badge-secondary ml-1" style="font-size: 0.65rem;">Arsip</span>
                                     <?php endif; ?>
@@ -415,12 +423,15 @@
 
     <!-- PAGINATION FOOTER -->
     <?php if ($pager->getPageCount('pemuda') > 1): ?>
-        <div class="card-footer bg-white border-top py-2 d-flex flex-column flex-sm-row justify-content-between align-items-center">
-            <div class="text-xs text-muted mb-2 mb-sm-0">
-                Halaman <?= $pager->getCurrentPage('pemuda') ?> dari <?= $pager->getPageCount('pemuda') ?>
+        <div class="card-footer bg-white border-top py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="text-sm text-muted mb-2 mb-md-0 font-weight-500">
+                <i class="fas fa-file-alt mr-1 text-primary"></i> 
+                Halaman <strong class="text-dark"><?= $pager->getCurrentPage('pemuda') ?></strong> dari <strong class="text-dark"><?= $pager->getPageCount('pemuda') ?></strong>
+                <span class="mx-2 text-muted">|</span>
+                Total <strong class="text-dark"><?= number_format($pager->getTotal('pemuda'), 0, ',', '.') ?></strong> data
             </div>
             <div>
-                <?= $pager->links('pemuda', 'default_full') ?>
+                <?= $pager->links('pemuda', 'bootstrap_full') ?>
             </div>
         </div>
     <?php endif; ?>

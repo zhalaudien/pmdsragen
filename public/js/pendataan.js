@@ -147,11 +147,15 @@ function initSearchableSelects() {
                     return '<div class="no-results text-muted small p-2"><i class="bi bi-search me-1"></i> Cabang tidak ditemukan</div>';
                 }
             },
-            onChange: function() {
+            onChange: function(val) {
                 cabangEl.classList.remove('is-invalid');
                 const tsWrap = cabangEl.nextElementSibling;
                 if (tsWrap && tsWrap.classList.contains('ts-wrapper')) {
                     tsWrap.classList.remove('is-invalid');
+                }
+                const nameInput = document.getElementById('name');
+                if (nameInput && nameInput.value.trim().length >= 2) {
+                    nameInput.dispatchEvent(new Event('input'));
                 }
             }
         });
@@ -222,38 +226,323 @@ function updateProgress(step) {
 }
 
 /**
- * Asynchronously checks if Pemuda with given name, birth_date, and cabang_id already exists.
- * Returns true if available (no duplicate), false if duplicate exists.
+ * Helper to escape HTML characters safely
  */
-async function checkDuplicatePemuda() {
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Helper to focus next field on Step 1 after checking data
+ */
+function focusNextField() {
+    const birthPlaceEl = document.getElementById('birth_place');
+    if (birthPlaceEl) {
+        birthPlaceEl.focus();
+        birthPlaceEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+/**
+ * Manual trigger for Cek Data button
+ */
+function handleManualCheckData() {
+    checkDataPemuda(true);
+}
+
+/**
+ * Populates all form fields with existing youth data retrieved from database
+ */
+function populateExistingData(pemuda) {
+    if (!pemuda) return;
+
+    // 1. Existing ID
+    const existIdEl = document.getElementById('existing_pemuda_id');
+    if (existIdEl) {
+        existIdEl.value = pemuda.id || '';
+    }
+
+    // 2. Data Pribadi
+    const maritalEl = document.getElementById('marital_status');
+    if (maritalEl && pemuda.marital_status) {
+        maritalEl.value = pemuda.marital_status;
+        maritalEl.classList.remove('is-invalid');
+    }
+
+    const bloodEl = document.getElementById('blood_type');
+    if (bloodEl && pemuda.blood_type) {
+        bloodEl.value = pemuda.blood_type;
+    }
+
+    const birthPlaceEl = document.getElementById('birth_place');
+    if (birthPlaceEl && pemuda.birth_place) {
+        birthPlaceEl.value = pemuda.birth_place;
+        birthPlaceEl.classList.remove('is-invalid');
+    }
+
+    const phoneEl = document.getElementById('phone');
+    if (phoneEl && pemuda.phone) {
+        phoneEl.value = pemuda.phone;
+        phoneEl.classList.remove('is-invalid');
+    }
+
+    const emailEl = document.getElementById('email');
+    if (emailEl) {
+        emailEl.value = pemuda.email || '';
+    }
+
+    // 3. Alamat Domisili
+    const provEl = document.getElementById('province_id');
+    if (provEl && pemuda.province_id) provEl.value = pemuda.province_id;
+
+    const regEl = document.getElementById('regency_id');
+    if (regEl && pemuda.regency_id) regEl.value = pemuda.regency_id;
+
+    const distEl = document.getElementById('district_id');
+    if (pemuda.district_id) {
+        if (districtTomSelect) {
+            districtTomSelect.setValue(pemuda.district_id.toString());
+        } else if (distEl) {
+            distEl.value = pemuda.district_id;
+            handleDistrictChange(pemuda.district_id);
+        }
+        handleDistrictChange(pemuda.district_id);
+    }
+
+    if (pemuda.village_id) {
+        setTimeout(() => {
+            if (villageTomSelect) {
+                villageTomSelect.setValue(pemuda.village_id.toString());
+            } else {
+                const villEl = document.getElementById('village_id');
+                if (villEl) villEl.value = pemuda.village_id;
+            }
+        }, 150);
+    }
+
+    const dusunEl = document.getElementById('dusun');
+    if (dusunEl) dusunEl.value = pemuda.dusun || '';
+
+    const rtEl = document.getElementById('rt');
+    if (rtEl) rtEl.value = pemuda.rt || '';
+
+    const rwEl = document.getElementById('rw');
+    if (rwEl) rwEl.value = pemuda.rw || '';
+
+    const addrDetailEl = document.getElementById('address_detail');
+    if (addrDetailEl && pemuda.address_detail) {
+        addrDetailEl.value = pemuda.address_detail;
+        addrDetailEl.classList.remove('is-invalid');
+    }
+
+    // 4. Pendidikan
+    const eduLevelEl = document.getElementById('education_level_id');
+    if (eduLevelEl && pemuda.education_level_id) {
+        eduLevelEl.value = pemuda.education_level_id;
+        eduLevelEl.classList.remove('is-invalid');
+    }
+
+    const eduStatusEl = document.getElementById('education_status');
+    if (eduStatusEl && pemuda.education_status) {
+        eduStatusEl.value = pemuda.education_status;
+        eduStatusEl.classList.remove('is-invalid');
+    }
+
+    const schoolEl = document.getElementById('school_name');
+    if (schoolEl && pemuda.school_name) {
+        schoolEl.value = pemuda.school_name;
+        schoolEl.classList.remove('is-invalid');
+    }
+
+    const majorEl = document.getElementById('major');
+    if (majorEl) majorEl.value = pemuda.major || '';
+
+    const gradYearEl = document.getElementById('graduation_year');
+    if (gradYearEl) gradYearEl.value = pemuda.graduation_year || '';
+
+    // 5. Pekerjaan
+    const jobStatusEl = document.getElementById('job_status_id');
+    if (jobStatusEl && pemuda.job_status_id) {
+        jobStatusEl.value = pemuda.job_status_id;
+        jobStatusEl.classList.remove('is-invalid');
+        handleJobStatusChange(pemuda.job_status_id.toString());
+    }
+
+    const jobTitleEl = document.getElementById('job_title');
+    if (jobTitleEl) jobTitleEl.value = pemuda.job_title || '';
+
+    const compNameEl = document.getElementById('company_name');
+    if (compNameEl) compNameEl.value = pemuda.company_name || '';
+
+    const fieldEl = document.getElementById('business_field');
+    if (fieldEl) fieldEl.value = pemuda.business_field || '';
+
+    // 6. Organisasi
+    document.querySelectorAll('.org-toggle-check').forEach(chk => {
+        chk.checked = false;
+        const key = chk.getAttribute('data-key');
+        if (key) toggleOrgDetail(key);
+    });
+
+    const knownOrgKeys = {
+        'satgas': 'Satgas',
+        'bankom': 'Bankom',
+        'parkir': 'Parkir',
+        'pemuda': 'Pemuda',
+        'tim_ikhrom': 'Tim Ikhrom'
+    };
+    const otherOrgs = [];
+
+    if (Array.isArray(pemuda.organisasi)) {
+        pemuda.organisasi.forEach(org => {
+            let matchedKey = null;
+            const orgName = (org.organization_name || '').toLowerCase().replace(/[\s_\-]/g, '');
+            for (const [k, title] of Object.entries(knownOrgKeys)) {
+                const cleanTitle = title.toLowerCase().replace(/[\s_\-]/g, '');
+                if (orgName === cleanTitle || orgName.includes(cleanTitle)) {
+                    matchedKey = k;
+                    break;
+                }
+            }
+            if (matchedKey) {
+                const chk = document.getElementById('org_' + matchedKey);
+                if (chk) {
+                    chk.checked = true;
+                    toggleOrgDetail(matchedKey);
+                    const posInput = document.querySelector(`input[name="organizations[${matchedKey}][position]"]`);
+                    if (posInput && org.position) posInput.value = org.position;
+                    const yearInput = document.querySelector(`input[name="organizations[${matchedKey}][join_year]"]`);
+                    if (yearInput && org.join_date) {
+                        const parsedYear = new Date(org.join_date).getFullYear();
+                        if (!isNaN(parsedYear)) yearInput.value = parsedYear;
+                    }
+                    const descInput = document.querySelector(`input[name="organizations[${matchedKey}][description]"]`);
+                    if (descInput && org.description) descInput.value = org.description;
+                }
+            } else if (org.organization_name) {
+                otherOrgs.push(org.organization_name);
+            }
+        });
+    }
+    const otherOrgInput = document.querySelector('input[name="other_organization"]');
+    if (otherOrgInput) {
+        otherOrgInput.value = otherOrgs.join(', ');
+    }
+
+    // 7. Keahlian (Skills)
+    document.querySelectorAll('.skill-toggle-check').forEach(chk => {
+        chk.checked = false;
+        toggleSkillLevel(chk.value);
+    });
+
+    if (Array.isArray(pemuda.skills)) {
+        pemuda.skills.forEach(s => {
+            const chk = document.getElementById('skill_' + s.skill_id);
+            if (chk) {
+                chk.checked = true;
+                toggleSkillLevel(s.skill_id);
+                const levelSelect = document.querySelector(`select[name="skills[${s.skill_id}][level]"]`);
+                if (levelSelect && s.level) {
+                    levelSelect.value = s.level;
+                }
+            }
+        });
+    }
+
+    // 8. Minat (Interests)
+    document.querySelectorAll('.interest-tag-checkbox').forEach(chk => {
+        chk.checked = false;
+    });
+
+    if (Array.isArray(pemuda.interests)) {
+        pemuda.interests.forEach(i => {
+            const chk = document.getElementById('interest_' + i.interest_id);
+            if (chk) {
+                chk.checked = true;
+            }
+        });
+    }
+}
+
+/**
+ * Asynchronously checks if Pemuda with given name, gender, birth_date, and cabang_id already exists.
+ * Returns true if proceedable (either found and loaded, or not found and new entry).
+ */
+async function checkDataPemuda(isManual = false) {
     const nameEl = document.getElementById('name');
     const birthDateEl = document.getElementById('birth_date');
     const cabangEl = document.getElementById('cabang_id');
-    const warningBox = document.getElementById('duplicate-warning-box');
-    const warningMsg = document.getElementById('duplicate-warning-message');
+    const genderEl = document.querySelector('input[name="gender"]:checked');
+    const resultWrapper = document.getElementById('check-data-result-wrapper');
+    const resultContent = document.getElementById('check-data-result-content');
+    const btnCekData = document.getElementById('btnCekData');
     const btnNext1 = document.getElementById('btnNextStep1') || document.querySelector('#step-1 button.btn-primary-pmd');
 
     const name = nameEl ? nameEl.value.trim() : '';
     const birthDate = birthDateEl ? birthDateEl.value.trim() : '';
+    const gender = genderEl ? genderEl.value : '';
     let cabangId = cabangEl ? cabangEl.value.trim() : '';
     if (typeof cabangTomSelect !== 'undefined' && cabangTomSelect) {
         cabangId = cabangTomSelect.getValue();
     }
 
-    if (!name || !birthDate || !cabangId) {
-        return true;
+    // Validation for check
+    if (!cabangId || !name || !gender || !birthDate) {
+        if (isManual) {
+            if (resultWrapper && resultContent) {
+                resultContent.innerHTML = `
+                    <div class="alert alert-warning card-custom border-warning p-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 text-warning flex-shrink-0"></i>
+                            <div>
+                                <strong class="d-block mb-1">Mohon lengkapi 4 data utama berikut terlebih dahulu:</strong>
+                                <ul class="mb-0 ps-3 small text-dark">
+                                    ${!cabangId ? '<li>Cabang Pemuda MTA wajib dipilih</li>' : ''}
+                                    ${!name ? '<li>Nama Lengkap wajib diisi (minimal 3 karakter)</li>' : ''}
+                                    ${!gender ? '<li>Jenis Kelamin wajib dipilih (Laki-laki / Perempuan)</li>' : ''}
+                                    ${!birthDate ? '<li>Tanggal Lahir wajib diisi</li>' : ''}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultWrapper.style.display = 'block';
+                resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        return false;
     }
 
     let originalBtnHtml = '';
+    if (btnCekData) {
+        originalBtnHtml = btnCekData.innerHTML;
+        btnCekData.disabled = true;
+        btnCekData.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memeriksa data...';
+    }
     if (btnNext1) {
-        originalBtnHtml = btnNext1.innerHTML;
         btnNext1.disabled = true;
-        btnNext1.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memeriksa data...';
+    }
+
+    if (resultWrapper && resultContent) {
+        resultContent.innerHTML = `
+            <div class="alert alert-light border card-custom p-3 text-center text-muted">
+                <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                <span class="small fw-semibold">Sedang memeriksa data pemuda di sistem cabang terkait...</span>
+            </div>
+        `;
+        resultWrapper.style.display = 'block';
     }
 
     try {
         const formData = new FormData();
         formData.append('name', name);
+        formData.append('gender', gender);
         formData.append('birth_date', birthDate);
         formData.append('cabang_id', cabangId);
 
@@ -261,9 +550,9 @@ async function checkDuplicatePemuda() {
             formData.append(PENDATAAN_CONFIG.csrfToken, PENDATAAN_CONFIG.csrfHash);
         }
 
-        const url = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.checkDuplicateUrl)
-            ? PENDATAAN_CONFIG.checkDuplicateUrl
-            : '/pendataan/check-duplicate';
+        const url = (typeof PENDATAAN_CONFIG !== 'undefined' && (PENDATAAN_CONFIG.checkDataUrl || PENDATAAN_CONFIG.checkDuplicateUrl))
+            ? (PENDATAAN_CONFIG.checkDataUrl || PENDATAAN_CONFIG.checkDuplicateUrl)
+            : '/pendataan/check-data';
 
         const response = await fetch(url, {
             method: 'POST',
@@ -277,6 +566,9 @@ async function checkDuplicatePemuda() {
             throw new Error('HTTP error ' + response.status);
         }
 
+        const res = await response.json();
+
+        // Update CSRF token
         if (res.csrfHash) {
             if (typeof PENDATAAN_CONFIG !== 'undefined') {
                 PENDATAAN_CONFIG.csrfHash = res.csrfHash;
@@ -287,39 +579,122 @@ async function checkDuplicatePemuda() {
             });
         }
 
-        if (res.duplicate) {
-            if (warningBox && warningMsg) {
-                warningMsg.innerHTML = res.message;
-                warningBox.style.display = 'block';
-                warningBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (res.status === 'found' && res.data) {
+            // Existing data found -> load data and enable update mode
+            const pemuda = res.data;
+            populateExistingData(pemuda);
+
+            const formModeBanner = document.getElementById('form-mode-banner');
+            const formModeReg = document.getElementById('form-mode-reg');
+            const formModeDesc = document.getElementById('form-mode-desc');
+            if (formModeBanner) {
+                if (formModeReg) formModeReg.innerText = 'No. Reg: ' + (pemuda.registration_number || '-');
+                if (formModeDesc) formModeDesc.innerHTML = `Data <strong>${escapeHtml(pemuda.name)}</strong> ditemukan di sistem cabang ini. Anda tinggal melengkapi dan memperbarui data formulir ini.`;
+                formModeBanner.style.display = 'block';
             }
 
-            if (nameEl) nameEl.classList.add('is-invalid');
-            if (birthDateEl) birthDateEl.classList.add('is-invalid');
-            if (cabangEl) {
-                cabangEl.classList.add('is-invalid');
-                const tsWrap = cabangEl.nextElementSibling;
-                if (tsWrap && tsWrap.classList.contains('ts-wrapper')) {
-                    tsWrap.classList.add('is-invalid');
-                }
+            const revBanner = document.getElementById('review-mode-banner');
+            const revReg = document.getElementById('review-mode-reg');
+            if (revBanner) {
+                if (revReg) revReg.innerText = 'No. Reg: ' + (pemuda.registration_number || '-');
+                revBanner.style.display = 'block';
             }
 
-            return false;
+            const btnSubmitText = document.getElementById('btnSubmitFormText');
+            if (btnSubmitText) {
+                btnSubmitText.innerText = 'Simpan & Lengkapi Data Pendataan';
+            }
+
+            if (resultWrapper && resultContent) {
+                resultContent.innerHTML = `
+                    <div class="alert alert-success card-custom border-success p-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="bi bi-patch-check-fill text-success fs-3 flex-shrink-0"></i>
+                            <div class="w-100">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                                    <h6 class="fw-bold text-success mb-0">Data Pemuda Ditemukan!</h6>
+                                    <span class="badge bg-success rounded-pill px-3 py-1">No. Reg: ${escapeHtml(pemuda.registration_number || '-')}</span>
+                                </div>
+                                <p class="small text-dark mb-2">
+                                    Data pemuda atas nama <strong>"${escapeHtml(pemuda.name)}"</strong> sudah terdaftar di cabang ini. 
+                                    Formulir telah <strong>otomatis terisi</strong> dengan data yang ada di sistem. 
+                                    Silakan periksa dan <strong>lengkapi data</strong> Anda pada langkah berikutnya.
+                                </p>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-1 px-2 small">
+                                        <i class="bi bi-pencil-square me-1"></i> Mode: Melengkapi &amp; Memperbarui Data
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-success px-3" onclick="goToStep(2)">
+                                        Lanjut Lengkapi Alamat <i class="bi bi-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultWrapper.style.display = 'block';
+                resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            return true;
         } else {
-            if (warningBox) {
-                warningBox.style.display = 'none';
+            // Not found -> clean up any existing_pemuda_id and allow new entry
+            const existIdEl = document.getElementById('existing_pemuda_id');
+            if (existIdEl) existIdEl.value = '';
+
+            const formModeBanner = document.getElementById('form-mode-banner');
+            if (formModeBanner) formModeBanner.style.display = 'none';
+
+            const revBanner = document.getElementById('review-mode-banner');
+            if (revBanner) revBanner.style.display = 'none';
+
+            const btnSubmitText = document.getElementById('btnSubmitFormText');
+            if (btnSubmitText) {
+                btnSubmitText.innerText = 'Kirim Data Pendataan';
             }
-            if (nameEl) nameEl.classList.remove('is-invalid');
-            if (birthDateEl) birthDateEl.classList.remove('is-invalid');
+
+            if (resultWrapper && resultContent) {
+                resultContent.innerHTML = `
+                    <div class="alert alert-info card-custom border-info p-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="bi bi-info-circle-fill text-info fs-3 flex-shrink-0"></i>
+                            <div class="w-100">
+                                <h6 class="fw-bold text-primary mb-1">Data Belum Terdaftar</h6>
+                                <p class="small text-dark mb-2">
+                                    Data pemuda atas nama <strong>"${escapeHtml(name)}"</strong> belum ada di cabang ini. 
+                                    Silakan <strong>lanjutkan pengisian formulir pendataan baru</strong> sampai selesai.
+                                </p>
+                                <button type="button" class="btn btn-sm btn-primary-pmd px-3" onclick="focusNextField()">
+                                    Lanjut Isi Data Pribadi <i class="bi bi-arrow-down ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultWrapper.style.display = 'block';
+                resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
             return true;
         }
     } catch (err) {
-        console.warn('Gagal memverifikasi duplikat data:', err);
+        console.warn('Gagal memverifikasi data pemuda:', err);
+        if (resultWrapper && resultContent) {
+            resultContent.innerHTML = `
+                <div class="alert alert-warning card-custom border-warning p-2 small">
+                    <i class="bi bi-exclamation-circle me-1"></i> Pengecekan server tidak dapat terhubung saat ini, Anda tetap dapat melanjutkan pengisian form.
+                </div>
+            `;
+            resultWrapper.style.display = 'block';
+        }
         return true;
     } finally {
+        if (btnCekData) {
+            btnCekData.disabled = false;
+            btnCekData.innerHTML = originalBtnHtml;
+        }
         if (btnNext1) {
             btnNext1.disabled = false;
-            btnNext1.innerHTML = originalBtnHtml;
         }
     }
 }
@@ -333,12 +708,9 @@ async function goToStep(step) {
             return;
         }
 
-        // If moving forward from Step 1, perform duplicate check
+        // If moving forward from Step 1, perform check
         if (currentStep === 1) {
-            const isAvailable = await checkDuplicatePemuda();
-            if (!isAvailable) {
-                return;
-            }
+            await checkDataPemuda(false);
         }
     }
 
@@ -403,10 +775,7 @@ async function validateAndNext(step) {
     }
 
     if (step === 1) {
-        const isAvailable = await checkDuplicatePemuda();
-        if (!isAvailable) {
-            return;
-        }
+        await checkDataPemuda(false);
     }
 
     goToStep(step + 1);
@@ -652,14 +1021,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Reset duplicate warning on user input
+    // Reset check data feedback & error state on user input
     ['name', 'birth_date', 'cabang_id'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', function() {
-                const warningBox = document.getElementById('duplicate-warning-box');
-                if (warningBox && warningBox.style.display !== 'none') {
-                    warningBox.style.display = 'none';
+                const resWrap = document.getElementById('check-data-result-wrapper');
+                if (resWrap && resWrap.style.display !== 'none') {
+                    resWrap.style.display = 'none';
                 }
                 el.classList.remove('is-invalid');
                 const tsWrap = el.nextElementSibling;
@@ -668,9 +1037,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             el.addEventListener('change', function() {
-                const warningBox = document.getElementById('duplicate-warning-box');
-                if (warningBox && warningBox.style.display !== 'none') {
-                    warningBox.style.display = 'none';
+                const resWrap = document.getElementById('check-data-result-wrapper');
+                if (resWrap && resWrap.style.display !== 'none') {
+                    resWrap.style.display = 'none';
                 }
                 el.classList.remove('is-invalid');
                 const tsWrap = el.nextElementSibling;
@@ -679,6 +1048,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+    });
+
+    // Reset gender error on select
+    document.querySelectorAll('input[name="gender"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const errEl = document.getElementById('gender-error');
+            if (errEl) errEl.style.display = 'none';
+            const resWrap = document.getElementById('check-data-result-wrapper');
+            if (resWrap && resWrap.style.display !== 'none') {
+                resWrap.style.display = 'none';
+            }
+        });
     });
 
     // Initialize Organization and Skill checkboxes state (in case of browser restore or validation bounce back)
@@ -716,4 +1097,399 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Initialize Warga MTA Autocomplete on Cabang & Name
+    initWargaMtaAutocomplete();
 });
+
+/**
+ * =========================================================================
+ * Warga MTA Autocomplete & Auto-Populate on Cabang Select & Name Typing
+ * =========================================================================
+ */
+let wargaSearchTimer = null;
+let currentWargaMta = null;
+
+function initWargaMtaAutocomplete() {
+    const nameInput     = document.getElementById('name');
+    const cabangSelect  = document.getElementById('cabang_id');
+    const dropdown      = document.getElementById('warga-suggestions-dropdown');
+    const listContainer = document.getElementById('warga-suggestions-list');
+    const spinner       = document.getElementById('name-search-spinner');
+
+    if (!nameInput || !dropdown || !listContainer) return;
+
+    // 1. Event saat mengetikkan nama di input
+    nameInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        clearTimeout(wargaSearchTimer);
+
+        // Jika query kurang dari 2 karakter, sembunyikan dropdown
+        if (query.length < 2) {
+            closeWargaSuggestions();
+            return;
+        }
+
+        const cabangId = (cabangTomSelect && cabangTomSelect.getValue()) ? cabangTomSelect.getValue() : (cabangSelect ? cabangSelect.value : '');
+
+        // Jika cabang belum dipilih
+        if (!cabangId) {
+            listContainer.innerHTML = `
+                <div class="p-3 text-center text-muted small">
+                    <i class="bi bi-exclamation-circle text-warning fs-5 d-block mb-1"></i>
+                    Silakan pilih <strong>Cabang Pemuda MTA</strong> di samping terlebih dahulu agar sistem dapat mencari data warga pada cabang tersebut.
+                </div>
+                <div class="p-2 bg-light border-top text-end">
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
+                </div>
+            `;
+            dropdown.style.display = 'block';
+            return;
+        }
+
+        // Tampilkan spinner loading
+        if (spinner) spinner.style.display = 'inline-block';
+
+        // Debounce pencarian selama 300ms
+        wargaSearchTimer = setTimeout(async () => {
+            try {
+                const searchUrl = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.searchWargaUrl)
+                    ? PENDATAAN_CONFIG.searchWargaUrl
+                    : '/pendataan/search-warga';
+
+                const response = await fetch(`${searchUrl}?cabang_id=${encodeURIComponent(cabangId)}&q=${encodeURIComponent(query)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!response.ok) throw new Error('HTTP error ' + response.status);
+
+                const res = await response.json();
+
+                // Update CSRF token jika dikembalikan
+                if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
+                    PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+                }
+
+                if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+                    renderWargaSuggestions(res.data, res.cabang_name || 'Cabang Terpilih', query);
+                } else {
+                    renderEmptyWargaSuggestions(query, res.cabang_name || 'cabang ini');
+                }
+            } catch (err) {
+                console.warn('Gagal mencari data warga MTA:', err);
+                renderErrorWargaSuggestions();
+            } finally {
+                if (spinner) spinner.style.display = 'none';
+            }
+        }, 300);
+    });
+
+    // 2. Focus kembali menampilkan saran jika query valid
+    nameInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2 && listContainer.children.length > 0 && !currentWargaMta) {
+            dropdown.style.display = 'block';
+        }
+    });
+
+    // 3. Menutup dropdown saat klik di luar area
+    document.addEventListener('click', function(e) {
+        if (!nameInput.contains(e.target) && !dropdown.contains(e.target)) {
+            closeWargaSuggestions();
+        }
+    });
+
+    // 4. Reset autocomplete saat ganti cabang
+    if (cabangSelect) {
+        cabangSelect.addEventListener('change', function() {
+            if (currentWargaMta) {
+                resetWargaMtaSelection();
+            }
+            // Jika sudah ada nama diketik, trigger ulang pencarian untuk cabang baru
+            if (nameInput.value.trim().length >= 2) {
+                nameInput.dispatchEvent(new Event('input'));
+            }
+        });
+    }
+}
+
+function closeWargaSuggestions() {
+    const dropdown = document.getElementById('warga-suggestions-dropdown');
+    if (dropdown) dropdown.style.display = 'none';
+}
+
+function renderWargaSuggestions(wargaList, cabangName, query) {
+    const dropdown      = document.getElementById('warga-suggestions-dropdown');
+    const listContainer = document.getElementById('warga-suggestions-list');
+    if (!dropdown || !listContainer) return;
+
+    let itemsHtml = '';
+    wargaList.forEach(w => {
+        const isMale = (w.kelamin || 'L').toUpperCase() === 'L';
+        
+        itemsHtml += `
+            <div class="warga-item-row p-2 px-3 border-bottom d-flex justify-content-between align-items-center" 
+                 role="button" 
+                 style="cursor: pointer; transition: background 0.15s ease;"
+                 onmouseover="this.style.backgroundColor='#f0fdf4'"
+                 onmouseout="this.style.backgroundColor=''"
+                 onclick="selectWargaMta('${w.uuid}')">
+                <div class="me-2 text-truncate">
+                    <div class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <span>${highlightMatch(escapeHtml(w.nama), query)}</span>
+                        ${w.nomor ? `<span class="badge bg-light border text-monospace text-muted py-0 px-1" style="font-size: 0.72rem;">${escapeHtml(w.nomor)}</span>` : ''}
+                    </div>
+                    <div class="small text-muted d-flex flex-wrap align-items-center gap-2 mt-1">
+                        <span class="badge ${isMale ? 'bg-primary' : 'badge-pink'}" style="font-size: 0.7rem; ${!isMale ? 'background-color:#e83e8c;color:#fff;' : ''}">
+                            <i class="bi ${isMale ? 'bi-gender-male' : 'bi-gender-female'}"></i> ${isMale ? 'Putra' : 'Putri'}
+                        </span>
+                        ${w.usia ? `<span><i class="bi bi-clock-history me-1"></i>${w.usia} Th</span>` : ''}
+                        ${w.alamat ? `<span class="text-truncate" style="max-width: 180px;"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(w.alamat)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="text-end flex-shrink-0">
+                    ${w.is_registered_pmd 
+                        ? `<span class="badge bg-success rounded-pill px-2 py-1 small"><i class="bi bi-check-circle me-1"></i>Terdaftar PMD</span>` 
+                        : `<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-2 py-1 small"><i class="bi bi-cursor-fill me-1"></i>Pilih Data</span>`}
+                </div>
+            </div>
+        `;
+    });
+
+    listContainer.innerHTML = `
+        <div class="dropdown-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="small fw-bold text-success">
+                <i class="bi bi-people-fill me-1"></i> Data Warga MTA (${escapeHtml(cabangName)}):
+            </span>
+            <span class="badge bg-secondary rounded-pill small">${wargaList.length} ditemukan</span>
+        </div>
+        <div class="warga-items-scroll" style="max-height: 250px; overflow-y: auto;">
+            ${itemsHtml}
+        </div>
+        <div class="p-2 px-3 bg-light border-top d-flex justify-content-between align-items-center small text-muted">
+            <span><i class="bi bi-info-circle me-1"></i> Bukan data Anda? Tetap gunakan nama yang diketik.</span>
+            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
+        </div>
+    `;
+
+    dropdown.style.display = 'block';
+}
+
+function renderEmptyWargaSuggestions(query, cabangName) {
+    const dropdown      = document.getElementById('warga-suggestions-dropdown');
+    const listContainer = document.getElementById('warga-suggestions-list');
+    if (!dropdown || !listContainer) return;
+
+    listContainer.innerHTML = `
+        <div class="p-3 text-center text-muted small">
+            <i class="bi bi-person-x fs-4 text-secondary d-block mb-1"></i>
+            Tidak ditemukan warga MTA bernama "<strong>${escapeHtml(query)}</strong>" di ${escapeHtml(cabangName)}.<br>
+            <span class="text-dark">Silakan lanjutkan mengisi formulir untuk pendaftaran pemuda baru.</span>
+        </div>
+        <div class="p-2 bg-light border-top text-end">
+            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
+        </div>
+    `;
+
+    dropdown.style.display = 'block';
+}
+
+function renderErrorWargaSuggestions() {
+    const dropdown      = document.getElementById('warga-suggestions-dropdown');
+    const listContainer = document.getElementById('warga-suggestions-list');
+    if (!dropdown || !listContainer) return;
+
+    listContainer.innerHTML = `
+        <div class="p-2 px-3 text-muted small text-center">
+            <i class="bi bi-wifi-off text-secondary me-1"></i> Pencarian nama warga MTA belum dapat terhubung. Anda tetap dapat mengetikkan nama secara manual.
+        </div>
+        <div class="p-2 bg-light border-top text-end">
+            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
+        </div>
+    `;
+
+    dropdown.style.display = 'block';
+}
+
+function highlightMatch(text, query) {
+    if (!query) return text;
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('(' + escapedQuery + ')', 'gi');
+    return text.replace(regex, '<span class="text-success fw-bold">$1</span>');
+}
+
+async function selectWargaMta(uuid) {
+    if (!uuid) return;
+
+    closeWargaSuggestions();
+    const spinner = document.getElementById('name-search-spinner');
+    if (spinner) spinner.style.display = 'inline-block';
+
+    try {
+        const detailUrl = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.wargaDetailUrl)
+            ? PENDATAAN_CONFIG.wargaDetailUrl
+            : '/pendataan/warga-detail';
+
+        const response = await fetch(`${detailUrl}/${encodeURIComponent(uuid)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+
+        const res = await response.json();
+
+        if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
+            PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+        }
+
+        if (!res.success || !res.data) {
+            alert(res.message || 'Gagal mengambil detail data warga MTA.');
+            return;
+        }
+
+        const data = res.data;
+        currentWargaMta = data;
+
+        // 1. Isi data pokok (Nama, UUID, Gender, Tanggal Lahir, Tempat Lahir)
+        const nameEl = document.getElementById('name');
+        if (nameEl && data.name) {
+            nameEl.value = data.name;
+            nameEl.classList.remove('is-invalid');
+        }
+
+        const mtaUuidEl = document.getElementById('mta_warga_uuid');
+        if (mtaUuidEl) {
+            mtaUuidEl.value = data.uuid || '';
+        }
+
+        if (data.gender) {
+            const isMale = data.gender.toUpperCase() === 'L';
+            const radioL = document.getElementById('gender_l');
+            const radioP = document.getElementById('gender_p');
+            if (isMale && radioL) radioL.checked = true;
+            if (!isMale && radioP) radioP.checked = true;
+            const errGender = document.getElementById('gender-error');
+            if (errGender) errGender.style.display = 'none';
+        }
+
+        const birthDateEl = document.getElementById('birth_date');
+        if (birthDateEl && data.birth_date) {
+            birthDateEl.value = data.birth_date;
+            birthDateEl.classList.remove('is-invalid');
+        }
+
+        const birthPlaceEl = document.getElementById('birth_place');
+        if (birthPlaceEl && data.birth_place) {
+            birthPlaceEl.value = data.birth_place;
+            birthPlaceEl.classList.remove('is-invalid');
+        }
+
+        const phoneEl = document.getElementById('phone');
+        if (phoneEl && data.phone) {
+            phoneEl.value = data.phone;
+            phoneEl.classList.remove('is-invalid');
+        }
+
+        const maritalEl = document.getElementById('marital_status');
+        if (maritalEl && data.marital_status) {
+            maritalEl.value = data.marital_status;
+            maritalEl.classList.remove('is-invalid');
+        }
+
+        const bloodEl = document.getElementById('blood_type');
+        if (bloodEl && data.blood_type) {
+            bloodEl.value = data.blood_type;
+        }
+
+        // 2. Isi data domisili
+        const addrEl = document.getElementById('address_detail');
+        if (addrEl && data.address_detail) {
+            addrEl.value = data.address_detail;
+            addrEl.classList.remove('is-invalid');
+        }
+
+        const dusunEl = document.getElementById('dusun');
+        if (dusunEl && data.dusun) dusunEl.value = data.dusun;
+
+        const rtEl = document.getElementById('rt');
+        if (rtEl && data.rt) rtEl.value = data.rt;
+
+        const rwEl = document.getElementById('rw');
+        if (rwEl && data.rw) rwEl.value = data.rw;
+
+        // Auto-select Kecamatan & Desa jika ada kecocokan
+        if (data.district_id) {
+            if (districtTomSelect) {
+                districtTomSelect.setValue(data.district_id.toString());
+            } else {
+                const distEl = document.getElementById('district_id');
+                if (distEl) distEl.value = data.district_id;
+            }
+            handleDistrictChange(data.district_id);
+
+            if (data.village_id) {
+                setTimeout(() => {
+                    if (villageTomSelect) {
+                        villageTomSelect.setValue(data.village_id.toString());
+                    } else {
+                        const villEl = document.getElementById('village_id');
+                        if (villEl) villEl.value = data.village_id;
+                    }
+                }, 200);
+            }
+        }
+
+        // 3. Jika warga sudah terdaftar di PMD Lokal -> muat data lengkapnya
+        if (data.is_registered_pmd && data.full_pmd_data) {
+            populateExistingData(data.full_pmd_data);
+
+            const formModeBanner = document.getElementById('form-mode-banner');
+            const formModeReg = document.getElementById('form-mode-reg');
+            const formModeDesc = document.getElementById('form-mode-desc');
+            if (formModeBanner) {
+                if (formModeReg) formModeReg.innerText = 'No. Reg: ' + (data.local_reg_number || '-');
+                if (formModeDesc) formModeDesc.innerHTML = `Data <strong>${escapeHtml(data.name)}</strong> sudah terdaftar di sistem PMD cabang ini. Formulir telah otomatis diisikan, Anda tinggal melengkapi data yang masih kosong.`;
+                formModeBanner.style.display = 'block';
+            }
+        } else {
+            // Belum di PMD -> tampilkan banner sukses pilih warga MTA
+            const selectedBanner = document.getElementById('warga-mta-selected-banner');
+            const nameBanner = document.getElementById('warga-selected-name');
+            const nomorBanner = document.getElementById('warga-selected-nomor');
+            if (selectedBanner) {
+                if (nameBanner) nameBanner.innerText = data.name;
+                if (nomorBanner) nomorBanner.innerText = data.nomor || '-';
+                selectedBanner.style.display = 'block';
+            }
+
+            const existIdEl = document.getElementById('existing_pemuda_id');
+            if (existIdEl) existIdEl.value = '';
+        }
+
+        // Scroll halus ke banner
+        const bannerTarget = document.getElementById('warga-mta-selected-banner') || document.getElementById('form-mode-banner');
+        if (bannerTarget && bannerTarget.style.display !== 'none') {
+            bannerTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+    } catch (err) {
+        console.error('Error saat memilih warga MTA:', err);
+        alert('Terjadi kesalahan saat memuat detail data warga.');
+    } finally {
+        if (spinner) spinner.style.display = 'none';
+    }
+}
+
+function resetWargaMtaSelection() {
+    currentWargaMta = null;
+    const mtaUuidEl = document.getElementById('mta_warga_uuid');
+    if (mtaUuidEl) mtaUuidEl.value = '';
+
+    const selectedBanner = document.getElementById('warga-mta-selected-banner');
+    if (selectedBanner) selectedBanner.style.display = 'none';
+
+    const existIdEl = document.getElementById('existing_pemuda_id');
+    if (existIdEl) existIdEl.value = '';
+
+    const formModeBanner = document.getElementById('form-mode-banner');
+    if (formModeBanner) formModeBanner.style.display = 'none';
+}

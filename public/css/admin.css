@@ -141,3 +141,87 @@ body {
     align-items: center;
     justify-content: space-between;
 }
+
+/* ==========================================================================
+   Modern Pagination Component Styles (Bootstrap 5 & AdminLTE 3)
+   ========================================================================== */
+.pagination {
+    display: inline-flex;
+    padding-left: 0;
+    list-style: none;
+    border-radius: 0.375rem;
+    gap: 4px;
+    align-items: center;
+    margin: 0;
+}
+
+.pagination .page-item {
+    margin: 0;
+}
+
+.pagination .page-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #495057;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem !important;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.pagination .page-link:hover {
+    z-index: 2;
+    color: #0056b3;
+    background-color: #f1f4f9;
+    border-color: #c6d4e8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.pagination .page-item.active .page-link,
+.pagination .page-item.active span.page-link {
+    z-index: 3;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border-color: #0056b3 !important;
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.35);
+    cursor: default;
+    transform: none;
+}
+
+.pagination .page-item.disabled .page-link,
+.pagination .page-item.disabled span.page-link {
+    color: #adb5bd;
+    pointer-events: none;
+    background-color: #f8f9fa;
+    border-color: #edf2f7;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+.pagination-sm .page-link {
+    min-width: 29px;
+    height: 29px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.78rem;
+}
+
+.pagination-footer-wrapper {
+    background-color: #ffffff;
+    border-top: 1px solid #edf2f7;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
