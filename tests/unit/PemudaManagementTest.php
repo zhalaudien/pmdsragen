@@ -16,10 +16,31 @@ final class PemudaManagementTest extends CIUnitTestCase
     {
         $db = Database::connect('default');
         $pemudaModel = new PemudaModel($db);
-        $regNumber = $pemudaModel->generateRegistrationNumber();
 
-        $this->assertStringStartsWith('PMD-' . date('Ymd') . '-', $regNumber);
-        $this->assertSame(17, strlen($regNumber));
+        // 1. Test default (tanpa parameter)
+        $regNumber = $pemudaModel->generateRegistrationNumber();
+        $this->assertSame(16, strlen($regNumber));
+        $this->assertMatchesRegularExpression('/^86\d{2}\d{8}\d{4}$/', $regNumber);
+        $this->assertStringStartsWith('8601' . date('Ymd'), $regNumber);
+
+        // 2. Test dengan Cabang Gemolong 1 (kode: 86.1 -> 01) dan tanggal lahir 2000-05-17
+        $cabangModel = new \App\Models\CabangModel($db);
+        $cbgGemolong = $cabangModel->where('code', '86.1')->first();
+        if ($cbgGemolong) {
+            $regGemolong = $pemudaModel->generateRegistrationNumber((int) $cbgGemolong['id'], '2000-05-17');
+            $this->assertSame(16, strlen($regGemolong));
+            $this->assertStringStartsWith('860120000517', $regGemolong);
+            $this->assertMatchesRegularExpression('/^860120000517\d{4}$/', $regGemolong);
+        }
+
+        // 3. Test dengan Cabang Gesi (kode: 86.6 -> 06) dan tanggal lahir 1998-12-30
+        $cbgGesi = $cabangModel->where('code', '86.6')->first();
+        if ($cbgGesi) {
+            $regGesi = $pemudaModel->generateRegistrationNumber((int) $cbgGesi['id'], '1998-12-30');
+            $this->assertSame(16, strlen($regGesi));
+            $this->assertStringStartsWith('860619981230', $regGesi);
+            $this->assertMatchesRegularExpression('/^860619981230\d{4}$/', $regGesi);
+        }
     }
 
     public function testUserPasswordHashingAndVerification(): void

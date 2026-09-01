@@ -35,7 +35,7 @@
         <div class="col-8">
             <h5 class="fw-bold mb-1">FORMULIR BIODATA PEMUDA</h5>
             <div>Nomor Registrasi: <strong><?= esc($pemuda['registration_number']) ?></strong></div>
-            <div class="text-muted" style="font-size: 11px;">Status: <?= strtoupper($pemuda['status_verifikasi']) ?> &bull; Tanggal Daftar: <?= date('d/m/Y H:i', strtotime($pemuda['created_at'])) ?></div>
+            <div class="text-muted" style="font-size: 11px;">Status: <?= ($pemuda['status_verifikasi'] === 'verified') ? 'TERVERIFIKASI (SINKRON PUSAT)' : 'BELUM TERVERIFIKASI' ?> &bull; Tanggal Daftar: <?= date('d/m/Y H:i', strtotime($pemuda['created_at'])) ?></div>
         </div>
         <div class="col-4 text-end">
             <div class="cetak-photo-box">

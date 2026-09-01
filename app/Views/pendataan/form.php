@@ -183,9 +183,10 @@
                                                     <?php foreach ($w['cabang'] as $c): ?>
                                                         <option value="<?= $c['id'] ?>" 
                                                                 data-name="<?= esc($c['name']) ?>" 
+                                                                data-code="<?= esc($c['code'] ?? '') ?>" 
                                                                 data-mta-uuid="<?= esc($c['mta_uuid'] ?? '') ?>" 
                                                                 <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
-                                                            <?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
+                                                            <?= !empty($c['code']) ? '[' . esc($c['code']) . '] ' : '' ?><?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
                                                         </option>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>

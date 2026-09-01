@@ -173,7 +173,7 @@
                                 <strong class="text-dark"><i class="fas fa-user text-primary mr-1"></i> 1. Nama Lengkap</strong> — Nama pemuda (min. 3 karakter).
                             </li>
                             <li class="mb-1">
-                                <strong class="text-dark"><i class="fas fa-sitemap text-warning mr-1"></i> 2. Cabang</strong> — Nama Cabang (contoh: <code>Sragen 1</code>, <code>Gemolong 1</code>) atau Kode (contoh: <code>CBG-001</code>).
+                                <strong class="text-dark"><i class="fas fa-sitemap text-warning mr-1"></i> 2. Cabang</strong> — Nama Cabang (contoh: <code>Sragen 1</code>, <code>Gemolong 1</code>) atau Kode (contoh: <code>86.1</code>, <code>86.47</code>).
                             </li>
                             <li class="mb-1">
                                 <strong class="text-dark"><i class="fas fa-venus-mars text-info mr-1"></i> 3. Jenis Kelamin</strong> — Isi <span class="badge badge-primary">L</span> (Laki-laki) atau <span class="badge badge-danger">P</span> (Perempuan).

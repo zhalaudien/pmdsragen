@@ -24,11 +24,9 @@
                     
                     <!-- Verif badge -->
                     <?php if ($pemuda['status_verifikasi'] === 'verified'): ?>
-                        <span class="badge badge-success px-2 py-1 font-weight-bold mr-1"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
-                    <?php elseif ($pemuda['status_verifikasi'] === 'rejected'): ?>
-                        <span class="badge badge-danger px-2 py-1 font-weight-bold mr-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
+                        <span class="badge badge-success px-2 py-1 font-weight-bold mr-1" title="Data Sinkron dengan MTA Pusat"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
                     <?php else: ?>
-                        <span class="badge badge-warning px-2 py-1 font-weight-bold mr-1"><i class="fas fa-clock mr-1"></i> Menunggu Verifikasi</span>
+                        <span class="badge badge-secondary px-2 py-1 font-weight-bold mr-1" title="Data Belum Sinkron dengan MTA Pusat"><i class="fas fa-clock mr-1"></i> Belum Terverifikasi</span>
                     <?php endif; ?>
 
                     <!-- Active / Archived badge -->
@@ -59,37 +57,6 @@
                     <a href="<?= base_url('admin/pemuda/edit/' . $pemuda['id']) ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-edit mr-1"></i> Edit Data
                     </a>
-
-                    <?php if (in_array(session()->get('role'), ['superadmin', 'admin_cabang'], true)): ?>
-                        <div class="btn-group">
-                            <button class="btn btn-success btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
-                                <i class="fas fa-shield-alt mr-1"></i> Status
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-right shadow border-0 p-1">
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="verified">
-                                    <button type="submit" class="dropdown-item py-1 text-success text-xs font-weight-bold">
-                                        <i class="fas fa-check-circle mr-1"></i> Setujui (Valid)
-                                    </button>
-                                </form>
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="rejected">
-                                    <button type="submit" class="dropdown-item py-1 text-danger text-xs font-weight-bold">
-                                        <i class="fas fa-times-circle mr-1"></i> Tolak Pendaftaran
-                                    </button>
-                                </form>
-                                <form action="<?= base_url('admin/pemuda/verifikasi/' . $pemuda['id']) ?>" method="POST">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="pending">
-                                    <button type="submit" class="dropdown-item py-1 text-warning text-xs font-weight-bold">
-                                        <i class="fas fa-clock mr-1"></i> Set Menunggu
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

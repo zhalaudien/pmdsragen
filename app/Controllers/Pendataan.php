@@ -150,7 +150,7 @@ class Pendataan extends BaseController
                 'mta_warga_uuid' => $this->request->getPost('mta_warga_uuid') ?: ($existingPemuda['mta_warga_uuid'] ?? null),
             ]);
 
-            $statusVerifikasi = $verifyCheck['verified'] ? 'verified' : ($existingPemuda['status_verifikasi'] ?? 'pending');
+            $statusVerifikasi = $verifyCheck['verified'] ? 'verified' : 'pending';
             $mtaWargaUuid     = $verifyCheck['warga']['uuid'] ?? ($this->request->getPost('mta_warga_uuid') ?: ($existingPemuda['mta_warga_uuid'] ?? null));
             $mtaStatusWarga   = $verifyCheck['warga']['status'] ?? ($existingPemuda['mta_status_warga'] ?? null);
             $mtaSyncedAt      = $verifyCheck['verified'] ? date('Y-m-d H:i:s') : ($existingPemuda['mta_synced_at'] ?? null);
@@ -186,7 +186,7 @@ class Pendataan extends BaseController
                 $this->pemudaModel->update($pemudaId, $pemudaData);
             } else {
                 // 3b. Generate Registration Number baru dan insert pemuda
-                $regNumber = $this->pemudaModel->generateRegistrationNumber();
+                $regNumber = $this->pemudaModel->generateRegistrationNumber((int) $cabangId, $birthDate);
                 $pemudaData['registration_number'] = $regNumber;
 
                 $this->pemudaModel->insert($pemudaData);

@@ -325,7 +325,7 @@ class HomepageSettingModel extends Model
                     ],
                     [
                         'q' => 'Apa fungsi Nomor Registrasi Pemuda?',
-                        'a' => 'Nomor registrasi (contoh: PMD-20260825-0001) adalah tanda bukti resmi bahwa profil Anda telah terdaftar dalam sistem induk Pemuda MTA Perwakilan Sragen dan dapat digunakan untuk verifikasi keikutsertaan kegiatan atau pelatihan.',
+                        'a' => 'Nomor registrasi (contoh: 8601200005178234) adalah tanda bukti resmi bahwa profil Anda telah terdaftar dalam sistem induk Pemuda MTA Perwakilan Sragen dan dapat digunakan untuk verifikasi keikutsertaan kegiatan atau pelatihan.',
                     ],
                     [
                         'q' => 'Bisakah saya memperbarui data setelah mengirimkan formulir?',

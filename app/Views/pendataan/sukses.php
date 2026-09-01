@@ -43,7 +43,7 @@
                 <div class="p-4 bg-light rounded-3 border mb-4 text-center">
                     <div class="text-muted small fw-semibold text-uppercase mb-1">Nomor Registrasi Pemuda Anda:</div>
                     <div class="display-6 fw-bold text-danger text-break" id="regNumberDisplay">
-                        <?= esc($registration_number ?? (session()->getFlashdata('registration_number') ?? 'PMD-' . date('Ymd') . '-0001')) ?>
+                        <?= esc($registration_number ?? (session()->getFlashdata('registration_number') ?? '8601' . date('Ymd') . '0001')) ?>
                     </div>
                     <div class="small text-muted mt-2">
                         <i class="bi bi-info-circle me-1"></i> Simpan nomor registrasi ini sebagai bukti resmi data pendataan Anda.
@@ -68,8 +68,8 @@
                                         <i class="bi bi-patch-check-fill me-1"></i> Terverifikasi Otomatis (Tercatat di MTA Pusat)
                                     </span>
                                 <?php else: ?>
-                                    <span class="badge bg-warning bg-opacity-25 text-warning-emphasis fw-bold">
-                                        <i class="bi bi-hourglass-split me-1"></i> Menunggu Verifikasi Admin
+                                    <span class="badge bg-secondary bg-opacity-25 text-secondary fw-bold">
+                                        <i class="bi bi-x-circle me-1"></i> Belum Terverifikasi (Belum Sinkron dengan MTA Pusat)
                                     </span>
                                 <?php endif; ?>
                             </div>

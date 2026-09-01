@@ -259,7 +259,7 @@ class PemudaImportService
         $rules = [
             ['A4', 'A. 5 DATA UTAMA WAJIB DIISI (KOLOM A s/d E WARNA HIJAU):'],
             ['A5', '   1. Nama Lengkap: Nama lengkap pemuda (minimal 3 karakter).'],
-            ['A6', '   2. Cabang: Nama Cabang (misal: "Sragen 1", "Gemolong 1") atau Kode Cabang (misal: "CBG-001").'],
+            ['A6', '   2. Cabang: Nama Cabang (misal: "Sragen 1", "Gemolong 1") atau Kode Cabang (misal: "86.1", "86.47").'],
             ['A7', '   3. Jenis Kelamin: Isi dengan "L" (Laki-laki) atau "P" (Perempuan).'],
             ['A8', '   4. Status Pernikahan: "belum_menikah", "sudah_menikah", "janda", atau "duda". (Jika kosong, default "belum_menikah").'],
             ['A9', '   5. Tanggal Lahir: Format YYYY-MM-DD (contoh: 2001-05-14) atau DD/MM/YYYY (contoh: 14/05/2001).'],
@@ -297,15 +297,15 @@ class PemudaImportService
         } catch (\Throwable $e) {
             // Fallback reference data
             $allCabang = [
-                ['wilayah_name' => 'Wilayah 1', 'code' => 'CBG-001', 'name' => 'Gesi'],
-                ['wilayah_name' => 'Wilayah 1', 'code' => 'CBG-002', 'name' => 'Jenar'],
-                ['wilayah_name' => 'Wilayah 1', 'code' => 'CBG-003', 'name' => 'Tangen 1'],
-                ['wilayah_name' => 'Wilayah 1', 'code' => 'CBG-004', 'name' => 'Tanon 1'],
-                ['wilayah_name' => 'Wilayah 2', 'code' => 'CBG-019', 'name' => 'Gemolong 1'],
-                ['wilayah_name' => 'Wilayah 2', 'code' => 'CBG-020', 'name' => 'Kalijambe 1'],
-                ['wilayah_name' => 'Wilayah 3', 'code' => 'CBG-038', 'name' => 'Sragen 1'],
-                ['wilayah_name' => 'Wilayah 3', 'code' => 'CBG-039', 'name' => 'Karangmalang 1'],
-                ['wilayah_name' => 'Wilayah 4', 'code' => 'CBG-058', 'name' => 'Gondang 1'],
+                ['wilayah_name' => 'Wilayah 1', 'code' => '86.6',  'name' => 'Gesi'],
+                ['wilayah_name' => 'Wilayah 1', 'code' => '86.10', 'name' => 'Jenar'],
+                ['wilayah_name' => 'Wilayah 1', 'code' => '86.55', 'name' => 'Tangen 1'],
+                ['wilayah_name' => 'Wilayah 1', 'code' => '86.56', 'name' => 'Tanon 1'],
+                ['wilayah_name' => 'Wilayah 2', 'code' => '86.1',  'name' => 'Gemolong 1'],
+                ['wilayah_name' => 'Wilayah 2', 'code' => '86.11', 'name' => 'Kalijambe 1'],
+                ['wilayah_name' => 'Wilayah 3', 'code' => '86.47', 'name' => 'Sragen 1'],
+                ['wilayah_name' => 'Wilayah 3', 'code' => '86.13', 'name' => 'Karangmalang 1'],
+                ['wilayah_name' => 'Wilayah 4', 'code' => '86.7',  'name' => 'Gondang 1'],
             ];
         }
 
@@ -537,9 +537,9 @@ class PemudaImportService
         $rowErrors   = [];
         $totalDataRows = 0;
 
-        $defaultVerif = $options['default_verifikasi'] ?? 'verified';
-        if (!in_array($defaultVerif, ['verified', 'pending', 'rejected'], true)) {
-            $defaultVerif = 'verified';
+        $defaultVerif = $options['default_verifikasi'] ?? 'pending';
+        if (!in_array($defaultVerif, ['verified', 'pending'], true)) {
+            $defaultVerif = 'pending';
         }
         $skipErrors  = !empty($options['skip_errors']);
         $seenInBatch = [];
@@ -627,7 +627,7 @@ class PemudaImportService
                 $d = $item['data'];
 
                 // Generate No Registrasi Unik
-                $regNumber = $this->pemudaModel->generateRegistrationNumber();
+                $regNumber = $this->pemudaModel->generateRegistrationNumber(!empty($d['cabang_id']) ? (int) $d['cabang_id'] : null, $d['birth_date'] ?? null);
 
                 // 5.1 Insert Pemuda
                 $pemudaData = [
@@ -868,11 +868,11 @@ class PemudaImportService
         } catch (\Throwable $e) {
             // Standard fallback
             $defaultCabang = [
-                ['id' => 1, 'code' => 'CBG-001', 'name' => 'Gesi'],
-                ['id' => 2, 'code' => 'CBG-002', 'name' => 'Jenar'],
-                ['id' => 19, 'code' => 'CBG-019', 'name' => 'Gemolong 1'],
-                ['id' => 38, 'code' => 'CBG-038', 'name' => 'Sragen 1'],
-                ['id' => 39, 'code' => 'CBG-039', 'name' => 'Sragen 2'],
+                ['id' => 1, 'code' => '86.6',  'name' => 'Gesi'],
+                ['id' => 2, 'code' => '86.10', 'name' => 'Jenar'],
+                ['id' => 19, 'code' => '86.1', 'name' => 'Gemolong 1'],
+                ['id' => 38, 'code' => '86.47', 'name' => 'Sragen 1'],
+                ['id' => 39, 'code' => '86.48', 'name' => 'Sragen 2'],
             ];
             foreach ($defaultCabang as $c) {
                 $cabangMap[(int) $c['id']] = $c;
@@ -1385,18 +1385,14 @@ class PemudaImportService
         }
         $data['interest_ids'] = array_unique($matchedInterestIds);
 
-        // 23. Status Verifikasi
+        // 23. Status Verifikasi (Hanya ada 2: verified / pending)
         $rawVerif = isset($map['status_verifikasi']) ? strtolower(trim((string) ($row[$map['status_verifikasi']] ?? ''))) : '';
-        if (in_array($rawVerif, ['verified', 'pending', 'rejected'], true)) {
-            $data['status_verifikasi'] = $rawVerif;
-        } elseif (str_contains($rawVerif, 'terverifikasi') || str_contains($rawVerif, 'valid') || str_contains($rawVerif, 'ya') || str_contains($rawVerif, 'sukses')) {
+        if ($rawVerif === 'verified' || str_contains($rawVerif, 'terverifikasi') || str_contains($rawVerif, 'valid') || str_contains($rawVerif, 'ya')) {
             $data['status_verifikasi'] = 'verified';
-        } elseif (str_contains($rawVerif, 'tolak')) {
-            $data['status_verifikasi'] = 'rejected';
-        } elseif (str_contains($rawVerif, 'tunggu') || str_contains($rawVerif, 'pending')) {
+        } elseif ($rawVerif === 'pending' || str_contains($rawVerif, 'belum') || str_contains($rawVerif, 'tunggu') || str_contains($rawVerif, 'tolak') || str_contains($rawVerif, 'rejected')) {
             $data['status_verifikasi'] = 'pending';
         } else {
-            $data['status_verifikasi'] = $defaultVerif;
+            $data['status_verifikasi'] = in_array($defaultVerif, ['verified', 'pending'], true) ? $defaultVerif : 'pending';
         }
 
         return [

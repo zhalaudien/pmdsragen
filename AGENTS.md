@@ -710,10 +710,14 @@ Gunakan:
 
 ```text
 status_verifikasi:
-    pending
-    verified
-    rejected
+    verified (Terverifikasi — jika data sinkron/tercatat di database MTA Pusat)
+    pending  (Belum Terverifikasi — jika data belum sinkron/tidak tercatat di database MTA Pusat)
 ```
+
+Aturan Ketat Status Verifikasi:
+1. Status verifikasi **HANYA ADA 2**: `verified` (Terverifikasi) dan `pending` (Belum Terverifikasi).
+2. Status verifikasi ditentukan secara otomatis oleh sistem berdasarkan hasil sinkronisasi dengan API MTA Pusat.
+3. Status verifikasi **TIDAK DAPAT diubah secara manual**, baik oleh superadmin, admin wilayah, maupun admin cabang.
 
 dan:
 
@@ -1488,6 +1492,73 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Dibuat unit test suite `tests/unit/HomepageSettingTest.php` (6 test, 40 assertions) untuk menguji model, controller, route definitions, ketersediaan menu sidebar, integritas view portal, dan binding pada landing page.
   - Seluruh 49 unit test proyek lulus 100%.
   - Diverifikasi secara langsung via HTTP curl ke server lokal, pengujian update konten secara live, dan pengujian reset ke default.
+
+### 2026-09-01 — Penyesuaian Kode Cabang Mengikuti Data Resmi API Pusat (api.mta.or.id)
+
+- **Standarisasi Format Kode Cabang:**
+  - Menyelaraskan seluruh kode cabang pemuda di database dari format lama (`CBG-xxx`) ke format resmi API Pusat MTA (`86.0`, `86.1`, `86.2`, ..., `86.69`) di mana `86` merupakan kode Perwakilan MTA Sragen dan digit di belakang titik adalah nomor cabang resmi di sistem pusat.
+- **Database Migration:**
+  - Dibuat migration `app/Database/Migrations/2026-09-01-235000_UpdateCabangCodeFromMtaApi.php` untuk memperbarui seluruh 70 cabang pemuda di tabel `cabang` dengan kode resmi dan UUID dari API Pusat MTA (`api.mta.or.id`).
+  - Migration berhasil dieksekusi, sehingga 100% data cabang di database lokal kini menggunakan format kode resmi pusat.
+- **Sinkronisasi Database Cabang (`MtaSyncService`):**
+  - Diperbarui metode `MtaSyncService::syncCabang()` pada `app/Services/MtaSyncService.php` agar setiap kali proses sinkronisasi cabang dijalankan dari admin panel (`/admin/mta-sync`), kode cabang lokal otomatis disinkronkan dengan data terbaru dari API pusat.
+- **Pembaruan Seeder (`CabangSeeder`):**
+  - Diperbarui `app/Database/Seeds/CabangSeeder.php` untuk mencakup seluruh 70 cabang lengkap dengan kode resmi `86.x`, pemetaan wilayah 1-4, deskripsi, dan `mta_uuid`.
+- **Integrasi Import & Form Input:**
+  - Diperbarui `app/Services/PemudaImportService.php` (panduan template, fallback lookups, dan pemetaan cabang) untuk mendukung dan mereferensikan kode `86.x`.
+  - Diperbarui `app/Views/admin/cabang/index.php` (modal tambah & edit cabang: placeholder `Contoh: 86.1`).
+  - Diperbarui `app/Views/admin/pemuda/import.php` (keterangan format kode cabang).
+  - Diperbarui `app/Views/pendataan/form.php` dan `app/Views/admin/pemuda/form.php` agar dropdown pilihan cabang menampilkan kode cabang resmi pusat (contoh: `[86.1] Gemolong 1 (Wilayah 2)`).
+- **Testing & Validasi:**
+  - Dibuat unit test suite `tests/unit/CabangApiCodeTest.php` (4 test, 16 assertions) untuk menguji format kode seeder, verifikasi database lokal, pemetaan lookups import pemuda, dan view placeholder.
+  - Seluruh 53 unit test proyek lulus 100%.
+
+### 2026-09-02 — Pembaruan Format Nomor Registrasi Pemuda (IdPerwakilanIdCabangtanggallahirRandomNomor)
+
+- **Standarisasi Format Nomor Registrasi Pemuda:**
+  - Format nomor registrasi diubah dari format lama (`PMD-YYYYMMDD-XXXX`) menjadi format terstruktur 16 digit: `IdPerwakilanIdCabangtanggallahirRandomNomor`.
+  - **Struktur Komponen (16 Digit, Tanpa Pemisah):**
+    - `IdPerwakilan` (2 digit): Kode Perwakilan MTA Sragen (`86`).
+    - `IdCabang` (2 digit): Nomor/kode cabang resmi MTA dengan padding 2 digit (contoh: `86.1` Gemolong 1 -> `01`, `86.6` Gesi -> `06`, `86.10` Jenar -> `10`, `86.42` Sambungmacan 2 -> `42`, `86.0` Sragen Perwakilan -> `00`).
+    - `tanggallahir` (8 digit): Tanggal lahir pemuda format `YYYYMMDD` (contoh: `20000517` untuk 17 Mei 2000).
+    - `RandomNomor` (4 digit): Angka acak 4 digit unik (`0001` - `9999`) yang diverifikasi keunikannya secara otomatis di database.
+  - **Contoh:** Pemuda lahir 17 Mei 2000 di Cabang Gemolong 1 (Kode 86.1) mendapatkan No. Registrasi: `8601200005178234`.
+- **Implementasi Model & Controller:**
+  - Diperbarui `PemudaModel::generateRegistrationNumber(?int $cabangId = null, ?string $birthDate = null)` di `app/Models/PemudaModel.php`.
+  - Diperbarui pemanggilan di `app/Controllers/Pendataan.php` (pendaftaran mandiri).
+  - Diperbarui pemanggilan di `app/Controllers/Admin/Pemuda.php` (tambah pemuda oleh admin).
+  - Diperbarui pemanggilan di `app/Services/MtaSyncService.php` (sinkronisasi dari API MTA).
+  - Diperbarui pemanggilan di `app/Services/PemudaImportService.php` (import massal Excel).
+  - Diperbarui fallback tampilan di `app/Views/pendataan/sukses.php` dan contoh teks di `HomepageSettingModel.php`.
+- **Testing & Validasi:**
+  - Diperbarui `tests/unit/PemudaManagementTest.php` untuk menguji struktur format 16 digit, kecocokan kode cabang & tanggal lahir, serta format default.
+  - Seluruh 53 unit test di `tests/unit/` lulus 100%.
+
+### 2026-09-02 — Penegakan Otomatisasi Status Verifikasi (2 Status Berdasarkan Sinkronisasi MTA Pusat)
+
+- **Kebijakan & Ketentuan Status Verifikasi:**
+  - Status verifikasi dipangkas menjadi **hanya 2 status**:
+    1. **`verified` (Terverifikasi)**: jika data pemuda tersinkronisasi / cocok dengan Database Warga MTA Pusat (`api.mta.or.id`).
+    2. **`pending` (Belum Terverifikasi)**: jika data pemuda belum tersinkronisasi / tidak ditemukan di MTA Pusat.
+  - Status `rejected` (Ditolak) ditiadakan.
+  - **Larangan Modifikasi Manual:** Status verifikasi tidak dapat diubah atau dimanipulasi secara manual oleh siapapun, baik Superadmin, Admin Wilayah, maupun Admin Cabang.
+- **Implementasi Backend & Controller:**
+  - `Admin\Pemuda::save()` & `Admin\Pemuda::update()`: Menghapus input manual `status_verifikasi` dari formulir. Status ditentukan secara otomatis melalui panggilan `MtaSyncService::verifyYouthAgainstMta()`.
+  - `Admin\Pemuda::verifikasi($id)`: Diubah dari endpoint toggle status manual menjadi aksi pemeriksaan & sinkronisasi live terhadap API MTA Pusat.
+  - `Pendataan::simpan()`: Status verifikasi pendaftar mandiri secara ketat mengikuti hasil pencocokan API MTA Pusat.
+  - `PemudaImportService`: Seluruh pemuda hasil impor spreadsheet di-set default `pending` (Belum Terverifikasi) sampai disinkronkan dengan API MTA.
+  - `PemudaModel::getCountsSummary()`: Ringkasan statistik hanya menghitung `verified` dan `pending`.
+- **Implementasi Antarmuka (UI/UX):**
+  - `app/Views/admin/pemuda/form.php`: Dropdown pilihan verifikasi dihapus dan diganti dengan informasi status read-only (badge + indikator sinkronisasi pusat).
+  - `app/Views/admin/pemuda/index.php`: Dropdown toggle manual pada baris tabel diganti dengan badge status informatif. Tab filter "Ditolak" dihapus. Ditambahkan opsi "Sinkronkan MTA" pada dropdown aksi baris.
+  - `app/Views/admin/pemuda/detail.php`: Dropdown ubah status verifikasi dihapus.
+  - `app/Views/admin/dashboard/index.php`: Kotak statistik utama disederhanakan menjadi 3 card: Total Pemuda, Terverifikasi (Sinkron Pusat), dan Belum Terverifikasi.
+  - `app/Views/admin/pemuda/cetak.php`: Format cetak menampilkan status "TERVERIFIKASI (SINKRON PUSAT)" atau "BELUM TERVERIFIKASI".
+  - `app/Views/pendataan/sukses.php`: Keterangan status sukses pendaftaran diperjelas menjadi Terverifikasi Otomatis vs Belum Terverifikasi.
+- **Pengujian:**
+  - Dibuat unit test suite `tests/unit/VerificationPolicyTest.php` (3 test, 7 assertions).
+  - Seluruh 56 unit test proyek lulus 100%.
+
 
 
 

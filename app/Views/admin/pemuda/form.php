@@ -60,7 +60,7 @@
                                 <?php if (!empty($wilayahWithCabang[0]['cabang'])): ?>
                                     <?php foreach ($wilayahWithCabang[0]['cabang'] as $c): ?>
                                         <option value="<?= $c['id'] ?>" <?= (old('cabang_id', $pemuda['cabang_id'] ?? '') == $c['id']) ? 'selected' : '' ?>>
-                                            <?= esc($c['name']) ?>
+                                            <?= !empty($c['code']) ? '[' . esc($c['code']) . '] ' : '' ?><?= esc($c['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -501,26 +501,21 @@
                 <div class="row">
                     <div class="col-12 col-sm-6 form-group mb-2">
                         <label class="text-xs text-muted font-weight-bold">Status Verifikasi</label>
-                        <?php if (in_array(session()->get('role'), ['superadmin', 'admin_cabang'], true)): ?>
-                            <select name="status_verifikasi" class="form-control form-control-sm" required>
-                                <option value="verified" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? 'verified') === 'verified' ? 'selected' : '' ?>>Terverifikasi (Valid)</option>
-                                <option value="pending" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'pending' ? 'selected' : '' ?>>Menunggu Verifikasi</option>
-                                <option value="rejected" <?= old('status_verifikasi', $pemuda['status_verifikasi'] ?? '') === 'rejected' ? 'selected' : '' ?>>Ditolak</option>
-                            </select>
-                        <?php else: ?>
-                            <!-- Read-only for admin_wilayah -->
-                            <div class="p-2 bg-light rounded border">
-                                <?php 
-                                    $currV = $pemuda['status_verifikasi'] ?? 'pending';
-                                    if ($currV === 'verified') echo '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>';
-                                    elseif ($currV === 'rejected') echo '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>';
-                                    else echo '<span class="badge badge-warning px-2 py-1"><i class="fas fa-clock mr-1"></i> Menunggu Verifikasi</span>';
-                                ?>
-                                <div class="text-muted text-xs mt-1">
-                                    <i class="fas fa-info-circle mr-1"></i> Hak verifikasi dipegang oleh <strong>Admin Cabang</strong> &amp; <strong>Superadmin</strong>.
-                                </div>
+                        <div class="p-2 bg-light rounded border">
+                            <?php 
+                                $isVerified = ($pemuda['status_verifikasi'] ?? '') === 'verified';
+                                if ($isVerified): 
+                            ?>
+                                <span class="badge badge-success px-2 py-1 font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
+                                <span class="text-xs text-success ml-1 font-weight-bold"><i class="fas fa-link mr-1"></i> Sinkron dengan MTA Pusat</span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary px-2 py-1 font-weight-bold"><i class="fas fa-clock mr-1"></i> Belum Terverifikasi</span>
+                                <span class="text-xs text-muted ml-1"><i class="fas fa-unlink mr-1"></i> Belum Sinkron dengan MTA Pusat</span>
+                            <?php endif; ?>
+                            <div class="text-muted text-xs mt-1">
+                                <i class="fas fa-info-circle mr-1"></i> Status verifikasi otomatis ditentukan berdasarkan keselarasan data dengan API MTA Pusat (tidak dapat diubah manual).
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
 
                     <div class="col-12 col-sm-6 form-group mb-2">
@@ -562,7 +557,8 @@
             if (selectedWilayah && selectedWilayah.cabang) {
                 $.each(selectedWilayah.cabang, function (i, c) {
                     const isSel = (selectedCabangId && selectedCabangId == c.id) ? 'selected' : '';
-                    $cabang.append('<option value="' + c.id + '" ' + isSel + '>' + c.name + '</option>');
+                    const label = (c.code ? '[' + c.code + '] ' : '') + c.name;
+                    $cabang.append('<option value="' + c.id + '" ' + isSel + '>' + label + '</option>');
                 });
             }
         }

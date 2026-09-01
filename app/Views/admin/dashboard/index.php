@@ -53,11 +53,11 @@
 <!-- STATS ROW 1: SMALL-BOXES -->
 <div class="row">
     <!-- Total Pemuda -->
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-4 col-12 col-sm-6">
         <div class="small-box bg-info elevation-2">
             <div class="inner">
                 <h3><?= number_format($stats['summary']['total'] ?? 0) ?></h3>
-                <p>Total Pemuda</p>
+                <p>Total Pemuda Terdaftar</p>
             </div>
             <div class="icon">
                 <i class="fas fa-users"></i>
@@ -68,50 +68,34 @@
         </div>
     </div>
 
-    <!-- Menunggu Verifikasi -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning elevation-2">
-            <div class="inner">
-                <h3><?= number_format($stats['summary']['pending'] ?? 0) ?></h3>
-                <p>Menunggu Verifikasi</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <a href="<?= base_url('admin/pemuda?status_verifikasi=pending') ?>" class="small-box-footer">
-                Proses Verifikasi <i class="fas fa-arrow-circle-right"></i>
-            </a>
-        </div>
-    </div>
-
     <!-- Terverifikasi -->
-    <div class="col-lg-3 col-6">
+    <div class="col-lg-4 col-6 col-sm-6">
         <div class="small-box bg-success elevation-2">
             <div class="inner">
                 <h3><?= number_format($stats['summary']['verified'] ?? 0) ?></h3>
-                <p>Terverifikasi</p>
+                <p>Terverifikasi (Sinkron Pusat)</p>
             </div>
             <div class="icon">
                 <i class="fas fa-check-circle"></i>
             </div>
             <a href="<?= base_url('admin/pemuda?status_verifikasi=verified') ?>" class="small-box-footer">
-                Data Valid <i class="fas fa-arrow-circle-right"></i>
+                Data Terverifikasi <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
     </div>
 
-    <!-- Ditolak -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger elevation-2">
+    <!-- Belum Terverifikasi -->
+    <div class="col-lg-4 col-6 col-sm-12">
+        <div class="small-box bg-secondary elevation-2">
             <div class="inner">
-                <h3><?= number_format($stats['summary']['rejected'] ?? 0) ?></h3>
-                <p>Ditolak</p>
+                <h3><?= number_format($stats['summary']['pending'] ?? 0) ?></h3>
+                <p>Belum Terverifikasi</p>
             </div>
             <div class="icon">
-                <i class="fas fa-times-circle"></i>
+                <i class="fas fa-clock"></i>
             </div>
-            <a href="<?= base_url('admin/pemuda?status_verifikasi=rejected') ?>" class="small-box-footer">
-                Perlu Revisi <i class="fas fa-arrow-circle-right"></i>
+            <a href="<?= base_url('admin/pemuda?status_verifikasi=pending') ?>" class="small-box-footer">
+                Data Belum Terverifikasi <i class="fas fa-arrow-circle-right"></i>
             </a>
         </div>
     </div>
@@ -420,11 +404,9 @@
                                         </td>
                                         <td>
                                             <?php if ($p['status_verifikasi'] === 'verified'): ?>
-                                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
-                                            <?php elseif ($p['status_verifikasi'] === 'rejected'): ?>
-                                                <span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>
+                                                <span class="badge badge-success px-2 py-1" title="Sinkron Pusat"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
                                             <?php else: ?>
-                                                <span class="badge badge-warning px-2 py-1"><i class="fas fa-clock mr-1"></i> Menunggu</span>
+                                                <span class="badge badge-secondary px-2 py-1" title="Belum Sinkron Pusat"><i class="fas fa-clock mr-1"></i> Belum Terverifikasi</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-muted text-xs">

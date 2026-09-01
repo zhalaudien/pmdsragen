@@ -99,23 +99,56 @@ class PemudaModel extends Model
 
     /**
      * Generate unique registration number
-     * Format: PMD-YYYYMMDD-XXXX
+     * Format: IdPerwakilanIdCabangtanggallahirRandomNomor
+     * Contoh: 8601200005178234 (Perwakilan: 86, Cabang: 01, Tgl Lahir: 20000517, Random: 4 digit 8234)
+     *
+     * @param int|null    $cabangId  ID cabang dari tabel cabang
+     * @param string|null $birthDate Tanggal lahir (format Y-m-d, d/m/Y, atau string tanggal valid)
+     * @return string Nomor registrasi unik 16 digit
      */
-    public function generateRegistrationNumber(): string
+    public function generateRegistrationNumber(?int $cabangId = null, ?string $birthDate = null): string
     {
-        $prefix = 'PMD-' . date('Ymd') . '-';
-        $latest = $this->like('registration_number', $prefix, 'after')
-                       ->orderBy('id', 'DESC')
-                       ->first();
+        $perwakilanCode = '86';
+        $cabangCode     = '01';
 
-        if ($latest) {
-            $lastNumber = (int) substr($latest['registration_number'], -4);
-            $newNumber  = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
+        if (!empty($cabangId)) {
+            $cabang = $this->db->table('cabang')->where('id', $cabangId)->get()->getRowArray();
+            if ($cabang) {
+                if (!empty($cabang['code']) && preg_match('/^(\d+)\.(\d+)$/', trim($cabang['code']), $matches)) {
+                    $perwakilanCode = $matches[1];
+                    $cabangCode     = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+                } else {
+                    $cabangCode = str_pad((string) ($cabang['id'] ?? 1), 2, '0', STR_PAD_LEFT);
+                }
+            }
         }
 
-        return $prefix . $newNumber;
+        if (!empty($birthDate)) {
+            $birthDateStr = trim((string) $birthDate);
+            if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $birthDateStr, $dm)) {
+                $birthCode = $dm[1] . $dm[2] . $dm[3];
+            } elseif (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})/', $birthDateStr, $dm)) {
+                $birthCode = $dm[3] . $dm[2] . $dm[1];
+            } elseif (preg_match('/^\d{8}$/', $birthDateStr)) {
+                $birthCode = $birthDateStr;
+            } else {
+                $ts = strtotime($birthDateStr);
+                $birthCode = ($ts !== false) ? date('Ymd', $ts) : date('Ymd');
+            }
+        } else {
+            $birthCode = date('Ymd');
+        }
+
+        $baseNumber = $perwakilanCode . $cabangCode . $birthCode;
+
+        // Generate 4 digit random (0001 - 9999) dan pastikan unik di database
+        do {
+            $randomCode = str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+            $candidate  = $baseNumber . $randomCode;
+            $count = $this->db->table($this->table)->where('registration_number', $candidate)->countAllResults();
+        } while ($count > 0);
+
+        return $candidate;
     }
 
     /**
@@ -391,7 +424,6 @@ class PemudaModel extends Model
         $totalAll = (clone $builder)->countAllResults(false);
         $verified = (clone $builder)->where('pemuda.status_verifikasi', 'verified')->countAllResults(false);
         $pending  = (clone $builder)->where('pemuda.status_verifikasi', 'pending')->countAllResults(false);
-        $rejected = (clone $builder)->where('pemuda.status_verifikasi', 'rejected')->countAllResults(false);
         $active   = (clone $builder)->where('pemuda.status_data', 'active')->countAllResults(false);
         $archived = (clone $builder)->where('pemuda.status_data', 'archived')->countAllResults(false);
 
@@ -399,7 +431,7 @@ class PemudaModel extends Model
             'total'    => $totalAll,
             'verified' => $verified,
             'pending'  => $pending,
-            'rejected' => $rejected,
+            'rejected' => 0,
             'active'   => $active,
             'archived' => $archived,
         ];

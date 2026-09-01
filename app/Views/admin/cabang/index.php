@@ -395,8 +395,8 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="text-xs text-muted font-weight-bold mb-1">Kode Cabang</label>
-                                <input type="text" name="code" class="form-control form-control-sm" placeholder="Contoh: CBG-001">
+                                <label class="text-xs text-muted font-weight-bold mb-1">Kode Cabang (Sesuai API Pusat)</label>
+                                <input type="text" name="code" class="form-control form-control-sm" placeholder="Contoh: 86.1">
                             </div>
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Nama Cabang <span class="text-danger">*</span></label>
@@ -497,8 +497,8 @@
                                 </select>
                             </div>
                             <div class="form-group mb-2">
-                                <label class="text-xs text-muted font-weight-bold mb-1">Kode Cabang</label>
-                                <input type="text" name="code" id="editCabangCode" class="form-control form-control-sm" placeholder="Contoh: CBG-001">
+                                <label class="text-xs text-muted font-weight-bold mb-1">Kode Cabang (Sesuai API Pusat)</label>
+                                <input type="text" name="code" id="editCabangCode" class="form-control form-control-sm" placeholder="Contoh: 86.1">
                             </div>
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Nama Cabang <span class="text-danger">*</span></label>

@@ -283,11 +283,6 @@ class Pemuda extends BaseController
             'job_status_id'      => 'required',
         ];
 
-        // Status verifikasi input validation (only required if permitted)
-        if (in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
-            $rules['status_verifikasi'] = 'permit_empty|in_list[pending,verified,rejected]';
-        }
-
         if (!$this->validate($rules)) {
             return redirect()->back()
                              ->withInput()
@@ -309,15 +304,31 @@ class Pemuda extends BaseController
             }
         }
 
-        // Verification permission check: admin_wilayah cannot set verified/rejected, always 'pending'
-        if ($scope['role'] === 'admin_wilayah') {
-            $statusVerifikasi = 'pending';
-        } else {
-            $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: 'verified';
-        }
+        $name         = (string) $this->request->getPost('name');
+        $birthDate    = (string) $this->request->getPost('birth_date');
+        $gender       = (string) $this->request->getPost('gender');
+        $phone        = trim((string) $this->request->getPost('phone'));
+        $mtaWargaUuid = toLowerTrim($this->request->getPost('mta_warga_uuid'));
 
-        $name      = (string) $this->request->getPost('name');
-        $birthDate = (string) $this->request->getPost('birth_date');
+        // Status verifikasi hanya ada 2 (terverifikasi / pending), otomatis berdasarkan sinkronisasi pusat
+        // Tidak dapat diubah manual oleh superadmin maupun admin cabang
+        $syncService = new \App\Services\MtaSyncService();
+        $verifyCheck = $syncService->verifyYouthAgainstMta([
+            'name'           => $name,
+            'phone'          => $phone,
+            'birth_date'     => $birthDate,
+            'gender'         => $gender,
+            'cabang_id'      => $cabangId,
+            'mta_warga_uuid' => $mtaWargaUuid,
+        ]);
+
+        $statusVerifikasi = $verifyCheck['verified'] ? 'verified' : 'pending';
+        $mtaWargaUuid     = $verifyCheck['warga']['uuid'] ?? ($mtaWargaUuid ?: null);
+        $mtaStatusWarga   = $verifyCheck['warga']['status'] ?? null;
+        $mtaSyncedAt      = $verifyCheck['verified'] ? date('Y-m-d H:i:s') : null;
+        $mtaFotoUrl       = $verifyCheck['warga']['foto'] ?? null;
+        $mtaAyahUuid      = $verifyCheck['warga']['ayah_uuid'] ?? null;
+        $mtaIbuUuid       = $verifyCheck['warga']['ibu_uuid'] ?? null;
 
         // Pengecekan data ganda (nama, tanggal lahir, dan cabang)
         $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId);
@@ -332,24 +343,28 @@ class Pemuda extends BaseController
         $db->transStart();
 
         try {
-            $regNumber = $this->pemudaModel->generateRegistrationNumber();
+            $regNumber = $this->pemudaModel->generateRegistrationNumber((int) $cabangId, $birthDate);
 
             // 1. Insert Pemuda
             $pemudaData = [
                 'cabang_id'           => $cabangId,
                 'registration_number' => $regNumber,
-                'name'                => mb_strtolower(trim((string) $this->request->getPost('name')), 'UTF-8'),
-                'gender'              => $this->request->getPost('gender'),
+                'name'                => mb_strtolower(trim($name), 'UTF-8'),
+                'gender'              => $gender,
                 'marital_status'      => toLowerTrim($this->request->getPost('marital_status')) ?: 'belum_menikah',
                 'blood_type'          => toLowerTrim($this->request->getPost('blood_type')),
                 'birth_place'         => toLowerTrim($this->request->getPost('birth_place')) ?: 'sragen',
-                'birth_date'          => $this->request->getPost('birth_date'),
-                'phone'               => trim((string) $this->request->getPost('phone')),
+                'birth_date'          => $birthDate,
+                'phone'               => $phone,
                 'email'               => toLowerTrim($this->request->getPost('email')),
                 'status_verifikasi'   => $statusVerifikasi,
                 'status_data'         => toLowerTrim($this->request->getPost('status_data')) ?: 'active',
-                'mta_warga_uuid'      => toLowerTrim($this->request->getPost('mta_warga_uuid')),
-                'mta_synced_at'       => $this->request->getPost('mta_warga_uuid') ? date('Y-m-d H:i:s') : null,
+                'mta_warga_uuid'      => $mtaWargaUuid,
+                'mta_status_warga'    => $mtaStatusWarga,
+                'mta_synced_at'       => $mtaSyncedAt,
+                'mta_foto_url'        => $mtaFotoUrl,
+                'mta_ayah_uuid'       => $mtaAyahUuid,
+                'mta_ibu_uuid'        => $mtaIbuUuid,
                 'created_by'          => session()->get('user_id'),
             ];
 
@@ -643,10 +658,6 @@ class Pemuda extends BaseController
             'status_data'        => 'required|in_list[active,archived]',
         ];
 
-        if (in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
-            $rules['status_verifikasi'] = 'permit_empty|in_list[pending,verified,rejected]';
-        }
-
         if (!$this->validate($rules)) {
             return redirect()->back()
                              ->withInput()
@@ -667,15 +678,31 @@ class Pemuda extends BaseController
             }
         }
 
-        // Verification status handling
-        if ($scope['role'] === 'admin_wilayah') {
-            $statusVerifikasi = $existing['status_verifikasi'];
-        } else {
-            $statusVerifikasi = $this->request->getPost('status_verifikasi') ?: $existing['status_verifikasi'];
-        }
+        $name         = (string) $this->request->getPost('name');
+        $birthDate    = (string) $this->request->getPost('birth_date');
+        $gender       = (string) $this->request->getPost('gender');
+        $phone        = trim((string) $this->request->getPost('phone'));
+        $mtaWargaUuid = toLowerTrim($this->request->getPost('mta_warga_uuid')) ?: ($existing['mta_warga_uuid'] ?? null);
 
-        $name      = (string) $this->request->getPost('name');
-        $birthDate = (string) $this->request->getPost('birth_date');
+        // Status verifikasi hanya ada 2 (terverifikasi / pending), otomatis berdasarkan sinkronisasi pusat
+        // Tidak dapat diubah manual oleh superadmin maupun admin cabang
+        $syncService = new \App\Services\MtaSyncService();
+        $verifyCheck = $syncService->verifyYouthAgainstMta([
+            'name'           => $name,
+            'phone'          => $phone,
+            'birth_date'     => $birthDate,
+            'gender'         => $gender,
+            'cabang_id'      => $cabangId,
+            'mta_warga_uuid' => $mtaWargaUuid,
+        ]);
+
+        $statusVerifikasi = $verifyCheck['verified'] ? 'verified' : 'pending';
+        $mtaWargaUuid     = $verifyCheck['warga']['uuid'] ?? ($mtaWargaUuid ?: null);
+        $mtaStatusWarga   = $verifyCheck['warga']['status'] ?? ($existing['mta_status_warga'] ?? null);
+        $mtaSyncedAt      = $verifyCheck['verified'] ? date('Y-m-d H:i:s') : ($existing['mta_synced_at'] ?? null);
+        $mtaFotoUrl       = $verifyCheck['warga']['foto'] ?? ($existing['mta_foto_url'] ?? null);
+        $mtaAyahUuid      = $verifyCheck['warga']['ayah_uuid'] ?? ($existing['mta_ayah_uuid'] ?? null);
+        $mtaIbuUuid       = $verifyCheck['warga']['ibu_uuid'] ?? ($existing['mta_ibu_uuid'] ?? null);
 
         // Pengecekan data ganda (nama, tanggal lahir, dan cabang) mengecualikan pemuda yang sedang diedit
         $duplicate = $this->pemudaModel->findDuplicate($name, $birthDate, $cabangId, $id);
@@ -693,17 +720,22 @@ class Pemuda extends BaseController
             // 1. Update Pemuda
             $pemudaData = [
                 'cabang_id'         => $cabangId,
-                'name'              => mb_strtolower(trim((string) $this->request->getPost('name')), 'UTF-8'),
-                'gender'            => $this->request->getPost('gender'),
+                'name'              => mb_strtolower(trim($name), 'UTF-8'),
+                'gender'            => $gender,
                 'marital_status'    => toLowerTrim($this->request->getPost('marital_status')) ?: 'belum_menikah',
                 'blood_type'        => toLowerTrim($this->request->getPost('blood_type')),
                 'birth_place'       => toLowerTrim($this->request->getPost('birth_place')) ?: 'sragen',
-                'birth_date'        => $this->request->getPost('birth_date'),
-                'phone'             => trim((string) $this->request->getPost('phone')),
+                'birth_date'        => $birthDate,
+                'phone'             => $phone,
                 'email'             => toLowerTrim($this->request->getPost('email')),
                 'status_verifikasi' => $statusVerifikasi,
                 'status_data'       => toLowerTrim($this->request->getPost('status_data')) ?: 'active',
-                'mta_warga_uuid'    => toLowerTrim($this->request->getPost('mta_warga_uuid')) ?: ($existing['mta_warga_uuid'] ?? null),
+                'mta_warga_uuid'    => $mtaWargaUuid,
+                'mta_status_warga'  => $mtaStatusWarga,
+                'mta_synced_at'     => $mtaSyncedAt,
+                'mta_foto_url'      => $mtaFotoUrl,
+                'mta_ayah_uuid'     => $mtaAyahUuid,
+                'mta_ibu_uuid'      => $mtaIbuUuid,
             ];
 
             $this->pemudaModel->update($id, $pemudaData);
@@ -839,51 +871,64 @@ class Pemuda extends BaseController
     }
 
     /**
-     * Verifikasi Status Pemuda (Pending / Verified / Rejected)
+     * Cek & Sinkronkan Status Verifikasi Pemuda dengan Database MTA Pusat
+     * Status verifikasi tidak dapat diubah secara manual, melainkan otomatis berdasarkan sinkronisasi API MTA Pusat.
      */
     public function verifikasi(int $id)
     {
         $scope = $this->getScope();
+        $pemuda = $this->pemudaModel->getPemudaDetail($id, $scope);
 
-        // Verification permission check: only superadmin and admin_cabang are allowed
-        if (!in_array($scope['role'], ['superadmin', 'admin_cabang'], true)) {
+        if (!$pemuda) {
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON([
                     'status'  => 'error', 
-                    'message' => 'Akses ditolak. Admin Wilayah tidak memiliki izin untuk melakukan verifikasi data pemuda.'
-                ])->setStatusCode(403);
+                    'message' => 'Data pemuda tidak ditemukan atau Anda tidak memiliki akses.'
+                ])->setStatusCode(404);
             }
-            return redirect()->back()->with('error', 'Akses ditolak. Admin Wilayah tidak memiliki izin untuk melakukan verifikasi data pemuda.');
-        }
-
-        $status = $this->request->getPost('status');
-
-        if (!in_array($status, ['pending', 'verified', 'rejected'], true)) {
-            return redirect()->back()->with('error', 'Status verifikasi tidak valid.');
-        }
-
-        $pemuda = $this->pemudaModel->getPemudaDetail($id, $scope);
-        if (!$pemuda) {
             return redirect()->back()->with('error', 'Data pemuda tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        $this->pemudaModel->update($id, [
-            'status_verifikasi' => $status,
+        // Lakukan sinkronisasi dan verifikasi otomatis terhadap database MTA Pusat
+        $syncService = new \App\Services\MtaSyncService();
+        $verifyCheck = $syncService->verifyYouthAgainstMta([
+            'name'           => $pemuda['name'],
+            'phone'          => $pemuda['phone'],
+            'birth_date'     => $pemuda['birth_date'],
+            'gender'         => $pemuda['gender'],
+            'cabang_id'      => $pemuda['cabang_id'],
+            'mta_warga_uuid' => $pemuda['mta_warga_uuid'] ?? null,
         ]);
 
-        $statusLabels = [
-            'verified' => 'Diverifikasi',
-            'rejected' => 'Ditolak',
-            'pending'  => 'Menunggu Verifikasi',
+        $newStatus    = $verifyCheck['verified'] ? 'verified' : 'pending';
+        $mtaWargaUuid = $verifyCheck['warga']['uuid'] ?? ($pemuda['mta_warga_uuid'] ?? null);
+
+        $updateData = [
+            'status_verifikasi' => $newStatus,
+            'mta_warga_uuid'    => $mtaWargaUuid,
+            'mta_status_warga'  => $verifyCheck['warga']['status'] ?? ($pemuda['mta_status_warga'] ?? null),
+            'mta_synced_at'     => $verifyCheck['verified'] ? date('Y-m-d H:i:s') : ($pemuda['mta_synced_at'] ?? null),
+            'mta_foto_url'      => $verifyCheck['warga']['foto'] ?? ($pemuda['mta_foto_url'] ?? null),
         ];
 
-        $msg = 'Status pemuda ' . esc($pemuda['name']) . ' berhasil diubah menjadi ' . ($statusLabels[$status] ?? $status) . '.';
+        $this->pemudaModel->update($id, $updateData);
 
-        if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['status' => 'success', 'message' => $msg, 'new_status' => $status]);
+        if ($verifyCheck['verified']) {
+            $msg = 'Data pemuda "' . esc($pemuda['name']) . '" berhasil disinkronkan dan Terverifikasi dengan Database MTA Pusat.';
+        } else {
+            $msg = 'Data pemuda "' . esc($pemuda['name']) . '" belum cocok / tidak ditemukan di Database MTA Pusat (Status: Belum Terverifikasi).';
         }
 
-        return redirect()->back()->with('success', $msg);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'     => 'success',
+                'message'    => $msg,
+                'new_status' => $newStatus,
+                'is_verified'=> $verifyCheck['verified'],
+            ]);
+        }
+
+        return redirect()->back()->with($verifyCheck['verified'] ? 'success' : 'warning', $msg);
     }
 
     /**
@@ -1040,9 +1085,9 @@ class Pemuda extends BaseController
         ];
 
         $verifLabels = [
-            'pending'  => 'Menunggu',
+            'pending'  => 'Belum Terverifikasi',
             'verified' => 'Terverifikasi',
-            'rejected' => 'Ditolak',
+            'rejected' => 'Belum Terverifikasi',
         ];
 
         foreach ($rows as $row) {

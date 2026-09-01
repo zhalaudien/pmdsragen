@@ -103,7 +103,7 @@ class MtaSyncService
                     'mta_uuid'           => $uuid,
                     'mta_last_synced_at' => date('Y-m-d H:i:s'),
                 ];
-                if (empty($existing['code']) && !empty($kode)) {
+                if (!empty($kode)) {
                     $updateData['code'] = $kode;
                 }
                 if (empty($existing['alamat']) && !empty($alamat)) {
@@ -234,7 +234,7 @@ class MtaSyncService
                 $this->pemudaModel->update($pemudaId, $updatePemuda);
             } else {
                 // Insert Pemuda Baru
-                $regNumber = $this->pemudaModel->generateRegistrationNumber();
+                $regNumber = $this->pemudaModel->generateRegistrationNumber((int) $cabangId, $birthDate);
                 $insertPemuda = [
                     'cabang_id'           => $cabangId,
                     'registration_number' => $regNumber,
@@ -620,14 +620,14 @@ class MtaSyncService
                 $verifiedCount++;
             } else {
                 // Jika tidak ditemukan di pusat dan tidak memiliki mta_warga_uuid
-                if (empty($pemuda['mta_warga_uuid']) && $pemuda['status_verifikasi'] === 'pending') {
-                    // Tetap berstatus pending
+                if (empty($pemuda['mta_warga_uuid'])) {
+                    $this->pemudaModel->update($pemuda['id'], ['status_verifikasi' => 'pending']);
                 }
                 $pendingCount++;
             }
         }
 
-        $msg = "Sinkronisasi & Verifikasi selesai. Total diperiksa: {$total}. Terverifikasi di MTA Pusat: {$verifiedCount} (Baru diverifikasi otomatis: {$newlyVerified}), Menunggu Verifikasi: {$pendingCount}.";
+        $msg = "Sinkronisasi & Verifikasi selesai. Total diperiksa: {$total}. Terverifikasi di MTA Pusat: {$verifiedCount} (Baru diverifikasi: {$newlyVerified}), Belum Terverifikasi: {$pendingCount}.";
         $this->logModel->log('warga', 'success', $verifiedCount, $msg);
 
         return [
