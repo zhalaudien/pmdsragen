@@ -425,8 +425,11 @@ class Pendataan extends BaseController
     }
 
     /**
-     * Endpoint AJAX untuk mencari data Warga MTA di Cabang terpilih
-     * (Untuk autocomplete nama pada form pendataan)
+     * Endpoint AJAX untuk mencari data Warga MTA dan Pemuda Lokal di Cabang terpilih
+     * Menggabungkan fitur check data dengan search warga:
+     * - Menampilkan data dari MTA Pusat maupun data lokal dari pemuda
+     * - Mendeteksi apakah warga sudah terdaftar di PMD atau belum
+     * - Memberikan opsi input data baru jika nama belum ada
      */
     public function searchWarga()
     {
@@ -457,7 +460,7 @@ class Pendataan extends BaseController
         if (mb_strlen($query) < 2) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Ketik minimal 2 karakter untuk mencari data warga.',
+                'message' => 'Ketik minimal 2 karakter untuk mencari data warga / pemuda.',
                 'data'    => [],
                 'csrfHash'=> csrf_hash(),
             ]);
@@ -473,71 +476,209 @@ class Pendataan extends BaseController
             ]);
         }
 
+        // 1. Cari data di database Lokal PMD untuk cabang ini
+        $localPemudaList = $this->pemudaModel
+            ->select('pemuda.id, pemuda.registration_number, pemuda.name, pemuda.gender, pemuda.birth_date, pemuda.birth_place, pemuda.phone, pemuda.status_verifikasi, pemuda.status_data, pemuda.mta_warga_uuid, pemuda.mta_status_warga, alamat.address_detail, alamat.dusun, alamat.rt, alamat.rw, alamat.district_id, alamat.village_id')
+            ->join('alamat', 'alamat.pemuda_id = pemuda.id', 'left')
+            ->where('pemuda.cabang_id', $cabangId)
+            ->where('pemuda.status_data', 'active')
+            ->groupStart()
+                ->like('pemuda.name', $query)
+                ->orLike('pemuda.registration_number', $query)
+                ->orLike('pemuda.phone', $query)
+            ->groupEnd()
+            ->orderBy('pemuda.name', 'ASC')
+            ->limit(20)
+            ->findAll();
+
+        // 2. Cari data di MTA Pusat via MtaApiService
         $mtaCabangUuid = $cabang['mta_uuid'] ?? null;
         $apiService = new \App\Services\MtaApiService();
 
         if (empty($mtaCabangUuid)) {
-            $cabangListRes = $apiService->getCabangSragenList();
-            if (($cabangListRes['success'] ?? false) && !empty($cabangListRes['data'])) {
-                $cleanLocalName = strtolower(trim($cabang['name']));
-                foreach ($cabangListRes['data'] as $mc) {
-                    $cleanMcName = strtolower(trim($mc['nama'] ?? ''));
-                    if ($cleanLocalName === $cleanMcName || str_contains($cleanMcName, $cleanLocalName) || str_contains($cleanLocalName, $cleanMcName)) {
-                        $mtaCabangUuid = $mc['uuid'];
-                        $this->cabangModel->update($cabangId, ['mta_uuid' => $mtaCabangUuid]);
-                        break;
+            try {
+                $cabangListRes = $apiService->getCabangSragenList();
+                if (($cabangListRes['success'] ?? false) && !empty($cabangListRes['data'])) {
+                    $cleanLocalName = strtolower(trim($cabang['name']));
+                    foreach ($cabangListRes['data'] as $mc) {
+                        $cleanMcName = strtolower(trim($mc['nama'] ?? ''));
+                        if ($cleanLocalName === $cleanMcName || str_contains($cleanMcName, $cleanLocalName) || str_contains($cleanLocalName, $cleanMcName)) {
+                            $mtaCabangUuid = $mc['uuid'];
+                            $this->cabangModel->update($cabangId, ['mta_uuid' => $mtaCabangUuid]);
+                            break;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                log_message('warning', 'MTA Cabang lookup failed in searchWarga: ' . $e->getMessage());
+            }
+        }
+
+        $mtaWargaList = [];
+        try {
+            $searchParams = ['limit' => 20];
+            if (!empty($mtaCabangUuid)) {
+                $searchParams['cabang'] = $mtaCabangUuid;
+            }
+            $searchRes = $apiService->searchWarga($query, $searchParams);
+            if (($searchRes['success'] ?? false) && !empty($searchRes['data'])) {
+                $mtaWargaList = $searchRes['data'];
+            }
+        } catch (\Throwable $e) {
+            log_message('warning', 'MTA searchWarga failed: ' . $e->getMessage());
+        }
+
+        // 3. Gabungkan (Merge) data dari MTA Pusat dan Lokal PMD secara cerdas
+        $mergedList = [];
+        $matchedLocalIds = [];
+
+        // Buat index pencocokan untuk data lokal
+        $localByUuid = [];
+        $localByNameBirth = [];
+
+        foreach ($localPemudaList as $lp) {
+            if (!empty($lp['mta_warga_uuid'])) {
+                $localByUuid[$lp['mta_warga_uuid']] = $lp;
+            }
+            $normKey = strtolower(trim($lp['name'])) . '|' . (!empty($lp['birth_date']) ? date('Y-m-d', strtotime($lp['birth_date'])) : '');
+            $localByNameBirth[$normKey] = $lp;
+        }
+
+        // Proses data dari MTA Pusat
+        foreach ($mtaWargaList as $w) {
+            $uuid = $w['uuid'] ?? '';
+            $matchedLocal = null;
+
+            if (!empty($uuid) && isset($localByUuid[$uuid])) {
+                $matchedLocal = $localByUuid[$uuid];
+            } else {
+                $wNormKey = strtolower(trim($w['nama'] ?? '')) . '|' . (!empty($w['lahir']) ? date('Y-m-d', strtotime($w['lahir'])) : '');
+                if (isset($localByNameBirth[$wNormKey])) {
+                    $matchedLocal = $localByNameBirth[$wNormKey];
+                } elseif (!empty($uuid)) {
+                    // Cek database langsung jika di batch lokal belum terambil
+                    $dbCheck = $this->pemudaModel
+                        ->select('id, registration_number, name, gender, birth_date, phone, status_verifikasi, mta_warga_uuid')
+                        ->where('cabang_id', $cabangId)
+                        ->where('mta_warga_uuid', $uuid)
+                        ->first();
+                    if ($dbCheck) {
+                        $matchedLocal = $dbCheck;
                     }
                 }
             }
+
+            if ($matchedLocal) {
+                $matchedLocalIds[] = (int) $matchedLocal['id'];
+                $mergedList[] = [
+                    'source'            => 'both', // Ada di MTA Pusat dan terdaftar di PMD
+                    'uuid'              => $uuid,
+                    'nomor'             => $w['nomor'] ?? '',
+                    'nama'              => $matchedLocal['name'] ?? ($w['nama'] ?? ''),
+                    'kelamin'           => in_array(strtoupper($matchedLocal['gender'] ?? $w['kelamin'] ?? 'L'), ['L', 'P'], true) ? strtoupper($matchedLocal['gender'] ?? $w['kelamin']) : 'L',
+                    'lahir'             => !empty($matchedLocal['birth_date']) ? $matchedLocal['birth_date'] : ($w['lahir'] ?? ''),
+                    'usia'              => $w['usia'] ?? (!empty($matchedLocal['birth_date']) ? (date('Y') - date('Y', strtotime($matchedLocal['birth_date']))) : null),
+                    'alamat'            => !empty($matchedLocal['address_detail']) ? $matchedLocal['address_detail'] : ($w['alamat'] ?? ''),
+                    'nohp'              => !empty($matchedLocal['phone']) ? $matchedLocal['phone'] : ($w['nohp'] ?? ''),
+                    'is_registered_pmd' => true,
+                    'local_pemuda_id'   => (int) $matchedLocal['id'],
+                    'local_reg_number'  => $matchedLocal['registration_number'] ?? null,
+                    'status_verifikasi' => $matchedLocal['status_verifikasi'] ?? 'verified',
+                    'status_label'      => 'Terdaftar di PMD & MTA Pusat',
+                ];
+            } else {
+                $mergedList[] = [
+                    'source'            => 'mta', // Warga MTA Pusat, belum terdaftar di PMD
+                    'uuid'              => $uuid,
+                    'nomor'             => $w['nomor'] ?? '',
+                    'nama'              => $w['nama'] ?? '',
+                    'kelamin'           => in_array(strtoupper($w['kelamin'] ?? 'L'), ['L', 'P'], true) ? strtoupper($w['kelamin']) : 'L',
+                    'lahir'             => $w['lahir'] ?? '',
+                    'usia'              => $w['usia'] ?? null,
+                    'alamat'            => $w['alamat'] ?? '',
+                    'nohp'              => $w['nohp'] ?? '',
+                    'is_registered_pmd' => false,
+                    'local_pemuda_id'   => null,
+                    'local_reg_number'  => null,
+                    'status_verifikasi' => null,
+                    'status_label'      => 'Warga MTA Pusat (Belum Terdaftar PMD)',
+                ];
+            }
         }
 
-        $searchParams = ['limit' => 15];
-        if (!empty($mtaCabangUuid)) {
-            $searchParams['cabang'] = $mtaCabangUuid;
-        }
-
-        $searchRes = $apiService->searchWarga($query, $searchParams);
-        $wargaList = ($searchRes['success'] ?? false) && !empty($searchRes['data']) ? $searchRes['data'] : [];
-
-        // Cross-reference dengan data pemuda lokal PMD
-        if (!empty($wargaList)) {
-            $uuids = array_filter(array_column($wargaList, 'uuid'));
-            $localPemudaMap = [];
-
-            if (!empty($uuids)) {
-                $matched = $this->pemudaModel
-                    ->select('id, registration_number, mta_warga_uuid, status_verifikasi')
-                    ->whereIn('mta_warga_uuid', $uuids)
-                    ->findAll();
-                foreach ($matched as $m) {
-                    if (!empty($m['mta_warga_uuid'])) {
-                        $localPemudaMap[$m['mta_warga_uuid']] = $m;
-                    }
-                }
+        // Tambahkan data lokal PMD yang belum masuk (yang tidak tercantum di hasil MTA)
+        foreach ($localPemudaList as $lp) {
+            if (in_array((int) $lp['id'], $matchedLocalIds, true)) {
+                continue;
             }
 
-            foreach ($wargaList as &$w) {
-                $uuid = $w['uuid'] ?? '';
-                if (!empty($uuid) && isset($localPemudaMap[$uuid])) {
-                    $w['is_registered_pmd'] = true;
-                    $w['local_pemuda_id']   = (int) $localPemudaMap[$uuid]['id'];
-                    $w['local_reg_number']  = $localPemudaMap[$uuid]['registration_number'];
-                } else {
-                    $w['is_registered_pmd'] = false;
-                    $w['local_pemuda_id']   = null;
-                    $w['local_reg_number']  = null;
-                }
-            }
-            unset($w);
+            $age = !empty($lp['birth_date']) ? (date('Y') - date('Y', strtotime($lp['birth_date']))) : null;
+            $hasMta = !empty($lp['mta_warga_uuid']) || ($lp['status_verifikasi'] ?? '') === 'verified';
+
+            $mergedList[] = [
+                'source'            => $hasMta ? 'both' : 'pmd',
+                'uuid'              => $lp['mta_warga_uuid'] ?? null,
+                'nomor'             => null,
+                'nama'              => $lp['name'],
+                'kelamin'           => in_array(strtoupper($lp['gender'] ?? 'L'), ['L', 'P'], true) ? strtoupper($lp['gender']) : 'L',
+                'lahir'             => $lp['birth_date'] ?? '',
+                'usia'              => $age,
+                'alamat'            => $lp['address_detail'] ?? ($lp['dusun'] ?? ''),
+                'nohp'              => $lp['phone'] ?? '',
+                'is_registered_pmd' => true,
+                'local_pemuda_id'   => (int) $lp['id'],
+                'local_reg_number'  => $lp['registration_number'] ?? null,
+                'status_verifikasi' => $lp['status_verifikasi'] ?? 'pending',
+                'status_label'      => $hasMta ? 'Terdaftar di PMD & MTA Pusat' : 'Terdaftar di PMD (Lokal)',
+            ];
         }
+
+        // Urutkan: Pemuda yang sudah terdaftar di PMD diutamakan, lalu abjad
+        usort($mergedList, function($a, $b) {
+            if ($a['is_registered_pmd'] !== $b['is_registered_pmd']) {
+                return $a['is_registered_pmd'] ? -1 : 1;
+            }
+            return strcasecmp($a['nama'], $b['nama']);
+        });
 
         return $this->response->setJSON([
             'success'     => true,
             'cabang_id'   => $cabangId,
             'cabang_name' => $cabang['name'],
-            'total'       => count($wargaList),
-            'data'        => $wargaList,
+            'total'       => count($mergedList),
+            'data'        => $mergedList,
             'csrfHash'    => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Endpoint AJAX untuk mengambil detail lengkap Pemuda Lokal PMD
+     * (Untuk auto-populate seluruh data form saat pemuda terdaftar dipilih dari pencarian)
+     */
+    public function pemudaDetail(int $id)
+    {
+        if ($id <= 0) {
+            return $this->response->setJSON([
+                'success'  => false,
+                'message'  => 'ID Pemuda tidak valid.',
+                'csrfHash' => csrf_hash(),
+            ]);
+        }
+
+        $fullData = $this->pemudaModel->getPemudaDetail($id);
+        if (!$fullData) {
+            return $this->response->setJSON([
+                'success'  => false,
+                'message'  => 'Data pemuda tidak ditemukan di sistem.',
+                'csrfHash' => csrf_hash(),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'source'   => 'pmd',
+            'data'     => $fullData,
+            'csrfHash' => csrf_hash(),
         ]);
     }
 

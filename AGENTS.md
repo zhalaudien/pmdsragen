@@ -1559,6 +1559,26 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Dibuat unit test suite `tests/unit/VerificationPolicyTest.php` (3 test, 7 assertions).
   - Seluruh 56 unit test proyek lulus 100%.
 
+### 2026-09-02 — Penggabungan Fitur Check Data dengan Search Warga & Autocomplete Terpadu
 
-
-
+- **Pencarian Terpadu (Unified Search & Check Data):**
+  - Menggabungkan fitur pemeriksaan data pemuda dengan pencarian warga MTA saat mengetik nama pada formulir pendataan publik.
+  - Endpoint `Pendataan::searchWarga` diperbarui untuk mencari secara simultan di dua sumber data:
+    1. **Database MTA Pusat** (via `MtaApiService::searchWarga` berdasarkan cabang terpilih).
+    2. **Database Lokal Pemuda PMD** (tabel `pemuda` dan `alamat` untuk cabang terpilih).
+  - Hasil pencarian digabungkan (merge) dan dideduplikasi secara cerdas:
+    - `both`: Warga tercatat di MTA Pusat dan sudah terdaftar di PMD Lokal (badge *Terdaftar di PMD* & *Terhubung MTA*).
+    - `pmd`: Pemuda terdaftar di database PMD lokal cabang terkait (badge *Terdaftar di PMD (Lokal)*).
+    - `mta`: Warga tercatat di MTA Pusat namun belum terdaftar di PMD (badge *Warga MTA Pusat (Belum Terdaftar PMD)*).
+- **Penanganan Pemuda Terdaftar & Endpoint Detail Lokal:**
+  - Ditambahkan endpoint `GET /pendataan/pemuda-detail/(:num)` pada `Pendataan::pemudaDetail($id)` untuk memuat data lengkap pemuda lokal (identitas, alamat, pendidikan, pekerjaan, organisasi, keahlian, dan minat) secara instan.
+  - Ketika memilih hasil pemuda yang sudah terdaftar di PMD, formulir otomatis terisi penuh dan mode formulir berganti ke "Mode Melengkapi & Memperbarui Data Terdaftar" dengan nomor registrasi yang bersangkutan.
+- **Dukungan Pendaftaran / Input Data Baru:**
+  - Jika nama belum ditemukan di database MTA Pusat maupun PMD Lokal:
+    - Dropdown menampilkan kartu interaktif: *"Nama [nama] Belum Ada di MTA Pusat maupun PMD Cabang... Silakan lanjutkan untuk mendaftar sebagai pemuda baru"*.
+    - Tombol aksi `[+ Input Data Baru dengan Nama Ini]` (`selectNewPemudaInput()`) mengaktifkan formulir baru, membersihkan ID terkait, menampilkan konfirmasi Mode Pendaftaran Baru, dan mengarahkan fokus user ke input berikutnya.
+  - Jika hasil pencarian ada tetapi nama pendaftar berbeda, disediakan opsi di bagian bawah dropdown: `[+ Nama Tidak Tercantum? Input Data Baru]`.
+- **UI/UX & Testing:**
+  - Penyederhanaan antarmuka Step 1 `app/Views/pendataan/form.php`: kotak menu "Fitur Pengecekan Data Terpadu" dihapus dari form sehingga antarmuka lebih bersih dan terfokus pada pencarian otomatis saat mengetik nama. Kontainer feedback dinamis `#check-data-result-wrapper` tetap dipertahankan untuk notifikasi mode data.
+  - Diperbarui `public/js/pendataan.js` dengan fungsi `handleSelectSuggestion()`, `selectLocalPemuda()`, `selectNewPemudaInput()`, dan `formatDateDisplay()`.
+  - Diperbarui suite pengujian `tests/unit/WargaMtaAutocompleteTest.php` untuk memvalidasi method baru, rute baru, elemen view, fungsi JavaScript, serta penanganan validasi.

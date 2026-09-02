@@ -262,10 +262,43 @@ function handleManualCheckData() {
 function populateExistingData(pemuda) {
     if (!pemuda) return;
 
-    // 1. Existing ID
+    // 1. Existing ID & Identitas Utama
     const existIdEl = document.getElementById('existing_pemuda_id');
     if (existIdEl) {
         existIdEl.value = pemuda.id || '';
+    }
+
+    if (pemuda.name) {
+        const nameEl = document.getElementById('name');
+        if (nameEl) {
+            nameEl.value = pemuda.name;
+            nameEl.classList.remove('is-invalid');
+        }
+    }
+
+    if (pemuda.gender) {
+        const isMale = pemuda.gender.toUpperCase() === 'L';
+        const radioL = document.getElementById('gender_l');
+        const radioP = document.getElementById('gender_p');
+        if (isMale && radioL) radioL.checked = true;
+        if (!isMale && radioP) radioP.checked = true;
+        const errGender = document.getElementById('gender-error');
+        if (errGender) errGender.style.display = 'none';
+    }
+
+    if (pemuda.birth_date) {
+        const birthDateEl = document.getElementById('birth_date');
+        if (birthDateEl) {
+            birthDateEl.value = pemuda.birth_date;
+            birthDateEl.classList.remove('is-invalid');
+        }
+    }
+
+    if (pemuda.mta_warga_uuid) {
+        const mtaUuidEl = document.getElementById('mta_warga_uuid');
+        if (mtaUuidEl) {
+            mtaUuidEl.value = pemuda.mta_warga_uuid;
+        }
     }
 
     // 2. Data Pribadi
@@ -1217,6 +1250,28 @@ function closeWargaSuggestions() {
     if (dropdown) dropdown.style.display = 'none';
 }
 
+function formatDateDisplay(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const clean = dateStr.split(' ')[0];
+        const parts = clean.split('-');
+        if (parts.length === 3) {
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        return dateStr;
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+function handleSelectSuggestion(source, uuid, localPemudaId) {
+    if (localPemudaId && parseInt(localPemudaId, 10) > 0) {
+        selectLocalPemuda(parseInt(localPemudaId, 10));
+    } else if (uuid && uuid !== 'null' && uuid !== 'undefined' && uuid !== '') {
+        selectWargaMta(uuid);
+    }
+}
+
 function renderWargaSuggestions(wargaList, cabangName, query) {
     const dropdown      = document.getElementById('warga-suggestions-dropdown');
     const listContainer = document.getElementById('warga-suggestions-list');
@@ -1225,31 +1280,57 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
     let itemsHtml = '';
     wargaList.forEach(w => {
         const isMale = (w.kelamin || 'L').toUpperCase() === 'L';
+        const uuidArg = w.uuid ? `'${w.uuid}'` : "''";
+        const localIdArg = w.local_pemuda_id ? parseInt(w.local_pemuda_id, 10) : 0;
+        const sourceArg = `'${w.source || 'mta'}'`;
         
+        let sourceBadges = '';
+        if (w.is_registered_pmd) {
+            sourceBadges += `<span class="badge bg-success rounded-pill px-2 py-1 small me-1"><i class="bi bi-check-circle-fill me-1"></i>Terdaftar di PMD</span>`;
+            if (w.local_reg_number) {
+                sourceBadges += `<span class="badge bg-light border text-monospace text-dark py-0 px-1 me-1" style="font-size: 0.72rem;">No. Reg: ${escapeHtml(w.local_reg_number)}</span>`;
+            }
+            if (w.source === 'both') {
+                sourceBadges += `<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill px-2 py-0 small"><i class="bi bi-link-45deg"></i> Terhubung MTA</span>`;
+            }
+        } else {
+            sourceBadges += `<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2 py-1 small me-1"><i class="bi bi-building me-1"></i>Warga MTA Pusat</span>`;
+            if (w.nomor) {
+                sourceBadges += `<span class="badge bg-light border text-monospace text-muted py-0 px-1 me-1" style="font-size: 0.72rem;">No: ${escapeHtml(w.nomor)}</span>`;
+            }
+            sourceBadges += `<span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0 small">Belum Terdaftar PMD</span>`;
+        }
+
+        let actionBtn = '';
+        if (w.is_registered_pmd) {
+            actionBtn = `<button type="button" class="btn btn-sm btn-success px-2 py-1 small fw-semibold text-nowrap"><i class="bi bi-pencil-square me-1"></i>Lengkapi Data</button>`;
+        } else {
+            actionBtn = `<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 small fw-semibold text-nowrap"><i class="bi bi-check2-circle me-1"></i>Pilih Data Warga</button>`;
+        }
+
         itemsHtml += `
             <div class="warga-item-row p-2 px-3 border-bottom d-flex justify-content-between align-items-center" 
                  role="button" 
                  style="cursor: pointer; transition: background 0.15s ease;"
-                 onmouseover="this.style.backgroundColor='#f0fdf4'"
+                 onmouseover="this.style.backgroundColor='#f8fafc'"
                  onmouseout="this.style.backgroundColor=''"
-                 onclick="selectWargaMta('${w.uuid}')">
+                 onclick="handleSelectSuggestion(${sourceArg}, ${uuidArg}, ${localIdArg})">
                 <div class="me-2 text-truncate">
-                    <div class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <div class="fw-bold text-dark mb-1 d-flex align-items-center flex-wrap gap-1">
                         <span>${highlightMatch(escapeHtml(w.nama), query)}</span>
-                        ${w.nomor ? `<span class="badge bg-light border text-monospace text-muted py-0 px-1" style="font-size: 0.72rem;">${escapeHtml(w.nomor)}</span>` : ''}
+                        ${sourceBadges}
                     </div>
-                    <div class="small text-muted d-flex flex-wrap align-items-center gap-2 mt-1">
+                    <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
                         <span class="badge ${isMale ? 'bg-primary' : 'badge-pink'}" style="font-size: 0.7rem; ${!isMale ? 'background-color:#e83e8c;color:#fff;' : ''}">
                             <i class="bi ${isMale ? 'bi-gender-male' : 'bi-gender-female'}"></i> ${isMale ? 'Putra' : 'Putri'}
                         </span>
                         ${w.usia ? `<span><i class="bi bi-clock-history me-1"></i>${w.usia} Th</span>` : ''}
-                        ${w.alamat ? `<span class="text-truncate" style="max-width: 180px;"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(w.alamat)}</span>` : ''}
+                        ${w.lahir ? `<span><i class="bi bi-calendar-date me-1"></i>${escapeHtml(formatDateDisplay(w.lahir))}</span>` : ''}
+                        ${w.alamat ? `<span class="text-truncate" style="max-width: 220px;"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(w.alamat)}</span>` : ''}
                     </div>
                 </div>
-                <div class="text-end flex-shrink-0">
-                    ${w.is_registered_pmd 
-                        ? `<span class="badge bg-success rounded-pill px-2 py-1 small"><i class="bi bi-check-circle me-1"></i>Terdaftar PMD</span>` 
-                        : `<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-2 py-1 small"><i class="bi bi-cursor-fill me-1"></i>Pilih Data</span>`}
+                <div class="text-end flex-shrink-0 ms-2">
+                    ${actionBtn}
                 </div>
             </div>
         `;
@@ -1257,16 +1338,18 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
 
     listContainer.innerHTML = `
         <div class="dropdown-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-            <span class="small fw-bold text-success">
-                <i class="bi bi-people-fill me-1"></i> Data Warga MTA (${escapeHtml(cabangName)}):
+            <span class="small fw-bold text-dark">
+                <i class="bi bi-search text-danger me-1"></i> Hasil Pencarian &amp; Pengecekan (${escapeHtml(cabangName)}):
             </span>
             <span class="badge bg-secondary rounded-pill small">${wargaList.length} ditemukan</span>
         </div>
-        <div class="warga-items-scroll" style="max-height: 250px; overflow-y: auto;">
+        <div class="warga-items-scroll" style="max-height: 280px; overflow-y: auto;">
             ${itemsHtml}
         </div>
-        <div class="p-2 px-3 bg-light border-top d-flex justify-content-between align-items-center small text-muted">
-            <span><i class="bi bi-info-circle me-1"></i> Bukan data Anda? Tetap gunakan nama yang diketik.</span>
+        <div class="p-2 px-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" onclick="selectNewPemudaInput('${escapeHtml(query)}')">
+                <i class="bi bi-person-plus-fill me-1"></i> Nama Tidak Tercantum? Input Data Baru
+            </button>
             <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
         </div>
     `;
@@ -1280,10 +1363,20 @@ function renderEmptyWargaSuggestions(query, cabangName) {
     if (!dropdown || !listContainer) return;
 
     listContainer.innerHTML = `
-        <div class="p-3 text-center text-muted small">
-            <i class="bi bi-person-x fs-4 text-secondary d-block mb-1"></i>
-            Tidak ditemukan warga MTA bernama "<strong>${escapeHtml(query)}</strong>" di ${escapeHtml(cabangName)}.<br>
-            <span class="text-dark">Silakan lanjutkan mengisi formulir untuk pendaftaran pemuda baru.</span>
+        <div class="p-3 text-center">
+            <div class="mb-2">
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border p-2 rounded-circle">
+                    <i class="bi bi-person-x fs-3"></i>
+                </span>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">Nama "${escapeHtml(query)}" Belum Ada</h6>
+            <p class="small text-muted mb-3">
+                Tidak ditemukan di database <strong>MTA Pusat</strong> maupun <strong>PMD Cabang ${escapeHtml(cabangName)}</strong>.<br>
+                Silakan lanjutkan untuk mendaftar sebagai pemuda baru.
+            </p>
+            <button type="button" class="btn btn-sm btn-primary-pmd px-3 py-2 fw-semibold" onclick="selectNewPemudaInput('${escapeHtml(query)}')">
+                <i class="bi bi-person-plus-fill me-1"></i> Input Data Baru dengan Nama Ini
+            </button>
         </div>
         <div class="p-2 bg-light border-top text-end">
             <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" onclick="closeWargaSuggestions()">Tutup</button>
@@ -1315,6 +1408,151 @@ function highlightMatch(text, query) {
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp('(' + escapedQuery + ')', 'gi');
     return text.replace(regex, '<span class="text-success fw-bold">$1</span>');
+}
+
+async function selectLocalPemuda(id) {
+    if (!id) return;
+
+    closeWargaSuggestions();
+    const spinner = document.getElementById('name-search-spinner');
+    if (spinner) spinner.style.display = 'inline-block';
+
+    try {
+        const pemudaUrl = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.pemudaDetailUrl)
+            ? PENDATAAN_CONFIG.pemudaDetailUrl
+            : '/pendataan/pemuda-detail';
+
+        const response = await fetch(`${pemudaUrl}/${encodeURIComponent(id)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+
+        const res = await response.json();
+
+        if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
+            PENDATAAN_CONFIG.csrfHash = res.csrfHash;
+        }
+
+        if (!res.success || !res.data) {
+            alert(res.message || 'Gagal memuat detail data pemuda lokal.');
+            return;
+        }
+
+        const pemuda = res.data;
+        populateExistingData(pemuda);
+
+        // Tampilkan banner mode pemuda terdaftar
+        const formModeBanner = document.getElementById('form-mode-banner');
+        const formModeReg = document.getElementById('form-mode-reg');
+        const formModeDesc = document.getElementById('form-mode-desc');
+        if (formModeBanner) {
+            if (formModeReg) formModeReg.innerText = 'No. Reg: ' + (pemuda.registration_number || '-');
+            if (formModeDesc) formModeDesc.innerHTML = `Data pemuda atas nama <strong>${escapeHtml(pemuda.name)}</strong> sudah terdaftar di cabang ini. Formulir telah otomatis diisikan dengan data Anda.`;
+            formModeBanner.style.display = 'block';
+        }
+
+        const revBanner = document.getElementById('review-mode-banner');
+        const revReg = document.getElementById('review-mode-reg');
+        if (revBanner) {
+            if (revReg) revReg.innerText = 'No. Reg: ' + (pemuda.registration_number || '-');
+            revBanner.style.display = 'block';
+        }
+
+        const btnSubmitText = document.getElementById('btnSubmitFormText');
+        if (btnSubmitText) {
+            btnSubmitText.innerText = 'Simpan & Lengkapi Data Pendataan';
+        }
+
+        // Tampilkan di check-data-result-wrapper
+        const resultWrapper = document.getElementById('check-data-result-wrapper');
+        const resultContent = document.getElementById('check-data-result-content');
+        if (resultWrapper && resultContent) {
+            resultContent.innerHTML = `
+                <div class="alert alert-success card-custom border-success p-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-patch-check-fill text-success fs-3 flex-shrink-0"></i>
+                        <div class="w-100">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                                <h6 class="fw-bold text-success mb-0">Data Pemuda Terdaftar Ditemukan!</h6>
+                                <span class="badge bg-success rounded-pill px-3 py-1">No. Reg: ${escapeHtml(pemuda.registration_number || '-')}</span>
+                            </div>
+                            <p class="small text-dark mb-2">
+                                Data pemuda atas nama <strong>"${escapeHtml(pemuda.name)}"</strong> sudah tercatat di sistem cabang ini. 
+                                Formulir telah otomatis diisikan dengan data Anda. Silakan lanjutkan untuk melengkapi data yang belum terisi.
+                            </p>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-1 px-2 small">
+                                    <i class="bi bi-pencil-square me-1"></i> Mode: Melengkapi &amp; Memperbarui Data
+                                </span>
+                                <button type="button" class="btn btn-sm btn-success px-3" onclick="goToStep(2)">
+                                    Lanjut Lengkapi Alamat <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultWrapper.style.display = 'block';
+        }
+
+        const targetScroll = formModeBanner || resultWrapper;
+        if (targetScroll) {
+            targetScroll.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+    } catch (err) {
+        console.error('Error saat memilih pemuda lokal:', err);
+        alert('Terjadi kesalahan saat memuat data pemuda.');
+    } finally {
+        if (spinner) spinner.style.display = 'none';
+    }
+}
+
+function selectNewPemudaInput(name) {
+    closeWargaSuggestions();
+    resetWargaMtaSelection();
+
+    const nameInput = document.getElementById('name');
+    if (nameInput && name) {
+        nameInput.value = name;
+        nameInput.classList.remove('is-invalid');
+    }
+
+    const checkResWrap = document.getElementById('check-data-result-wrapper');
+    const checkResContent = document.getElementById('check-data-result-content');
+    if (checkResWrap && checkResContent) {
+        checkResContent.innerHTML = `
+            <div class="alert alert-primary card-custom border-primary p-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-plus-fill fs-4 text-primary flex-shrink-0"></i>
+                        <div>
+                            <strong class="text-primary d-block">Mode Pendaftaran Pemuda Baru</strong>
+                            <div class="small text-dark">Anda mendaftarkan pemuda baru atas nama <strong>${escapeHtml(name)}</strong>. Silakan lanjutkan mengisi seluruh data formulir hingga selesai.</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary rounded-pill px-3 py-2">Pendaftaran Baru</span>
+                </div>
+            </div>
+        `;
+        checkResWrap.style.display = 'block';
+        checkResWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    const btnSubmitText = document.getElementById('btnSubmitFormText');
+    if (btnSubmitText) {
+        btnSubmitText.innerText = 'Kirim Data Pendataan';
+    }
+
+    // Arahkan fokus ke input selanjutnya
+    const birthDateEl = document.getElementById('birth_date');
+    const genderRadio = document.getElementById('gender_l');
+    if (genderRadio && !document.querySelector('input[name="gender"]:checked')) {
+        genderRadio.focus();
+    } else if (birthDateEl && !birthDateEl.value) {
+        birthDateEl.focus();
+    }
 }
 
 async function selectWargaMta(uuid) {
@@ -1463,6 +1701,9 @@ async function selectWargaMta(uuid) {
 
             const existIdEl = document.getElementById('existing_pemuda_id');
             if (existIdEl) existIdEl.value = '';
+
+            const formModeBanner = document.getElementById('form-mode-banner');
+            if (formModeBanner) formModeBanner.style.display = 'none';
         }
 
         // Scroll halus ke banner
@@ -1492,4 +1733,12 @@ function resetWargaMtaSelection() {
 
     const formModeBanner = document.getElementById('form-mode-banner');
     if (formModeBanner) formModeBanner.style.display = 'none';
+
+    const revBanner = document.getElementById('review-mode-banner');
+    if (revBanner) revBanner.style.display = 'none';
+
+    const btnSubmitText = document.getElementById('btnSubmitFormText');
+    if (btnSubmitText) {
+        btnSubmitText.innerText = 'Kirim Data Pendataan';
+    }
 }

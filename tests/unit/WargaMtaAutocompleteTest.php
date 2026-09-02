@@ -17,10 +17,15 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         $reflection = new \ReflectionClass(Pendataan::class);
         $this->assertTrue($reflection->hasMethod('searchWarga'));
         $this->assertTrue($reflection->hasMethod('wargaDetail'));
+        $this->assertTrue($reflection->hasMethod('pemudaDetail'));
 
         $detailMethod = $reflection->getMethod('wargaDetail');
         $this->assertCount(1, $detailMethod->getParameters());
         $this->assertEquals('uuid', $detailMethod->getParameters()[0]->getName());
+
+        $pemudaDetailMethod = $reflection->getMethod('pemudaDetail');
+        $this->assertCount(1, $pemudaDetailMethod->getParameters());
+        $this->assertEquals('id', $pemudaDetailMethod->getParameters()[0]->getName());
     }
 
     public function testRoutesAreDefined(): void
@@ -32,9 +37,11 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
 
         $this->assertArrayHasKey('pendataan/search-warga', $getRoutes);
         $this->assertArrayHasKey('pendataan/warga-detail/([^/]+)', $getRoutes);
+        $this->assertArrayHasKey('pendataan/pemuda-detail/([0-9]+)', $getRoutes);
 
         $this->assertEquals('\App\Controllers\Pendataan::searchWarga', $getRoutes['pendataan/search-warga']);
         $this->assertEquals('\App\Controllers\Pendataan::wargaDetail/$1', $getRoutes['pendataan/warga-detail/([^/]+)']);
+        $this->assertEquals('\App\Controllers\Pendataan::pemudaDetail/$1', $getRoutes['pendataan/pemuda-detail/([0-9]+)']);
     }
 
     public function testFormViewContainsAutocompleteElements(): void
@@ -62,6 +69,7 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         // PENDATAAN_CONFIG URLs
         $this->assertStringContainsString("searchWargaUrl:", $content);
         $this->assertStringContainsString("wargaDetailUrl:", $content);
+        $this->assertStringContainsString("pemudaDetailUrl:", $content);
     }
 
     public function testJsContainsAutocompleteFunctions(): void
@@ -74,7 +82,26 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         $this->assertStringContainsString('initWargaMtaAutocomplete', $content);
         $this->assertStringContainsString('renderWargaSuggestions', $content);
         $this->assertStringContainsString('selectWargaMta', $content);
+        $this->assertStringContainsString('selectLocalPemuda', $content);
+        $this->assertStringContainsString('selectNewPemudaInput', $content);
+        $this->assertStringContainsString('handleSelectSuggestion', $content);
         $this->assertStringContainsString('resetWargaMtaSelection', $content);
         $this->assertStringContainsString('warga-suggestions-dropdown', $content);
+    }
+
+    public function testPemudaDetailValidationHandling(): void
+    {
+        $controller = new Pendataan();
+        $controller->initController(Services::request(), Services::response(), Services::logger());
+
+        // Test with invalid ID (0 or negative)
+        $response = $controller->pemudaDetail(0);
+        $data = json_decode($response->getBody(), true);
+        $this->assertFalse($data['success']);
+        $this->assertEquals('ID Pemuda tidak valid.', $data['message']);
+
+        $responseNeg = $controller->pemudaDetail(-5);
+        $dataNeg = json_decode($responseNeg->getBody(), true);
+        $this->assertFalse($dataNeg['success']);
     }
 }

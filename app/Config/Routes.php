@@ -11,6 +11,7 @@ $routes->get('/', 'Home::index');
 $routes->get('pendataan', 'Pendataan::index');
 $routes->get('pendataan/search-warga', 'Pendataan::searchWarga');
 $routes->get('pendataan/warga-detail/(:segment)', 'Pendataan::wargaDetail/$1');
+$routes->get('pendataan/pemuda-detail/(:num)', 'Pendataan::pemudaDetail/$1');
 $routes->post('pendataan/simpan', 'Pendataan::simpan');
 $routes->post('pendataan/check-data', 'Pendataan::checkData');
 $routes->post('pendataan/check-duplicate', 'Pendataan::checkData');

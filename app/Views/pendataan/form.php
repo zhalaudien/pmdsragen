@@ -126,7 +126,7 @@
                         </div>
                         <div>
                             <h4 class="card-title fw-bold mb-0">1. Data Pribadi &amp; Pengecekan Data</h4>
-                            <p class="text-muted small mb-0">Pilih cabang dan ketikkan nama Anda untuk memilih data dari Database Warga MTA</p>
+                            <p class="text-muted small mb-0">Pilih cabang dan ketik nama Anda untuk mencari data dari Database MTA Pusat &amp; PMD Cabang, atau input data baru.</p>
                         </div>
                     </div>
 
@@ -205,7 +205,7 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
                                 <input type="text" class="form-control" id="name" name="name"
-                                    placeholder="Ketik nama untuk mencari data warga MTA..."
+                                    placeholder="Ketik nama untuk mencari data warga MTA / pemuda..."
                                     value="<?= old('name') ?>" required minlength="3" maxlength="150" autocomplete="off">
                                 <span class="input-group-text bg-white" id="name-search-spinner" style="display: none;">
                                     <span class="spinner-border spinner-border-sm text-success" role="status"></span>
@@ -213,7 +213,7 @@
                             </div>
                             <div class="invalid-feedback">Nama lengkap wajib diisi (minimal 3 karakter).</div>
                             <small class="form-text text-muted" id="warga-search-hint">
-                                <i class="bi bi-lightbulb text-warning me-1"></i>Pilih cabang di samping, lalu ketik nama Anda untuk memilih dari data Warga MTA.
+                                <i class="bi bi-search text-danger me-1"></i>Pilih cabang di samping, lalu ketik nama Anda untuk mencari data di MTA Pusat dan PMD Cabang. Jika nama belum ada, Anda dapat langsung menginput data baru.
                             </small>
 
                             <!-- AUTOCOMPLETE SUGGESTIONS DROPDOWN -->
@@ -253,24 +253,7 @@
                             <div class="invalid-feedback">Tanggal lahir wajib diisi.</div>
                         </div>
 
-                        <!-- Kotak Aksi Pengecekan Data Pemuda -->
-                        <div class="col-12">
-                            <div class="p-3 bg-light rounded-3 border d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 my-1">
-                                <div>
-                                    <div class="fw-bold text-slate-900 small mb-1">
-                                        <i class="bi bi-person-bounding-box me-1 text-danger"></i> Fitur Pengecekan Data Pemuda
-                                    </div>
-                                    <div class="text-muted small">
-                                        Periksa apakah data nama, jenis kelamin, dan tanggal lahir Anda sudah terdaftar di cabang yang dipilih untuk <strong>melengkapi data</strong> atau melanjutkan pendataan baru.
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-outline-danger fw-semibold px-4 py-2 text-nowrap flex-shrink-0" id="btnCekData" onclick="handleManualCheckData()">
-                                    <i class="bi bi-search me-1"></i> Cek Data Pemuda
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Hasil Pengecekan Data Interaktif -->
+                        <!-- Hasil Pengecekan / Feedback Mode Data -->
                         <div class="col-12" id="check-data-result-wrapper" style="display: none;">
                             <div id="check-data-result-content"></div>
                         </div>
@@ -1055,6 +1038,7 @@
         checkDuplicateUrl: '<?= base_url('pendataan/check-duplicate') ?>',
         searchWargaUrl: '<?= base_url('pendataan/search-warga') ?>',
         wargaDetailUrl: '<?= base_url('pendataan/warga-detail') ?>',
+        pemudaDetailUrl: '<?= base_url('pendataan/pemuda-detail') ?>',
         csrfToken: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>'
     };
