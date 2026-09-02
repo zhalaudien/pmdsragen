@@ -478,7 +478,7 @@ class Pendataan extends BaseController
 
         // 1. Cari data di database Lokal PMD untuk cabang ini
         $localPemudaList = $this->pemudaModel
-            ->select('pemuda.id, pemuda.registration_number, pemuda.name, pemuda.gender, pemuda.birth_date, pemuda.birth_place, pemuda.phone, pemuda.status_verifikasi, pemuda.status_data, pemuda.mta_warga_uuid, pemuda.mta_status_warga, alamat.address_detail, alamat.dusun, alamat.rt, alamat.rw, alamat.district_id, alamat.village_id')
+            ->select('pemuda.id as id, pemuda.registration_number, pemuda.name, pemuda.gender, pemuda.birth_date, pemuda.birth_place, pemuda.phone, pemuda.status_verifikasi, pemuda.status_data, pemuda.mta_warga_uuid, pemuda.mta_status_warga, alamat.address_detail, alamat.dusun, alamat.rt, alamat.rw, alamat.district_id, alamat.village_id')
             ->join('alamat', 'alamat.pemuda_id = pemuda.id', 'left')
             ->where('pemuda.cabang_id', $cabangId)
             ->where('pemuda.status_data', 'active')
@@ -518,8 +518,11 @@ class Pendataan extends BaseController
         try {
             $searchParams = ['limit' => 20];
             if (!empty($mtaCabangUuid)) {
-                $searchParams['cabang'] = $mtaCabangUuid;
+                $searchParams['cabang_uuid'] = $mtaCabangUuid;
+            } else {
+                $searchParams['cabang'] = $cabang['name'];
             }
+
             $searchRes = $apiService->searchWarga($query, $searchParams);
             if (($searchRes['success'] ?? false) && !empty($searchRes['data'])) {
                 $mtaWargaList = $searchRes['data'];
@@ -570,9 +573,10 @@ class Pendataan extends BaseController
 
             if ($matchedLocal) {
                 $matchedLocalIds[] = (int) $matchedLocal['id'];
+                $resolvedUuid = !empty($uuid) ? $uuid : (!empty($matchedLocal['mta_warga_uuid']) ? $matchedLocal['mta_warga_uuid'] : (string) $matchedLocal['id']);
                 $mergedList[] = [
                     'source'            => 'both', // Ada di MTA Pusat dan terdaftar di PMD
-                    'uuid'              => $uuid,
+                    'uuid'              => $resolvedUuid,
                     'nomor'             => $w['nomor'] ?? '',
                     'nama'              => $matchedLocal['name'] ?? ($w['nama'] ?? ''),
                     'kelamin'           => in_array(strtoupper($matchedLocal['gender'] ?? $w['kelamin'] ?? 'L'), ['L', 'P'], true) ? strtoupper($matchedLocal['gender'] ?? $w['kelamin']) : 'L',
@@ -614,10 +618,11 @@ class Pendataan extends BaseController
 
             $age = !empty($lp['birth_date']) ? (date('Y') - date('Y', strtotime($lp['birth_date']))) : null;
             $hasMta = !empty($lp['mta_warga_uuid']) || ($lp['status_verifikasi'] ?? '') === 'verified';
+            $resolvedUuid = !empty($lp['mta_warga_uuid']) ? $lp['mta_warga_uuid'] : (string) $lp['id'];
 
             $mergedList[] = [
                 'source'            => $hasMta ? 'both' : 'pmd',
-                'uuid'              => $lp['mta_warga_uuid'] ?? null,
+                'uuid'              => $resolvedUuid,
                 'nomor'             => null,
                 'nama'              => $lp['name'],
                 'kelamin'           => in_array(strtoupper($lp['gender'] ?? 'L'), ['L', 'P'], true) ? strtoupper($lp['gender']) : 'L',
@@ -694,6 +699,50 @@ class Pendataan extends BaseController
                 'message'  => 'UUID Warga MTA tidak valid.',
                 'csrfHash' => csrf_hash(),
             ]);
+        }
+
+        // 1. Cek terlebih dahulu apakah UUID atau ID ini adalah milik Pemuda Lokal PMD
+        $localPemuda = $this->pemudaModel->findByMtaWargaUuid($uuid);
+        if (!$localPemuda && (is_numeric($uuid) || preg_match('/^\d+$/', $uuid))) {
+            $localPemuda = $this->pemudaModel->find((int) $uuid);
+        }
+        if (!$localPemuda) {
+            $localPemuda = $this->pemudaModel->where('registration_number', $uuid)->first();
+        }
+
+        if ($localPemuda) {
+            $fullPmdData = $this->pemudaModel->getPemudaDetail((int) $localPemuda['id']);
+            if ($fullPmdData) {
+                return $this->response->setJSON([
+                    'success'  => true,
+                    'source'   => 'pmd',
+                    'data'     => [
+                        'uuid'              => $localPemuda['mta_warga_uuid'] ?? (string) $localPemuda['id'],
+                        'nomor'             => '',
+                        'name'              => $localPemuda['name'],
+                        'gender'            => in_array(strtoupper($localPemuda['gender'] ?? 'L'), ['L', 'P'], true) ? strtoupper($localPemuda['gender']) : 'L',
+                        'birth_date'        => !empty($localPemuda['birth_date']) ? $localPemuda['birth_date'] : '',
+                        'birth_place'       => !empty($localPemuda['birth_place']) ? $localPemuda['birth_place'] : 'Sragen',
+                        'phone'             => !empty($localPemuda['phone']) ? $localPemuda['phone'] : '',
+                        'marital_status'    => $localPemuda['marital_status'] ?? 'belum_menikah',
+                        'blood_type'        => $localPemuda['blood_type'] ?? 'tidak_tahu',
+                        'address_detail'    => $fullPmdData['address_detail'] ?? '',
+                        'dusun'             => $fullPmdData['dusun'] ?? '',
+                        'rt'                => $fullPmdData['rt'] ?? '',
+                        'rw'                => $fullPmdData['rw'] ?? '',
+                        'district_id'       => $fullPmdData['district_id'] ?? null,
+                        'village_id'        => $fullPmdData['village_id'] ?? null,
+                        'pekerjaan'         => $fullPmdData['job_title'] ?? '',
+                        'ayah'              => '',
+                        'ibu'               => '',
+                        'is_registered_pmd' => true,
+                        'local_pemuda_id'   => (int) $localPemuda['id'],
+                        'local_reg_number'  => $localPemuda['registration_number'] ?? null,
+                        'full_pmd_data'     => $fullPmdData,
+                    ],
+                    'csrfHash' => csrf_hash(),
+                ]);
+            }
         }
 
         $apiService = new \App\Services\MtaApiService();

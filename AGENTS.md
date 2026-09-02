@@ -1578,7 +1578,11 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
     - Dropdown menampilkan kartu interaktif: *"Nama [nama] Belum Ada di MTA Pusat maupun PMD Cabang... Silakan lanjutkan untuk mendaftar sebagai pemuda baru"*.
     - Tombol aksi `[+ Input Data Baru dengan Nama Ini]` (`selectNewPemudaInput()`) mengaktifkan formulir baru, membersihkan ID terkait, menampilkan konfirmasi Mode Pendaftaran Baru, dan mengarahkan fokus user ke input berikutnya.
   - Jika hasil pencarian ada tetapi nama pendaftar berbeda, disediakan opsi di bagian bawah dropdown: `[+ Nama Tidak Tercantum? Input Data Baru]`.
-- **UI/UX & Testing:**
+- **UI/UX, Cache-Busting & Bugfix Data Pemuda:**
   - Penyederhanaan antarmuka Step 1 `app/Views/pendataan/form.php`: kotak menu "Fitur Pengecekan Data Terpadu" dihapus dari form sehingga antarmuka lebih bersih dan terfokus pada pencarian otomatis saat mengetik nama. Kontainer feedback dinamis `#check-data-result-wrapper` tetap dipertahankan untuk notifikasi mode data.
-  - Diperbarui `public/js/pendataan.js` dengan fungsi `handleSelectSuggestion()`, `selectLocalPemuda()`, `selectNewPemudaInput()`, dan `formatDateDisplay()`.
+  - Ditambahkan cache-busting `?v=filemtime` pada pemanggilan `js/pendataan.js` di `app/Views/pendataan/form.php` untuk mencegah browser menggunakan cache berkas JS lama.
+  - **Perbaikan Bug Pemilihan Data Pemuda Lokal:**
+    - Pada `Pendataan::wargaDetail($uuid)`, ditambahkan pengecekan prioritas ke database lokal pemuda (`findByMtaWargaUuid`, pencarian ID numerik, dan `registration_number`). Jika ditemukan di database pemuda lokal, sistem langsung mengembalikan data profil lengkap pemuda tanpa perlu memanggil API MTA Pusat.
+    - Pada `Pendataan::searchWarga`, pemetaan UUID untuk data lokal pemuda dijamin valid (menggunakan `mta_warga_uuid` atau ID pemuda lokal sebagai fallback) agar tidak terjadi pencarian `null` ke MTA Pusat.
+    - Pada `public/js/pendataan.js`, fungsi pemilihan item dropdown diubah menjadi `selectSuggestionByIndex(idx)` yang membaca objek data langsung dari array tanpa risiko kesalahan parsing parameter atau event bubbling button, serta dilengkapi fallback multi-layer ke `selectLocalPemuda` dan `selectWargaMta`.
   - Diperbarui suite pengujian `tests/unit/WargaMtaAutocompleteTest.php` untuk memvalidasi method baru, rute baru, elemen view, fungsi JavaScript, serta penanganan validasi.

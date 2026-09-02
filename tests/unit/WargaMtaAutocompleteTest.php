@@ -84,6 +84,7 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         $this->assertStringContainsString('selectWargaMta', $content);
         $this->assertStringContainsString('selectLocalPemuda', $content);
         $this->assertStringContainsString('selectNewPemudaInput', $content);
+        $this->assertStringContainsString('selectSuggestionByIndex', $content);
         $this->assertStringContainsString('handleSelectSuggestion', $content);
         $this->assertStringContainsString('resetWargaMtaSelection', $content);
         $this->assertStringContainsString('warga-suggestions-dropdown', $content);
@@ -103,5 +104,17 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         $responseNeg = $controller->pemudaDetail(-5);
         $dataNeg = json_decode($responseNeg->getBody(), true);
         $this->assertFalse($dataNeg['success']);
+    }
+
+    public function testWargaDetailValidationHandling(): void
+    {
+        $controller = new Pendataan();
+        $controller->initController(Services::request(), Services::response(), Services::logger());
+
+        // Test with empty UUID
+        $response = $controller->wargaDetail('');
+        $data = json_decode($response->getBody(), true);
+        $this->assertFalse($data['success']);
+        $this->assertEquals('UUID Warga MTA tidak valid.', $data['message']);
     }
 }

@@ -1264,11 +1264,37 @@ function formatDateDisplay(dateStr) {
     }
 }
 
+let currentWargaList = [];
+
+function selectSuggestionByIndex(idx) {
+    idx = parseInt(idx, 10);
+    if (isNaN(idx) || !currentWargaList || !currentWargaList[idx]) return;
+    const w = currentWargaList[idx];
+
+    if (w.local_pemuda_id && parseInt(w.local_pemuda_id, 10) > 0) {
+        selectLocalPemuda(parseInt(w.local_pemuda_id, 10));
+    } else if (w.is_registered_pmd && w.id) {
+        selectLocalPemuda(parseInt(w.id, 10));
+    } else if (w.uuid && w.uuid !== 'null' && w.uuid !== 'undefined' && w.uuid !== '') {
+        if (/^\d+$/.test(w.uuid.toString())) {
+            selectLocalPemuda(parseInt(w.uuid, 10));
+        } else {
+            selectWargaMta(w.uuid);
+        }
+    } else if (w.nama) {
+        selectNewPemudaInput(w.nama);
+    }
+}
+
 function handleSelectSuggestion(source, uuid, localPemudaId) {
     if (localPemudaId && parseInt(localPemudaId, 10) > 0) {
         selectLocalPemuda(parseInt(localPemudaId, 10));
     } else if (uuid && uuid !== 'null' && uuid !== 'undefined' && uuid !== '') {
-        selectWargaMta(uuid);
+        if (/^\d+$/.test(uuid.toString())) {
+            selectLocalPemuda(parseInt(uuid, 10));
+        } else {
+            selectWargaMta(uuid);
+        }
     }
 }
 
@@ -1277,8 +1303,10 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
     const listContainer = document.getElementById('warga-suggestions-list');
     if (!dropdown || !listContainer) return;
 
+    currentWargaList = wargaList || [];
+
     let itemsHtml = '';
-    wargaList.forEach(w => {
+    currentWargaList.forEach((w, idx) => {
         const isMale = (w.kelamin || 'L').toUpperCase() === 'L';
         const uuidArg = w.uuid ? `'${w.uuid}'` : "''";
         const localIdArg = w.local_pemuda_id ? parseInt(w.local_pemuda_id, 10) : 0;
@@ -1303,9 +1331,9 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
 
         let actionBtn = '';
         if (w.is_registered_pmd) {
-            actionBtn = `<button type="button" class="btn btn-sm btn-success px-2 py-1 small fw-semibold text-nowrap"><i class="bi bi-pencil-square me-1"></i>Lengkapi Data</button>`;
+            actionBtn = `<button type="button" class="btn btn-sm btn-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})"><i class="bi bi-pencil-square me-1"></i>Lengkapi Data</button>`;
         } else {
-            actionBtn = `<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 small fw-semibold text-nowrap"><i class="bi bi-check2-circle me-1"></i>Pilih Data Warga</button>`;
+            actionBtn = `<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})"><i class="bi bi-check2-circle me-1"></i>Pilih Data Warga</button>`;
         }
 
         itemsHtml += `
@@ -1314,7 +1342,7 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
                  style="cursor: pointer; transition: background 0.15s ease;"
                  onmouseover="this.style.backgroundColor='#f8fafc'"
                  onmouseout="this.style.backgroundColor=''"
-                 onclick="handleSelectSuggestion(${sourceArg}, ${uuidArg}, ${localIdArg})">
+                 onclick="selectSuggestionByIndex(${idx})">
                 <div class="me-2 text-truncate">
                     <div class="fw-bold text-dark mb-1 d-flex align-items-center flex-wrap gap-1">
                         <span>${highlightMatch(escapeHtml(w.nama), query)}</span>
@@ -1420,22 +1448,46 @@ async function selectLocalPemuda(id) {
     try {
         const pemudaUrl = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.pemudaDetailUrl)
             ? PENDATAAN_CONFIG.pemudaDetailUrl
-            : '/pendataan/pemuda-detail';
+            : (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.baseUrl ? PENDATAAN_CONFIG.baseUrl + '/pendataan/pemuda-detail' : '/pendataan/pemuda-detail');
 
-        const response = await fetch(`${pemudaUrl}/${encodeURIComponent(id)}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
+        let res = null;
+        try {
+            const response = await fetch(`${pemudaUrl}/${encodeURIComponent(id)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) {
+                res = await response.json();
+            }
+        } catch (e) {
+            console.warn('Gagal fetch pemudaDetail, mencoba wargaDetail fallback:', e);
+        }
 
-        if (!response.ok) throw new Error('HTTP error ' + response.status);
+        // Fallback ke wargaDetail jika pemudaDetail gagal
+        if (!res || !res.success || !res.data) {
+            const detailUrl = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.wargaDetailUrl)
+                ? PENDATAAN_CONFIG.wargaDetailUrl
+                : '/pendataan/warga-detail';
+            const fbResponse = await fetch(`${detailUrl}/${encodeURIComponent(id)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (fbResponse.ok) {
+                const fbRes = await fbResponse.json();
+                if (fbRes.success && fbRes.data) {
+                    res = {
+                        success: true,
+                        data: fbRes.data.full_pmd_data || fbRes.data,
+                        csrfHash: fbRes.csrfHash
+                    };
+                }
+            }
+        }
 
-        const res = await response.json();
-
-        if (res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
+        if (res && res.csrfHash && typeof PENDATAAN_CONFIG !== 'undefined') {
             PENDATAAN_CONFIG.csrfHash = res.csrfHash;
         }
 
-        if (!res.success || !res.data) {
-            alert(res.message || 'Gagal memuat detail data pemuda lokal.');
+        if (!res || !res.success || !res.data) {
+            alert((res && res.message) || 'Gagal memuat detail data pemuda lokal.');
             return;
         }
 
@@ -1474,20 +1526,14 @@ async function selectLocalPemuda(id) {
                         <i class="bi bi-patch-check-fill text-success fs-3 flex-shrink-0"></i>
                         <div class="w-100">
                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                                <h6 class="fw-bold text-success mb-0">Data Pemuda Terdaftar Ditemukan!</h6>
-                                <span class="badge bg-success rounded-pill px-3 py-1">No. Reg: ${escapeHtml(pemuda.registration_number || '-')}</span>
+                                <strong class="text-success fs-6">Data Pemuda Ditemukan di Database Cabang</strong>
+                                <span class="badge bg-success rounded-pill px-3 py-1">Mode Melengkapi Data</span>
                             </div>
-                            <p class="small text-dark mb-2">
-                                Data pemuda atas nama <strong>"${escapeHtml(pemuda.name)}"</strong> sudah tercatat di sistem cabang ini. 
-                                Formulir telah otomatis diisikan dengan data Anda. Silakan lanjutkan untuk melengkapi data yang belum terisi.
+                            <p class="mb-2 text-dark small">
+                                Pemuda dengan nama <strong>${escapeHtml(pemuda.name)}</strong> telah terdaftar di cabang ini dengan No. Registrasi <code class="fw-bold text-dark">${escapeHtml(pemuda.registration_number || '-')}</code>.
                             </p>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-1 px-2 small">
-                                    <i class="bi bi-pencil-square me-1"></i> Mode: Melengkapi &amp; Memperbarui Data
-                                </span>
-                                <button type="button" class="btn btn-sm btn-success px-3" onclick="goToStep(2)">
-                                    Lanjut Lengkapi Alamat <i class="bi bi-arrow-right ms-1"></i>
-                                </button>
+                            <div class="alert alert-light border small text-muted mb-0 py-2">
+                                <i class="bi bi-info-circle me-1 text-primary"></i> Data formulir telah otomatis dimuat. Anda dapat langsung melanjutkan ke langkah berikutnya untuk melengkapi atau memperbarui kolom yang belum lengkap.
                             </div>
                         </div>
                     </div>
@@ -1496,7 +1542,8 @@ async function selectLocalPemuda(id) {
             resultWrapper.style.display = 'block';
         }
 
-        const targetScroll = formModeBanner || resultWrapper;
+        // Scroll halus ke konfirmasi / field selanjutnya
+        const targetScroll = resultWrapper || document.getElementById('birth_date');
         if (targetScroll) {
             targetScroll.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -1558,6 +1605,11 @@ function selectNewPemudaInput(name) {
 async function selectWargaMta(uuid) {
     if (!uuid) return;
 
+    // Jika parameter adalah ID numerik lokal, delegasikan langsung ke selectLocalPemuda
+    if (typeof uuid === 'number' || (typeof uuid === 'string' && /^\d+$/.test(uuid.trim()))) {
+        return selectLocalPemuda(parseInt(uuid, 10));
+    }
+
     closeWargaSuggestions();
     const spinner = document.getElementById('name-search-spinner');
     if (spinner) spinner.style.display = 'inline-block';
@@ -1586,6 +1638,34 @@ async function selectWargaMta(uuid) {
 
         const data = res.data;
         currentWargaMta = data;
+
+        // Jika respons mengembalikan data pemuda lokal terdaftar
+        if (data.is_registered_pmd && data.full_pmd_data) {
+            populateExistingData(data.full_pmd_data);
+
+            const formModeBanner = document.getElementById('form-mode-banner');
+            const formModeReg = document.getElementById('form-mode-reg');
+            const formModeDesc = document.getElementById('form-mode-desc');
+            if (formModeBanner) {
+                if (formModeReg) formModeReg.innerText = 'No. Reg: ' + (data.local_reg_number || '-');
+                if (formModeDesc) formModeDesc.innerHTML = `Data pemuda atas nama <strong>${escapeHtml(data.name)}</strong> sudah terdaftar di cabang ini. Formulir telah otomatis diisikan dengan data Anda.`;
+                formModeBanner.style.display = 'block';
+            }
+
+            const revBanner = document.getElementById('review-mode-banner');
+            const revReg = document.getElementById('review-mode-reg');
+            if (revBanner) {
+                if (revReg) revReg.innerText = 'No. Reg: ' + (data.local_reg_number || '-');
+                revBanner.style.display = 'block';
+            }
+
+            const btnSubmitText = document.getElementById('btnSubmitFormText');
+            if (btnSubmitText) {
+                btnSubmitText.innerText = 'Simpan & Lengkapi Data Pendataan';
+            }
+
+            return;
+        }
 
         // 1. Isi data pokok (Nama, UUID, Gender, Tanggal Lahir, Tempat Lahir)
         const nameEl = document.getElementById('name');

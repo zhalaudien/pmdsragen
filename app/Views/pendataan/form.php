@@ -1043,5 +1043,5 @@
         csrfHash: '<?= csrf_hash() ?>'
     };
 </script>
-<script src="<?= base_url('js/pendataan.js') ?>"></script>
+<script src="<?= base_url('js/pendataan.js') ?>?v=<?= file_exists(FCPATH . 'js/pendataan.js') ? filemtime(FCPATH . 'js/pendataan.js') : time() ?>"></script>
 <?= $this->endSection() ?>
