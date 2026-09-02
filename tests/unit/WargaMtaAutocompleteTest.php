@@ -117,4 +117,16 @@ final class WargaMtaAutocompleteTest extends CIUnitTestCase
         $this->assertFalse($data['success']);
         $this->assertEquals('UUID Warga MTA tidak valid.', $data['message']);
     }
+
+    public function testSearchWargaRequiresValidCabang(): void
+    {
+        $controller = new Pendataan();
+        $controller->initController(Services::request(), Services::response(), Services::logger());
+
+        // Without cabang_id
+        $response = $controller->searchWarga();
+        $data = json_decode($response->getBody(), true);
+        $this->assertFalse($data['success']);
+        $this->assertEquals('Pilih cabang Pemuda MTA terlebih dahulu.', $data['message']);
+    }
 }

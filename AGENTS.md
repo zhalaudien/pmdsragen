@@ -1585,4 +1585,10 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
     - Pada `Pendataan::wargaDetail($uuid)`, ditambahkan pengecekan prioritas ke database lokal pemuda (`findByMtaWargaUuid`, pencarian ID numerik, dan `registration_number`). Jika ditemukan di database pemuda lokal, sistem langsung mengembalikan data profil lengkap pemuda tanpa perlu memanggil API MTA Pusat.
     - Pada `Pendataan::searchWarga`, pemetaan UUID untuk data lokal pemuda dijamin valid (menggunakan `mta_warga_uuid` atau ID pemuda lokal sebagai fallback) agar tidak terjadi pencarian `null` ke MTA Pusat.
     - Pada `public/js/pendataan.js`, fungsi pemilihan item dropdown diubah menjadi `selectSuggestionByIndex(idx)` yang membaca objek data langsung dari array tanpa risiko kesalahan parsing parameter atau event bubbling button, serta dilengkapi fallback multi-layer ke `selectLocalPemuda` dan `selectWargaMta`.
+  - **Pembatasan Ketat Pencarian Berdasarkan Cabang Terpilih:**
+    - Pada `MtaApiService::searchWarga`, parameter `cabang_uuid` kini diteruskan ke query parameter `cabang` API MTA Pusat.
+    - Pada `Pendataan::searchWarga`, pencocokan kode cabang MTA dilakukan dengan memverifikasi kesamaan nomor urut cabang (misal Gemolong 1 vs Gemolong 2).
+    - Ditambahkan filter server-side ketat pada hasil respon API MTA Pusat sehingga data warga dari cabang lain (misal Sragen Kota, Masaran, dsb.) secara otomatis disaring dan tidak akan ditampilkan.
+    - Setiap item hasil pencarian kini memuat atribut cabang yang dipilih dan menampilkan badge cabang pada dropdown.
+    - Pada `public/js/pendataan.js`, perubahan cabang pada dropdown TomSelect otomatis menutup saran lama dan memicu ulang pencarian khusus untuk cabang yang baru dipilih.
   - Diperbarui suite pengujian `tests/unit/WargaMtaAutocompleteTest.php` untuk memvalidasi method baru, rute baru, elemen view, fungsi JavaScript, serta penanganan validasi.

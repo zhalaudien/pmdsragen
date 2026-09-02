@@ -499,9 +499,22 @@ class Pendataan extends BaseController
             try {
                 $cabangListRes = $apiService->getCabangSragenList();
                 if (($cabangListRes['success'] ?? false) && !empty($cabangListRes['data'])) {
-                    $cleanLocalName = strtolower(trim($cabang['name']));
+                    $cleanLocalName = strtolower((string) preg_replace('/[^a-z0-9]/', '', $cabang['name']));
+                    preg_match('/\d+$/', $cleanLocalName, $mLocalNum);
+                    $localNum = $mLocalNum[0] ?? '';
+
                     foreach ($cabangListRes['data'] as $mc) {
-                        $cleanMcName = strtolower(trim($mc['nama'] ?? ''));
+                        $cleanMcName = strtolower((string) preg_replace('/[^a-z0-9]/', '', $mc['nama'] ?? ''));
+                        preg_match('/\d+$/', $cleanMcName, $mMcNum);
+                        $mcNum = $mMcNum[0] ?? '';
+
+                        // Jika ada nomor cabang (misal 1, 2), nomor harus sama persis
+                        if ($localNum !== '' || $mcNum !== '') {
+                            if ($localNum !== $mcNum) {
+                                continue;
+                            }
+                        }
+
                         if ($cleanLocalName === $cleanMcName || str_contains($cleanMcName, $cleanLocalName) || str_contains($cleanLocalName, $cleanMcName)) {
                             $mtaCabangUuid = $mc['uuid'];
                             $this->cabangModel->update($cabangId, ['mta_uuid' => $mtaCabangUuid]);
@@ -516,8 +529,9 @@ class Pendataan extends BaseController
 
         $mtaWargaList = [];
         try {
-            $searchParams = ['limit' => 20];
+            $searchParams = ['limit' => 50];
             if (!empty($mtaCabangUuid)) {
+                $searchParams['cabang'] = $mtaCabangUuid;
                 $searchParams['cabang_uuid'] = $mtaCabangUuid;
             } else {
                 $searchParams['cabang'] = $cabang['name'];
@@ -546,6 +560,69 @@ class Pendataan extends BaseController
             $normKey = strtolower(trim($lp['name'])) . '|' . (!empty($lp['birth_date']) ? date('Y-m-d', strtotime($lp['birth_date'])) : '');
             $localByNameBirth[$normKey] = $lp;
         }
+
+        // Filter ketat: Hanya izinkan data warga MTA yang memang berasal dari cabang terpilih
+        $cleanTargetCabangName = strtolower((string) preg_replace('/[^a-z0-9]/', '', $cabang['name']));
+        preg_match('/\d+$/', $cleanTargetCabangName, $mTargetNum);
+        $targetNum = $mTargetNum[0] ?? '';
+
+        $filteredMtaWargaList = [];
+        foreach ($mtaWargaList as $w) {
+            $wUuid = $w['uuid'] ?? '';
+            $wCabangUuid = $w['cabang_uuid'] ?? ($w['cabang_id'] ?? '');
+            $wCabangRaw  = trim($w['cabang'] ?? ($w['cabang_nama'] ?? ''));
+            $cleanWCabang = strtolower((string) preg_replace('/[^a-z0-9]/', '', $wCabangRaw));
+            preg_match('/\d+$/', $cleanWCabang, $mWCabangNum);
+            $wCabangNum = $mWCabangNum[0] ?? '';
+
+            // 1. Jika warga sudah terdaftar di PMD lokal cabang ini -> PASTI milik cabang ini
+            if (!empty($wUuid) && isset($localByUuid[$wUuid])) {
+                $filteredMtaWargaList[] = $w;
+                continue;
+            }
+            $wNormKey = strtolower(trim($w['nama'] ?? '')) . '|' . (!empty($w['lahir']) ? date('Y-m-d', strtotime($w['lahir'])) : '');
+            if (isset($localByNameBirth[$wNormKey])) {
+                $filteredMtaWargaList[] = $w;
+                continue;
+            }
+
+            // 2. Jika ada informasi nama cabang pada data warga MTA, validasi kecocokan cabang
+            if (!empty($wCabangRaw)) {
+                // Jika ada nomor cabang (misal Gemolong 1 vs Gemolong 2), nomor harus sama
+                if ($targetNum !== '' || $wCabangNum !== '') {
+                    if ($targetNum !== $wCabangNum) {
+                        continue; // Beda nomor cabang (jangan tampilkan)
+                    }
+                }
+
+                if ($cleanTargetCabangName === $cleanWCabang ||
+                    str_contains($cleanWCabang, $cleanTargetCabangName) ||
+                    str_contains($cleanTargetCabangName, $cleanWCabang)) {
+                    $filteredMtaWargaList[] = $w;
+                    continue;
+                }
+
+                // Nama cabang terisi namun tidak cocok -> lewati
+                continue;
+            }
+
+            // 3. Jika ada cabang_uuid pada data warga MTA
+            if (!empty($mtaCabangUuid) && !empty($wCabangUuid)) {
+                if (strcasecmp($mtaCabangUuid, $wCabangUuid) === 0) {
+                    $filteredMtaWargaList[] = $w;
+                    continue;
+                } else {
+                    continue; // Beda cabang UUID
+                }
+            }
+
+            // 4. Jika data warga dari MTA tidak memuat field nama cabang maupun cabang_uuid,
+            // dan kita mencari menggunakan filter cabang UUID ke API
+            if (!empty($mtaCabangUuid)) {
+                $filteredMtaWargaList[] = $w;
+            }
+        }
+        $mtaWargaList = $filteredMtaWargaList;
 
         // Proses data dari MTA Pusat
         foreach ($mtaWargaList as $w) {
@@ -583,6 +660,7 @@ class Pendataan extends BaseController
                     'lahir'             => !empty($matchedLocal['birth_date']) ? $matchedLocal['birth_date'] : ($w['lahir'] ?? ''),
                     'usia'              => $w['usia'] ?? (!empty($matchedLocal['birth_date']) ? (date('Y') - date('Y', strtotime($matchedLocal['birth_date']))) : null),
                     'alamat'            => !empty($matchedLocal['address_detail']) ? $matchedLocal['address_detail'] : ($w['alamat'] ?? ''),
+                    'cabang'            => $cabang['name'],
                     'nohp'              => !empty($matchedLocal['phone']) ? $matchedLocal['phone'] : ($w['nohp'] ?? ''),
                     'is_registered_pmd' => true,
                     'local_pemuda_id'   => (int) $matchedLocal['id'],
@@ -600,6 +678,7 @@ class Pendataan extends BaseController
                     'lahir'             => $w['lahir'] ?? '',
                     'usia'              => $w['usia'] ?? null,
                     'alamat'            => $w['alamat'] ?? '',
+                    'cabang'            => $cabang['name'],
                     'nohp'              => $w['nohp'] ?? '',
                     'is_registered_pmd' => false,
                     'local_pemuda_id'   => null,
@@ -629,6 +708,7 @@ class Pendataan extends BaseController
                 'lahir'             => $lp['birth_date'] ?? '',
                 'usia'              => $age,
                 'alamat'            => $lp['address_detail'] ?? ($lp['dusun'] ?? ''),
+                'cabang'            => $cabang['name'],
                 'nohp'              => $lp['phone'] ?? '',
                 'is_registered_pmd' => true,
                 'local_pemuda_id'   => (int) $lp['id'],

@@ -1237,6 +1237,7 @@ function initWargaMtaAutocomplete() {
             if (currentWargaMta) {
                 resetWargaMtaSelection();
             }
+            closeWargaSuggestions();
             // Jika sudah ada nama diketik, trigger ulang pencarian untuk cabang baru
             if (nameInput.value.trim().length >= 2) {
                 nameInput.dispatchEvent(new Event('input'));
@@ -1329,6 +1330,10 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
             sourceBadges += `<span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0 small">Belum Terdaftar PMD</span>`;
         }
 
+        if (w.cabang) {
+            sourceBadges += `<span class="badge bg-light border text-dark py-0 px-1 me-1" style="font-size: 0.72rem;"><i class="bi bi-geo-alt me-1 text-danger"></i>${escapeHtml(w.cabang)}</span>`;
+        }
+
         let actionBtn = '';
         if (w.is_registered_pmd) {
             actionBtn = `<button type="button" class="btn btn-sm btn-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})"><i class="bi bi-pencil-square me-1"></i>Lengkapi Data</button>`;
@@ -1397,10 +1402,10 @@ function renderEmptyWargaSuggestions(query, cabangName) {
                     <i class="bi bi-person-x fs-3"></i>
                 </span>
             </div>
-            <h6 class="fw-bold text-dark mb-1">Nama "${escapeHtml(query)}" Belum Ada</h6>
+            <h6 class="fw-bold text-dark mb-1">Nama "${escapeHtml(query)}" Belum Ada di Cabang ${escapeHtml(cabangName)}</h6>
             <p class="small text-muted mb-3">
                 Tidak ditemukan di database <strong>MTA Pusat</strong> maupun <strong>PMD Cabang ${escapeHtml(cabangName)}</strong>.<br>
-                Silakan lanjutkan untuk mendaftar sebagai pemuda baru.
+                Silakan lanjutkan untuk mendaftar sebagai pemuda baru di cabang ini.
             </p>
             <button type="button" class="btn btn-sm btn-primary-pmd px-3 py-2 fw-semibold" onclick="selectNewPemudaInput('${escapeHtml(query)}')">
                 <i class="bi bi-person-plus-fill me-1"></i> Input Data Baru dengan Nama Ini

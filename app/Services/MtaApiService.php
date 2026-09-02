@@ -284,6 +284,8 @@ class MtaApiService
         }
         if (!empty($params['cabang'])) {
             $queryParams['cabang'] = $params['cabang'];
+        } elseif (!empty($params['cabang_uuid'])) {
+            $queryParams['cabang'] = $params['cabang_uuid'];
         }
         // Kunci default ke Perwakilan Sragen
         $queryParams['perwakilan'] = !empty($params['perwakilan']) ? $params['perwakilan'] : $this->getSragenUuid();
