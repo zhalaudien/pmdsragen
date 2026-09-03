@@ -1592,3 +1592,38 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
     - Setiap item hasil pencarian kini memuat atribut cabang yang dipilih dan menampilkan badge cabang pada dropdown.
     - Pada `public/js/pendataan.js`, perubahan cabang pada dropdown TomSelect otomatis menutup saran lama dan memicu ulang pencarian khusus untuk cabang yang baru dipilih.
   - Diperbarui suite pengujian `tests/unit/WargaMtaAutocompleteTest.php` untuk memvalidasi method baru, rute baru, elemen view, fungsi JavaScript, serta penanganan validasi.
+
+### 2026-09-03 — Optimalisasi Penuh Tampilan & Pengalaman Pengguna Ponsel (Mobile Phone Friendly)
+
+- **Mobile Viewport & Global UX (`public/css/main.css`):**
+  - Mencegah pergeseran / overflow horizontal liar dengan `overflow-x: hidden`, `-webkit-text-size-adjust: 100%`, dan `touch-action: manipulation` (menghilangkan delay tap 300ms di peramban seluler).
+  - Penyesuaian safe-area insets (`padding-bottom: env(safe-area-inset-bottom)`) untuk perangkat mobile modern.
+  - Navbar responsif: penyesuaian ukuran brand title (`0.92rem`) dan icon (`32px`) pada layar < 576px agar tidak mendesak tombol hamburger menu.
+  - Menu hamburger dropdown di ponsel dibuat lebih elegan menyerupai bottom sheet / card dengan gradient merah, padding nyaman, dan tombol aksi full-width.
+  - Penataan ukuran font input & select minimal 16px pada layar mobile (<= 768px) untuk **mencegah bug auto-zoom otomatis iOS Safari**.
+  - Ukuran target sentuh (touch target) tombol dan kontrol minimal 46px-48px untuk kenyamanan jari tangan.
+
+- **Formulir Pendataan Publik (`app/Views/pendataan/form.php`, `public/css/pendataan.css`, `public/js/pendataan.js`):**
+  - **Mobile Step Progress Header:** Ditambahkan banner pelacak langkah responsif khusus tampilan mobile (`.mobile-stepper-header`) yang menampilkan nomor langkah ("Langkah X/8"), nama langkah, persentase penyelesaian, dan progress bar dinamis.
+  - **Horizontal Scrollable Stepper:** Stepper 8 lingkaran pada layar mobile diubah menjadi scrolling horizontal yang mulus dengan scrollbar tersembunyi tanpa tumpang tindih / gepeng.
+  - **Sinkronisasi Otomatis:** Saat berpindah langkah, JavaScript (`updateProgress`) otomatis memperbarui badge, nama langkah, persentase, dan menggulir lingkaran langkah aktif ke tengah layar secara horizontal (`scrollIntoView`).
+  - **Form Step Actions:** Tombol "Kembali" dan "Selanjutnya" diubah menjadi responsif (`.form-step-actions` dengan `flex-column-reverse flex-sm-row`), sehingga pada layar ponsel tombol utama "Selanjutnya" berada di atas dengan lebar penuh (full-width) yang mudah dijangkau ibu jari, disusul tombol "Kembali" di bawahnya.
+  - **Card Padding Responsif:** Mengubah padding kartu formulir dari `p-4 p-md-5` menjadi `p-3 p-sm-4 p-md-5` agar area input di layar ponsel 320px–400px lebih luas dan tidak sempit.
+  - **Autocomplete Dropdown Mobile:** Penataan kartu hasil pencarian nama warga MTA / pemuda lokal agar otomatis berganti tata letak vertikal bertumpuk (`flex-column`), tombol "Pilih / Lengkapi" menjadi full-width, serta teks rincian tidak terpotong.
+  - **Komponen Interaktif:** Kartu jenis kelamin (`.gender-card-select`), checkbox organisasi (`.org-card`), matriks keahlian (`.skill-card`), dan pills minat (`.interest-tag-label`) dioptimalkan dengan padding dan touch target yang ramah sentuhan jari.
+  - **Scroll Halus ke Header:** Navigasi langkah di ponsel menggulir otomatis ke posisi awal kartu langkah dengan memperhitungkan tinggi sticky header.
+
+- **Halaman Beranda / Landing Page (`public/css/landing.css`):**
+  - Hero section responsif: font title disesuaikan (`1.65rem`), tombol CTA utama dan outline full-width pada ponsel dengan padding nyaman.
+  - Stats strip: grid 2x2 pada layar kecil dengan ukuran angka (`1.55rem`) dan padding kompak untuk mencegah angka terpotong.
+  - Struktur 4 Wilayah: tombol navigasi tab diubah menjadi grid 2x2 yang ringkas pada tablet/ponsel agar tidak memakan ruang vertikal terlalu panjang.
+  - Banner CTA & kartu program kerja: padding responsif dan tombol full-width di ponsel.
+
+- **Halaman Sukses & Login (`app/Views/pendataan/sukses.php`, `app/Views/auth/login.php`, `public/css/auth.css`):**
+  - Halaman sukses: padding kartu `p-3 p-sm-4 p-md-5`, ukuran font nomor registrasi responsif (`text-break`, `fs-2 fs-sm-1`), dan tombol aksi full-width bertumpuk di ponsel.
+  - Halaman login: kartu login `col-12 col-sm-9`, input font 16px untuk iOS Safari, dan tombol login dengan touch target 48px.
+
+- **Dashboard Admin (`public/css/admin.css`):**
+  - Scrolling sentuh lancar pada `.table-responsive` (`-webkit-overflow-scrolling: touch`).
+  - Penataan `.btn-group` pada toolbar agar membungkus rapi (wrap) di ponsel tanpa memecah batas layar horizontal.
+

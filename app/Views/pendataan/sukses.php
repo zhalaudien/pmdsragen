@@ -23,15 +23,15 @@
         <div class="col-lg-8 text-center">
             
             <!-- Success Animation & Badge -->
-            <div class="card card-custom p-4 p-md-5">
+            <div class="card card-custom p-3 p-sm-4 p-md-5">
                 <div class="mb-4">
-                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="bi bi-check-circle-fill display-4"></i>
+                    <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="bi bi-check-circle-fill fs-1"></i>
                     </div>
-                    <h2 class="fw-bold text-slate-900 mb-2">
+                    <h2 class="fw-bold text-slate-900 mb-2 fs-4 fs-sm-3">
                         <?= !empty($isUpdate) ? 'Data Pemuda Berhasil Diperbarui &amp; Dilengkapi!' : 'Pendaftaran Pemuda Berhasil!' ?>
                     </h2>
-                    <p class="text-muted mx-auto" style="max-width: 540px;">
+                    <p class="text-muted mx-auto small mb-0" style="max-width: 540px;">
                         <?= !empty($isUpdate) 
                             ? 'Data profil dan potensi diri Anda telah berhasil diperbarui dan diselaraskan dalam sistem basis data <strong>Pemuda MTA Perwakilan Sragen</strong>.'
                             : 'Data profil dan potensi diri Anda telah tersimpan dengan aman dalam sistem basis data <strong>Pemuda MTA Perwakilan Sragen</strong>.' 
@@ -40,9 +40,9 @@
                 </div>
 
                 <!-- Registration Number Box -->
-                <div class="p-4 bg-light rounded-3 border mb-4 text-center">
+                <div class="p-3 p-sm-4 bg-light rounded-3 border mb-4 text-center">
                     <div class="text-muted small fw-semibold text-uppercase mb-1">Nomor Registrasi Pemuda Anda:</div>
-                    <div class="display-6 fw-bold text-danger text-break" id="regNumberDisplay">
+                    <div class="fs-2 fs-sm-1 fw-bold text-danger text-break py-1" id="regNumberDisplay">
                         <?= esc($registration_number ?? (session()->getFlashdata('registration_number') ?? '8601' . date('Ymd') . '0001')) ?>
                     </div>
                     <div class="small text-muted mt-2">
@@ -79,13 +79,13 @@
 
                 <!-- Action Buttons -->
                 <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-2">
-                    <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="window.print()">
+                    <button type="button" class="btn btn-outline-secondary w-100 w-sm-auto px-4 py-2" onclick="window.print()">
                         <i class="bi bi-printer me-1"></i> Cetak Bukti
                     </button>
-                    <a href="<?= base_url('pendataan') ?>" class="btn btn-secondary-pmd px-4 py-2">
+                    <a href="<?= base_url('pendataan') ?>" class="btn btn-secondary-pmd w-100 w-sm-auto px-4 py-2">
                         <i class="bi bi-plus-circle me-1"></i> Input Data Lain
                     </a>
-                    <a href="<?= base_url('/') ?>" class="btn btn-primary-pmd px-4 py-2">
+                    <a href="<?= base_url('/') ?>" class="btn btn-primary-pmd w-100 w-sm-auto px-4 py-2">
                         <i class="bi bi-house-door me-1"></i> Kembali ke Beranda
                     </a>
                 </div>

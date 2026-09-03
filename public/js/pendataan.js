@@ -207,22 +207,48 @@ function initSearchableSelects() {
     }
 }
 
+const stepNames = [
+    'Data Pribadi & Pengecekan',
+    'Alamat Domisili',
+    'Riwayat Pendidikan',
+    'Status Pekerjaan & Karir',
+    'Organisasi & Penugasan',
+    'Keahlian & Keterampilan',
+    'Minat & Pengembangan Diri',
+    'Konfirmasi & Ringkasan Data'
+];
+
 function updateProgress(step) {
-    const percentage = ((step - 1) / (totalSteps - 1)) * 100;
+    const percentage = Math.round(((step - 1) / (totalSteps - 1)) * 100);
     const fillEl = document.getElementById('stepperProgressFill');
     if (fillEl) {
         fillEl.style.width = percentage + '%';
     }
 
     document.querySelectorAll('.stepper-item').forEach(item => {
-        const itemStep = parseInt(item.getAttribute('data-step'));
+        const itemStep = parseInt(item.getAttribute('data-step'), 10);
         item.classList.remove('active', 'completed');
         if (itemStep === step) {
             item.classList.add('active');
+            // Scroll active step item horizontally into view on mobile
+            if (window.innerWidth <= 768 && typeof item.scrollIntoView === 'function') {
+                item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
         } else if (itemStep < step) {
             item.classList.add('completed');
         }
     });
+
+    // Update Mobile Step Progress Header
+    const mobileBadge   = document.getElementById('mobileStepBadge');
+    const mobileName    = document.getElementById('mobileStepName');
+    const mobilePercent = document.getElementById('mobileStepPercent');
+    const mobileBar     = document.getElementById('mobileProgressBar');
+
+    if (mobileBadge) mobileBadge.textContent = `Langkah ${step}/${totalSteps}`;
+    if (mobileName) mobileName.textContent = stepNames[step - 1] || '';
+    if (mobilePercent) mobilePercent.textContent = `${percentage}%`;
+    if (mobileBar) mobileBar.style.width = `${Math.max(12.5, percentage)}%`;
 }
 
 /**
@@ -761,7 +787,10 @@ async function goToStep(step) {
         if (step === 8) {
             prepareReview();
         }
-        window.scrollTo({ top: targetSection.offsetTop - 80, behavior: 'smooth' });
+        const mobileHeader = document.querySelector('.mobile-stepper-header');
+        const scrollTarget = (window.innerWidth <= 768 && mobileHeader) ? mobileHeader : targetSection;
+        const targetOffset = scrollTarget.getBoundingClientRect().top + window.pageYOffset - (window.innerWidth <= 768 ? 70 : 80);
+        window.scrollTo({ top: Math.max(0, targetOffset), behavior: 'smooth' });
     }
 }
 

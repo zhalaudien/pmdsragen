@@ -69,6 +69,20 @@
             </div>
         <?php endif; ?>
 
+        <!-- Mobile Step Progress Header (Visible on Mobile <= 768px) -->
+        <div class="mobile-stepper-header d-md-none mb-3 p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger rounded-pill px-2 py-1 small fw-bold" id="mobileStepBadge">Langkah 1/8</span>
+                    <span class="fw-bold text-dark small" id="mobileStepName">Data Pribadi &amp; Pengecekan</span>
+                </div>
+                <span class="small fw-bold text-danger" id="mobileStepPercent">12%</span>
+            </div>
+            <div class="progress" style="height: 6px; background-color: #fee2e2; border-radius: 4px;">
+                <div class="progress-bar bg-danger" id="mobileProgressBar" role="progressbar" style="width: 12.5%; transition: width 0.3s ease; border-radius: 4px;"></div>
+            </div>
+        </div>
+
         <!-- Multi-step Navigation Stepper -->
         <div class="stepper-wrapper">
             <div class="stepper-progress-bar">
@@ -119,7 +133,7 @@
             <!-- SECTION 1: DATA PRIBADI & PENGECEKAN DATA -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section active" id="step-1">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-person-vcard"></i>
@@ -325,7 +339,7 @@
                     </div>
 
                     <!-- Step 1 Actions -->
-                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-primary-pmd" id="btnNextStep1" onclick="validateAndNext(1)">
                             Selanjutnya: Alamat <i class="bi bi-arrow-right ms-1"></i>
                         </button>
@@ -337,7 +351,7 @@
             <!-- SECTION 2: ALAMAT -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-2">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-geo-alt-fill"></i>
@@ -439,7 +453,7 @@
                     </div>
 
                     <!-- Step 2 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(1)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
@@ -454,7 +468,7 @@
             <!-- SECTION 3: PENDIDIKAN -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-3">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-mortarboard-fill"></i>
@@ -531,7 +545,7 @@
                     </div>
 
                     <!-- Step 3 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(2)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
@@ -546,7 +560,7 @@
             <!-- SECTION 4: PEKERJAAN -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-4">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-briefcase-fill"></i>
@@ -609,7 +623,7 @@
                     </div>
 
                     <!-- Step 4 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(3)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
@@ -624,7 +638,7 @@
             <!-- SECTION 5: ORGANISASI -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-5">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-diagram-3-fill"></i>
@@ -755,7 +769,7 @@
                     </div>
 
                     <!-- Step 5 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(4)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
@@ -770,7 +784,7 @@
             <!-- SECTION 6: KEAHLIAN (SKILLS) -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-6">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-award-fill"></i>
@@ -837,7 +851,7 @@
                     </div>
 
                     <!-- Step 6 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(5)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
@@ -852,7 +866,7 @@
             <!-- SECTION 7: MINAT (INTERESTS) -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-7">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-heart-fill"></i>
@@ -905,12 +919,12 @@
                     </div>
 
                     <!-- Step 7 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(6)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali
                         </button>
                         <button type="button" class="btn btn-primary-pmd" onclick="prepareReview(); goToStep(8)">
-                            Selanjutnya: Review & Konfirmasi <i class="bi bi-arrow-right ms-1"></i>
+                            Selanjutnya: Review &amp; Konfirmasi <i class="bi bi-arrow-right ms-1"></i>
                         </button>
                     </div>
                 </div>
@@ -920,7 +934,7 @@
             <!-- SECTION 8: KONFIRMASI & PERSETUJUAN -->
             <!-- ================================================================= -->
             <div class="card card-custom mb-4 form-step-section" id="step-8">
-                <div class="card-body p-4 p-md-5">
+                <div class="card-body p-3 p-sm-4 p-md-5">
                     <div class="d-flex align-items-center mb-4">
                         <div class="section-icon-badge">
                             <i class="bi bi-shield-check"></i>
@@ -999,8 +1013,8 @@
 
                     <!-- Statement Checkbox -->
                     <div class="card bg-light border-0 p-3 mb-4 rounded-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="agreement_check" required>
+                        <div class="form-check d-flex align-items-start gap-2">
+                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" id="agreement_check" required style="width: 1.25em; height: 1.25em;">
                             <label class="form-check-label fw-semibold text-slate-800 small" for="agreement_check">
                                 Saya menyatakan dengan sesungguhnya bahwa seluruh data yang saya isikan pada formulir pendataan pemuda ini adalah benar, akurat, dan dapat dipertanggungjawabkan sesuai ketentuan yang berlaku.
                             </label>
@@ -1009,7 +1023,7 @@
                     </div>
 
                     <!-- Step 8 Actions -->
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <div class="form-step-actions d-flex flex-column-reverse flex-sm-row justify-content-between gap-2 mt-4 pt-3 border-top">
                         <button type="button" class="btn btn-secondary-pmd" onclick="goToStep(7)">
                             <i class="bi bi-arrow-left me-1"></i> Kembali Ubah Data
                         </button>

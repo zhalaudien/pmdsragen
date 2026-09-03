@@ -21,7 +21,7 @@
 <body class="auth-body">
     <div class="container p-3">
         <div class="row justify-content-center">
-            <div class="col-11 col-sm-9 col-md-7 col-lg-5 col-xl-4">
+            <div class="col-12 col-sm-9 col-md-7 col-lg-5 col-xl-4">
                 <div class="login-card shadow-lg">
                     <div class="login-header text-center">
                         <div class="brand-icon mx-auto mb-2">
@@ -31,7 +31,7 @@
                         <p class="mb-0 text-white-50 small">Portal Administrator &amp; Pengurus</p>
                     </div>
 
-                    <div class="p-4 p-md-5">
+                    <div class="p-3 p-sm-4 p-md-5">
                         <h5 class="fw-bold text-dark mb-4 text-center">Masuk ke Dashboard</h5>
 
                         <?php if (session()->getFlashdata('error')): ?>

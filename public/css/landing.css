@@ -76,6 +76,31 @@ html {
     }
 }
 
+@media (max-width: 575.98px) {
+    .hero-landing {
+        padding: 2.75rem 0 2rem;
+    }
+    .hero-title {
+        font-size: 1.65rem;
+        line-height: 1.25;
+    }
+    .hero-subtitle {
+        font-size: 0.92rem;
+        line-height: 1.55;
+    }
+    .hero-badge-pill {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+    }
+    .hero-btn-primary,
+    .hero-btn-outline {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.95rem;
+        padding: 0.75rem 1.25rem;
+    }
+}
+
 .hero-subtitle {
     font-size: 1.1rem;
     line-height: 1.65;
@@ -189,6 +214,29 @@ html {
     font-weight: 600;
     color: #64748b;
     margin-top: 0.25rem;
+}
+
+@media (max-width: 575.98px) {
+    .stats-strip {
+        margin-top: -1.75rem;
+    }
+    .stats-card {
+        padding: 0.95rem 0.65rem;
+        border-radius: var(--pmd-radius-md);
+    }
+    .stats-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        border-radius: 10px;
+        margin-bottom: 0.45rem;
+    }
+    .stats-num {
+        font-size: 1.55rem;
+    }
+    .stats-label {
+        font-size: 0.76rem;
+    }
 }
 
 /* ===================================================
@@ -324,6 +372,32 @@ html {
 .wilayah-nav-pills .nav-link.active .badge {
     background-color: #ffffff !important;
     color: #991b1b !important;
+}
+
+@media (max-width: 991.98px) {
+    .wilayah-nav-pills {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem !important;
+        margin-bottom: 1rem;
+    }
+    .wilayah-nav-pills .nav-link {
+        padding: 0.75rem 0.85rem;
+        font-size: 0.85rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+    .wilayah-nav-pills .nav-link .badge {
+        margin-top: 0.25rem;
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .wilayah-nav-pills {
+        grid-template-columns: 1fr;
+    }
 }
 
 .cabang-chip {
@@ -495,4 +569,35 @@ html {
 .hover-red:hover {
     color: var(--pmd-primary) !important;
     transition: color 0.15s ease;
+}
+
+@media (max-width: 575.98px) {
+    .cta-banner {
+        padding: 2.25rem 1.25rem;
+        border-radius: 16px;
+    }
+    .cta-banner h2 {
+        font-size: 1.5rem;
+    }
+    .cta-banner .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .program-card {
+        padding: 1.25rem 1rem;
+    }
+    .step-card {
+        padding: 1.25rem 1rem;
+    }
+    .accordion-custom .accordion-button {
+        padding: 0.95rem 1rem;
+        font-size: 0.925rem;
+    }
+    .accordion-custom .accordion-body {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+    .contact-card {
+        padding: 1.25rem 1rem;
+    }
 }

@@ -87,17 +87,40 @@
     color: #10b981;
 }
 
+/* Mobile Stepper Header */
+.mobile-stepper-header {
+    background-color: #ffffff;
+    border: 1px solid var(--pmd-border);
+    border-radius: var(--pmd-radius-md);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
 @media (max-width: 768px) {
+    .stepper-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 0.5rem 0.25rem 0.75rem;
+        margin-bottom: 1.25rem;
+        gap: 0.35rem;
+    }
+    .stepper-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+    .stepper-progress-bar {
+        display: none;
+    }
+    .stepper-item {
+        flex: 0 0 auto;
+        min-width: 44px;
+    }
     .stepper-title {
         display: none;
     }
     .stepper-circle {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         font-size: 0.85rem;
-    }
-    .stepper-progress-bar {
-        top: 18px;
     }
 }
 
@@ -341,4 +364,126 @@
     color: #64748b;
     font-size: 0.875rem;
     text-align: center;
+}
+
+/* ========================================================================= */
+/* Mobile Phone Responsive Form Overrides                                    */
+/* ========================================================================= */
+
+.review-item-value {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Form Step Actions (Back / Next Buttons) on Mobile */
+.form-step-actions {
+    transition: all 0.2s ease;
+}
+
+@media (max-width: 575.98px) {
+    .form-step-actions {
+        flex-direction: column-reverse !important;
+        gap: 0.65rem !important;
+    }
+
+    .form-step-actions .btn {
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.95rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 48px;
+    }
+
+    .section-icon-badge {
+        width: 38px;
+        height: 38px;
+        font-size: 1.15rem;
+        border-radius: 10px;
+        margin-right: 0.6rem;
+        flex-shrink: 0;
+    }
+
+    .form-step-section .card-title {
+        font-size: 1.1rem;
+    }
+
+    /* Gender Cards on Mobile */
+    .gender-card-select {
+        padding: 0.75rem 0.5rem;
+        min-height: 72px;
+    }
+
+    .gender-card-select i {
+        font-size: 1.4rem !important;
+    }
+
+    /* Warga MTA Autocomplete Dropdown on Mobile */
+    #warga-suggestions-dropdown {
+        max-height: 280px !important;
+        border-radius: var(--pmd-radius-md);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .warga-item-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+        padding: 0.75rem !important;
+    }
+
+    .warga-item-row .text-end {
+        text-align: left !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .warga-item-row .text-end button {
+        width: 100% !important;
+        padding: 0.5rem 0.75rem !important;
+        display: block !important;
+    }
+
+    /* Organization Cards on Mobile */
+    .org-card {
+        padding: 0.85rem;
+    }
+
+    .org-card .form-check-label .badge {
+        margin-top: 0.25rem;
+    }
+
+    /* Skill Cards & Interest Tags on Mobile */
+    .skill-card {
+        padding: 0.75rem;
+    }
+
+    .interest-tag-label {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.825rem;
+        min-height: 40px;
+    }
+}
+
+/* TomSelect on Mobile Screens */
+@media (max-width: 768px) {
+    .ts-control {
+        font-size: 16px !important;
+        min-height: 46px;
+        padding: 0.65rem 0.85rem;
+    }
+
+    .ts-dropdown .option {
+        padding: 0.75rem 0.95rem;
+        font-size: 0.95rem;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+    }
+
+    .ts-dropdown .optgroup-header {
+        padding: 0.6rem 0.85rem;
+        font-size: 0.78rem;
+    }
 }

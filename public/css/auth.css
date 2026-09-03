@@ -95,3 +95,29 @@ body.auth-body {
     border: 1px dashed #cbd5e1;
     font-size: 0.85rem;
 }
+
+@media (max-width: 575.98px) {
+    .login-header {
+        padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .brand-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.6rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .auth-form-control,
+    .auth-input-group-text,
+    .auth-toggle-password {
+        font-size: 16px !important;
+        min-height: 48px;
+    }
+
+    .auth-btn-primary {
+        min-height: 48px;
+        font-size: 1rem;
+        padding: 0.75rem 1.25rem;
+    }
+}
