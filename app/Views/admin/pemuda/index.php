@@ -232,7 +232,128 @@
     </div>
 
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <!-- MOBILE CARDS (Khusus Tampilan Ponsel / Layar Kecil) -->
+        <div class="pemuda-mobile-cards d-block d-md-none p-3">
+            <?php if (empty($pemudaList)): ?>
+                <div class="text-center py-5">
+                    <div class="text-muted mb-2"><i class="fas fa-search fa-2x"></i></div>
+                    <h6 class="font-weight-bold text-dark">Tidak ada data pemuda yang cocok</h6>
+                    <p class="text-muted text-xs mb-0">Coba ubah kata kunci atau atur ulang filter pencarian Anda.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($pemudaList as $p): ?>
+                    <div class="pemuda-card-item">
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <div class="pemuda-card-avatar mr-2">
+                                <?= strtoupper(substr($p['name'], 0, 1)) ?>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="font-weight-bold text-dark mb-0 text-truncate" style="font-size: 0.95rem;">
+                                        <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="text-dark">
+                                            <?= esc($p['name']) ?>
+                                        </a>
+                                    </h6>
+                                    <?= $p['gender'] === 'L' ? '<span class="badge badge-primary badge-pill ml-1">L</span>' : '<span class="badge badge-danger badge-pill ml-1">P</span>' ?>
+                                </div>
+                                <div class="text-xs text-muted mt-1">
+                                    <span class="text-primary font-weight-bold"><?= esc($p['registration_number']) ?></span>
+                                    <?php if (!empty($p['mta_warga_uuid'])): ?>
+                                        <span class="badge badge-info ml-1" style="font-size: 0.65rem;"><i class="fas fa-check-double mr-1"></i>MTA</span>
+                                    <?php endif; ?>
+                                    <?php if ($p['status_data'] === 'archived'): ?>
+                                        <span class="badge badge-secondary ml-1" style="font-size: 0.65rem;">Arsip</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pemuda-card-meta mb-2">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-sitemap mr-2 text-info" style="width: 14px;"></i>
+                                <span class="font-weight-bold text-dark"><?= esc($p['cabang_name']) ?></span>
+                                <span class="text-muted ml-1">&bull; <?= esc($p['wilayah_name']) ?></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-graduation-cap mr-2 text-warning" style="width: 14px;"></i>
+                                <span><?= esc($p['education_level_name'] ?? '-') ?> &bull; <?= esc($p['job_status_name'] ?? '-') ?></span>
+                            </div>
+                            <?php if (!empty($p['phone'])): ?>
+                                <div class="d-flex align-items-center">
+                                    <i class="fab fa-whatsapp mr-2 text-success" style="width: 14px;"></i>
+                                    <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', (str_starts_with($p['phone'], '0') ? ('62' . substr($p['phone'], 1)) : $p['phone'])) ?>" 
+                                       target="_blank" class="text-success font-weight-bold">
+                                        <?= esc($p['phone']) ?>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted" style="font-size: 0.72rem;">
+                                <i class="far fa-calendar-alt mr-1"></i> <?= date('d M Y', strtotime($p['created_at'])) ?>
+                            </span>
+                            <div>
+                                <?php if ($p['status_verifikasi'] === 'verified'): ?>
+                                    <span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.72rem;">
+                                        <i class="fas fa-check-circle mr-1"></i> Terverifikasi
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge badge-secondary px-2 py-1 font-weight-bold" style="font-size: 0.72rem;">
+                                        <i class="fas fa-clock mr-1"></i> Belum Terverifikasi
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="pemuda-card-actions">
+                            <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="btn btn-default btn-sm shadow-none" title="Detail">
+                                <i class="fas fa-eye mr-1"></i> Detail
+                            </a>
+                            <a href="<?= base_url('admin/pemuda/edit/' . $p['id']) ?>" class="btn btn-primary btn-sm shadow-none" title="Edit">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                            <a href="<?= base_url('admin/pemuda/cetak/' . $p['id']) ?>" target="_blank" class="btn btn-info btn-sm shadow-none" title="Cetak">
+                                <i class="fas fa-print mr-1"></i> Cetak
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-light border btn-sm shadow-none" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding: 0.35rem 0.6rem;">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right shadow-sm border-0 p-1">
+                                    <form action="<?= base_url('admin/pemuda/verifikasi/' . $p['id']) ?>" method="POST">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="dropdown-item py-1 text-xs text-info font-weight-bold">
+                                            <i class="fas fa-sync-alt mr-2"></i> Sinkronkan MTA
+                                        </button>
+                                    </form>
+                                    <div class="dropdown-divider"></div>
+                                    <form action="<?= base_url('admin/pemuda/archive/' . $p['id']) ?>" method="POST">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="dropdown-item py-1 text-xs">
+                                            <i class="fas fa-archive mr-2 text-secondary"></i>
+                                            <?= $p['status_data'] === 'archived' ? 'Aktifkan Kembali' : 'Arsipkan Data' ?>
+                                        </button>
+                                    </form>
+                                    <?php if (session()->get('role') === 'superadmin'): ?>
+                                        <div class="dropdown-divider"></div>
+                                        <button type="button" 
+                                                class="dropdown-item py-1 text-xs text-danger font-weight-bold btn-delete" 
+                                                data-id="<?= $p['id'] ?>" 
+                                                data-name="<?= esc($p['name']) ?>">
+                                            <i class="fas fa-trash-alt mr-2"></i> Hapus Permanen
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- DESKTOP / TABLET TABLE -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover table-striped table-vcenter mb-0" style="font-size: 0.85rem;">
                 <thead class="thead-light">
                     <tr>

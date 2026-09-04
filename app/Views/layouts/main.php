@@ -7,6 +7,16 @@
     <title><?= esc($title ?? ($this->renderSection('title') ? $this->renderSection('title') . ' - Pemuda MTA Perwakilan Sragen' : 'Pemuda MTA Perwakilan Sragen | Pusat Informasi & Pendataan')) ?></title>
     <meta name="description" content="Pusat Informasi dan Sistem Pendataan Pemuda MTA Perwakilan Sragen. Menghimpun potensi dan karya pemuda di 4 Wilayah dan 61 Cabang se-Kabupaten Sragen.">
 
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Pemuda MTA">
+    <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('icons/apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('icons/icon-192x192.png') ?>">
+
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,6 +149,7 @@
                         <li><a href="<?= base_url('/#manfaat') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Manfaat Pendataan</a></li>
                         <li><a href="<?= base_url('/#alur') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Alur Pendaftaran</a></li>
                         <li><a href="<?= base_url('admin/login') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-shield-lock me-1 text-danger small"></i> Login Pengurus / Admin</a></li>
+                        <li><a href="javascript:void(0)" onclick="if(window.triggerPwaInstall) window.triggerPwaInstall();" class="text-decoration-none text-muted hover-red"><i class="bi bi-phone me-1 text-danger small"></i> Pasang Aplikasi di HP</a></li>
                     </ul>
                 </div>
 
@@ -176,8 +187,36 @@
         </div>
     </footer>
 
+    <!-- Mobile Bottom Navigation Bar (App Bar) -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+        <a href="<?= base_url('/') ?>" class="mobile-nav-item <?= (url_is('/') || url_is('')) ? 'active' : '' ?>">
+            <i class="bi bi-house-door<?= (url_is('/') || url_is('')) ? '-fill' : '' ?>"></i>
+            <span>Beranda</span>
+        </a>
+        <a href="<?= base_url('/#wilayah') ?>" class="mobile-nav-item">
+            <i class="bi bi-diagram-3"></i>
+            <span>Cabang</span>
+        </a>
+        <a href="<?= base_url('pendataan') ?>" class="mobile-nav-item mobile-nav-fab <?= url_is('pendataan*') ? 'active' : '' ?>">
+            <div class="fab-icon-wrap">
+                <i class="bi bi-ui-checks"></i>
+            </div>
+            <span>Pendataan</span>
+        </a>
+        <a href="<?= base_url('/#faq') ?>" class="mobile-nav-item">
+            <i class="bi bi-question-circle"></i>
+            <span>FAQ</span>
+        </a>
+        <a href="<?= base_url('admin/login') ?>" class="mobile-nav-item <?= url_is('admin*') ? 'active' : '' ?>">
+            <i class="bi bi-shield-lock"></i>
+            <span>Admin</span>
+        </a>
+    </nav>
+
     <!-- Bootstrap 5.3 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- PWA & Mobile App Support -->
+    <script src="<?= base_url('js/pwa-install.js') ?>"></script>
     <?= $this->renderSection('scripts') ?>
 </body>
 

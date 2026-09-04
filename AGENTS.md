@@ -1627,3 +1627,33 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Scrolling sentuh lancar pada `.table-responsive` (`-webkit-overflow-scrolling: touch`).
   - Penataan `.btn-group` pada toolbar agar membungkus rapi (wrap) di ponsel tanpa memecah batas layar horizontal.
 
+### 2026-09-04 — Implementasi Versi Mobile Penuh & Progressive Web App (PWA)
+
+- **Progressive Web App (PWA) & Web App Manifest (`public/manifest.json`, `public/sw.js`, `public/offline.html`, `public/icons/`):**
+  - Dibuat Web App Manifest lengkap (`public/manifest.json`) dengan konfigurasi `standalone`, orientasi portrait, tema warna brand `#dc2626`, dan pintasan aplikasi (Shortcuts: Form Pendataan, 4 Wilayah & Cabang, Portal Admin).
+  - Dibuat set ikon aplikasi PWA lengkap di `public/icons/` (`icon-72x72.png`, `icon-96x96.png`, `icon-128x128.png`, `icon-144x144.png`, `icon-152x152.png`, `icon-192x192.png`, `icon-384x384.png`, `icon-512x512.png`, `apple-touch-icon.png`, dan `maskable-icon-512x512.png`).
+  - Dibuat Service Worker (`public/sw.js`) dengan pre-caching aset inti, strategi stale-while-revalidate untuk aset statis, network-first untuk navigasi halaman, dan pembersihan cache otomatis saat versi diperbarui.
+  - Dibuat halaman fallback offline (`public/offline.html`) yang informatif dan ramah pengguna saat koneksi internet terputus.
+  - Dibuat skrip instalasi mobile pintar (`public/js/pwa-install.js`) yang menangani `beforeinstallprompt` dengan banner instalasi elegan ("Pasang Aplikasi Pemuda MTA di HP") serta instruksi visual untuk pengguna Safari iOS.
+
+- **Mobile Bottom Navigation Bar (Bilah Navigasi Bawah Khusus Ponsel):**
+  - **Area Publik (`app/Views/layouts/main.php`, `public/css/main.css`):**
+    - Ditambahkan bilah navigasi bawah sticky bergaya aplikasi native (`.mobile-bottom-nav`) dengan 5 tab: Beranda, Cabang, Form Pendataan (dengan Floating Action Button / FAB merah mencolok di tengah), FAQ, dan Admin.
+    - Penyesuaian `safe-area-inset-bottom` dan padding bottom dinamis pada `body` agar konten halaman tidak tertutup bilah navigasi.
+  - **Area Admin (`app/Views/admin/layouts/main.php`, `public/css/admin.css`):**
+    - Ditambahkan bilah navigasi bawah khusus pengurus (`.admin-mobile-bottom-nav`) dengan 5 tab: Dashboard, Data Pemuda, Tambah Pemuda (center FAB biru), Cabang, dan Menu (tombol drawer sidebar).
+    - Ditambahkan indikator badge scope ringkas (`d-inline-block d-md-none`) pada navbar atas agar pengurus cabang/wilayah tetap dapat melihat scope akses aktifnya di layar sempit.
+
+- **Tampilan Kartu Adaptif Ponsel (Mobile Card View) untuk Data Admin:**
+  - **Manajemen Data Pemuda (`app/Views/admin/pemuda/index.php`):**
+    - Menggantikan tabel 9 kolom yang harus digulir horizontal di ponsel dengan tampilan kartu (`.pemuda-mobile-cards` dan `.pemuda-card-item`).
+    - Kartu menampilkan inisial avatar, status verifikasi, nomor registrasi, wilayah & cabang, demografi, tombol cepat WhatsApp langsung, serta aksi Detail, Edit, Cetak, dan dropdown Arsip/Hapus.
+  - **Master Cabang (`app/Views/admin/cabang/index.php`):**
+    - Menghadirkan tampilan kartu khusus ponsel (`.cabang-mobile-cards`) lengkap dengan status ketersediaan gelombang, jadwal, ustadz, kontak pimpinan WhatsApp, serta aksi Detail modal, Edit, dan Hapus.
+  - **Dashboard Admin (`app/Views/admin/dashboard/index.php`):**
+    - Menata ulang info-box statistik pada baris kedua menjadi grid 2x2 responsif yang proporsional di layar ponsel.
+
+- **Pengujian Unit (`tests/unit/MobileVersionTest.php`):**
+  - Ditambahkan 10 metode pengujian unit yang memvalidasi integritas `manifest.json`, seluruh ikon PWA, service worker, halaman offline, skrip instalasi, meta tag di seluruh layout, tampilan kartu ponsel, dan aturan CSS responsif. Seluruh 69 pengujian unit (382 asersi) berhasil 100%.
+
+

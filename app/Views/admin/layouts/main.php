@@ -6,6 +6,16 @@
     <meta name="csrf-token-hash" content="<?= csrf_hash() ?>">
     <title><?= esc($title ?? 'Dashboard') ?> | Pemuda MTA Perwakilan Sragen</title>
 
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="theme-color" content="#343a40">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Pemuda MTA Admin">
+    <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('icons/apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('icons/icon-192x192.png') ?>">
+
     <!-- Google Font: Source Sans Pro & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,12 +68,12 @@
         <!-- Right navbar links -->
         <ul class="navbar-nav ml-auto align-items-center">
             <!-- Scope badge -->
+            <?php 
+                $currRole    = session()->get('role');
+                $currWilayah = session()->get('wilayah_name') ?? ('Wilayah ' . session()->get('wilayah_id'));
+                $currCabang  = session()->get('cabang_name') ?? ('Cabang ' . session()->get('cabang_id'));
+            ?>
             <li class="nav-item mr-2 d-none d-md-block">
-                <?php 
-                    $currRole    = session()->get('role');
-                    $currWilayah = session()->get('wilayah_name') ?? ('Wilayah ' . session()->get('wilayah_id'));
-                    $currCabang  = session()->get('cabang_name') ?? ('Cabang ' . session()->get('cabang_id'));
-                ?>
                 <?php if ($currRole === 'superadmin'): ?>
                     <span class="badge badge-dark px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
                         <i class="fas fa-globe text-info mr-1"></i> Scope: <strong>Seluruh Sistem</strong>
@@ -75,6 +85,23 @@
                 <?php else: ?>
                     <span class="badge badge-success px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
                         <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong>
+                    </span>
+                <?php endif; ?>
+            </li>
+
+            <!-- Mobile Compact Scope Badge -->
+            <li class="nav-item mr-1 d-inline-block d-md-none">
+                <?php if ($currRole === 'superadmin'): ?>
+                    <span class="badge badge-dark px-2 py-1 font-weight-normal" style="font-size: 0.72rem;" title="Scope: Seluruh Sistem">
+                        <i class="fas fa-globe text-info"></i> Superadmin
+                    </span>
+                <?php elseif ($currRole === 'admin_wilayah'): ?>
+                    <span class="badge badge-primary px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 110px;" title="Scope: <?= esc($currWilayah) ?>">
+                        <i class="fas fa-map-marker-alt"></i> <?= esc($currWilayah) ?>
+                    </span>
+                <?php else: ?>
+                    <span class="badge badge-success px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 110px;" title="Scope: <?= esc($currCabang) ?>">
+                        <i class="fas fa-sitemap"></i> <?= esc($currCabang) ?>
                     </span>
                 <?php endif; ?>
             </li>
@@ -367,6 +394,32 @@
 </div>
 <!-- ./wrapper -->
 
+<!-- ADMIN MOBILE BOTTOM NAVIGATION (App Bar) -->
+<nav class="admin-mobile-bottom-nav" aria-label="Navigasi Mobile Admin">
+    <a href="<?= base_url('admin/dashboard') ?>" class="admin-nav-item <?= (url_is('admin/dashboard') || url_is('admin')) ? 'active' : '' ?>">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="<?= base_url('admin/pemuda') ?>" class="admin-nav-item <?= (url_is('admin/pemuda*') && !url_is('admin/pemuda/tambah')) ? 'active' : '' ?>">
+        <i class="fas fa-users"></i>
+        <span>Pemuda</span>
+    </a>
+    <a href="<?= base_url('admin/pemuda/tambah') ?>" class="admin-nav-item admin-nav-fab <?= url_is('admin/pemuda/tambah') ? 'active' : '' ?>">
+        <div class="fab-icon-wrap shadow-sm">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <span>Tambah</span>
+    </a>
+    <a href="<?= (session()->get('role') === 'superadmin') ? base_url('admin/cabang') : base_url('admin/pemuda') ?>" class="admin-nav-item <?= url_is('admin/cabang*') ? 'active' : '' ?>">
+        <i class="fas fa-sitemap"></i>
+        <span>Cabang</span>
+    </a>
+    <a href="#" class="admin-nav-item" data-widget="pushmenu" role="button" aria-label="Buka Menu Sidebar">
+        <i class="fas fa-bars"></i>
+        <span>Menu</span>
+    </a>
+</nav>
+
 <!-- REQUIRED SCRIPTS -->
 <!-- jQuery -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
@@ -414,6 +467,9 @@
         });
     });
 </script>
+
+<!-- PWA & Mobile App Support -->
+<script src="<?= base_url('js/pwa-install.js') ?>"></script>
 
 <?= $this->renderSection('scripts') ?>
 </body>

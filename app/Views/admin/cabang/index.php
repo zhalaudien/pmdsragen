@@ -100,7 +100,118 @@
         </div>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <!-- CABANG MOBILE CARDS (Khusus Tampilan Ponsel) -->
+        <div class="cabang-mobile-cards d-block d-md-none p-3">
+            <?php if (empty($cabangList)): ?>
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-muted"></i>
+                    Belum ada data cabang yang sesuai filter.
+                </div>
+            <?php else: ?>
+                <?php foreach ($cabangList as $c): ?>
+                    <div class="pemuda-card-item">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem;">
+                                    <?= esc($c['name']) ?>
+                                </h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge badge-primary px-2 py-0" style="font-size: 0.72rem;">
+                                        <?= esc($c['wilayah_name']) ?>
+                                    </span>
+                                    <span class="badge badge-light border font-monospace ml-1" style="font-size: 0.72rem;">
+                                        <?= esc($c['code'] ?: '-') ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <a href="<?= base_url('admin/pemuda?cabang_id=' . $c['id']) ?>" class="badge badge-info px-2 py-1 text-decoration-none shadow-xs" title="Lihat data pemuda">
+                                <i class="fas fa-users mr-1"></i> <?= number_format($c['total_pemuda'] ?? 0) ?>
+                            </a>
+                        </div>
+
+                        <div class="pemuda-card-meta mb-2">
+                            <?php if (!empty($c['pimpinan_nama'])): ?>
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-user-tie mr-2 text-primary" style="width: 14px;"></i>
+                                    <span class="font-weight-bold text-dark"><?= esc($c['pimpinan_nama']) ?></span>
+                                    <?php if (!empty($c['no_wa'])): ?>
+                                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', (str_starts_with($c['no_wa'], '0') ? ('62' . substr($c['no_wa'], 1)) : $c['no_wa'])) ?>" target="_blank" class="text-success font-weight-bold ml-2">
+                                            <i class="fab fa-whatsapp"></i> WA
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-calendar-alt mr-2 text-warning" style="width: 14px;"></i>
+                                <?php if (($c['has_gelombang'] ?? 'belum') === 'sudah'): ?>
+                                    <span class="badge badge-success px-2 py-0 mr-1" style="font-size: 0.7rem;">Sudah Gelombang</span>
+                                    <span class="text-xs"><?= esc($c['gelombang_hari'] ?? '') ?><?= (!empty($c['gelombang_hari']) && !empty($c['gelombang_jam'])) ? ' • ' : '' ?><?= esc($c['gelombang_jam'] ?? '') ?></span>
+                                <?php else: ?>
+                                    <span class="badge badge-secondary px-2 py-0" style="font-size: 0.7rem;">Belum Gelombang</span>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if (!empty($c['alamat'])): ?>
+                                <div class="d-flex align-items-start text-xs text-muted">
+                                    <i class="fas fa-map-marker-alt mr-2 text-danger mt-1" style="width: 14px;"></i>
+                                    <span class="text-truncate"><?= esc($c['alamat']) ?></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="pemuda-card-actions">
+                            <button type="button" 
+                                    class="btn btn-info btn-sm btn-detail-cabang shadow-none" 
+                                    data-id="<?= $c['id'] ?>"
+                                    data-wid="<?= $c['wilayah_id'] ?>"
+                                    data-wname="<?= esc($c['wilayah_name']) ?>"
+                                    data-code="<?= esc($c['code'] ?? '') ?>"
+                                    data-name="<?= esc($c['name']) ?>"
+                                    data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                    data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
+                                    data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
+                                    data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
+                                    data-hari="<?= esc($c['gelombang_hari'] ?? '') ?>"
+                                    data-jam="<?= esc($c['gelombang_jam'] ?? '') ?>"
+                                    data-ustadz="<?= esc($c['gelombang_ustadz'] ?? '') ?>"
+                                    data-desc="<?= esc($c['description'] ?? '') ?>"
+                                    data-totalpemuda="<?= number_format($c['total_pemuda'] ?? 0) ?>"
+                                    title="Lihat Detail">
+                                <i class="fas fa-eye mr-1"></i> Detail
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-primary btn-sm btn-edit-cabang shadow-none" 
+                                    data-id="<?= $c['id'] ?>"
+                                    data-wid="<?= $c['wilayah_id'] ?>"
+                                    data-code="<?= esc($c['code'] ?? '') ?>"
+                                    data-name="<?= esc($c['name']) ?>"
+                                    data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                    data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
+                                    data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
+                                    data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
+                                    data-hari="<?= esc($c['gelombang_hari'] ?? '') ?>"
+                                    data-jam="<?= esc($c['gelombang_jam'] ?? '') ?>"
+                                    data-ustadz="<?= esc($c['gelombang_ustadz'] ?? '') ?>"
+                                    data-desc="<?= esc($c['description'] ?? '') ?>"
+                                    title="Edit Cabang">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm btn-delete-cabang shadow-none" 
+                                    data-id="<?= $c['id'] ?>" 
+                                    data-name="<?= esc($c['name']) ?>"
+                                    title="Hapus Cabang">
+                                <i class="fas fa-trash mr-1"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+        <!-- DESKTOP / TABLET TABLE -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table table-hover table-striped table-vcenter mb-0" style="font-size: 0.88rem;">
                 <thead class="thead-light">
                     <tr>

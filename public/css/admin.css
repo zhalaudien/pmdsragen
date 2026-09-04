@@ -263,5 +263,196 @@ body {
         flex-wrap: wrap;
         justify-content: center;
     }
+
+    /* Mobile Info-box & Stats refinement */
+    .info-box {
+        min-height: 56px;
+        margin-bottom: 0.65rem !important;
+        border-radius: 10px;
+    }
+
+    .info-box .info-box-icon {
+        width: 46px;
+        font-size: 1.15rem;
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+    }
+
+    .info-box .info-box-content {
+        padding: 4px 8px;
+        line-height: 1.2;
+    }
+
+    .info-box .info-box-text {
+        font-size: 0.68rem;
+        letter-spacing: -0.01em;
+    }
+
+    .info-box .info-box-number {
+        font-size: 1.05rem;
+    }
 }
+
+/* ========================================================================= */
+/* Admin Mobile App Bottom Navigation Bar                                    */
+/* ========================================================================= */
+
+.admin-mobile-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .content-wrapper {
+        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .main-footer {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .admin-mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(58px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: #ffffff;
+        border-top: 1px solid #dee2e6;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+        z-index: 1040;
+        align-items: center;
+        justify-content: space-around;
+    }
+
+    .admin-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        height: 100%;
+        color: #6c757d;
+        text-decoration: none !important;
+        font-size: 0.68rem;
+        font-weight: 600;
+        transition: color 0.15s ease, transform 0.15s ease;
+        position: relative;
+        padding: 4px 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .admin-nav-item i {
+        font-size: 1.2rem;
+        margin-bottom: 2px;
+        transition: transform 0.15s ease;
+    }
+
+    .admin-nav-item:active {
+        transform: scale(0.92);
+    }
+
+    .admin-nav-item.active {
+        color: #007bff;
+    }
+
+    .admin-nav-item.active i {
+        transform: translateY(-2px);
+    }
+
+    /* Floating Center Button (FAB) for Admin Tambah Pemuda */
+    .admin-nav-fab {
+        position: relative;
+        overflow: visible;
+    }
+
+    .admin-nav-fab .fab-icon-wrap {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: -22px;
+        box-shadow: 0 4px 14px rgba(0, 123, 255, 0.4);
+        border: 3px solid #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .admin-nav-fab .fab-icon-wrap i {
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+
+    .admin-nav-fab:active .fab-icon-wrap {
+        transform: scale(0.92);
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.5);
+    }
+
+    .admin-nav-fab span {
+        margin-top: 2px;
+        font-weight: 700;
+        color: #007bff;
+    }
+}
+
+/* ========================================================================= */
+/* Pemuda Mobile Cards (Adaptive Card View for Mobile Screens)                */
+/* ========================================================================= */
+.pemuda-card-item {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 0.95rem;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pemuda-card-item:active {
+    background-color: #f8fafc;
+}
+
+.pemuda-card-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.pemuda-card-meta {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.pemuda-card-actions {
+    display: flex;
+    gap: 0.4rem;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 0.65rem;
+    margin-top: 0.65rem;
+}
+
+.pemuda-card-actions .btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    min-height: 36px;
+}
+
 
