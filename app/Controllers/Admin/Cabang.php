@@ -103,6 +103,7 @@ class Cabang extends BaseController
             'name'             => 'required|min_length[3]|max_length[100]',
             'code'             => 'permit_empty|max_length[50]',
             'alamat'           => 'permit_empty',
+            'maps_url'         => 'permit_empty|max_length[500]',
             'pimpinan_nama'    => 'permit_empty|max_length[100]',
             'no_wa'            => 'permit_empty|max_length[20]',
             'has_gelombang'    => 'required|in_list[sudah,belum]',
@@ -117,12 +118,14 @@ class Cabang extends BaseController
         }
 
         $hasGelombang = $this->request->getPost('has_gelombang') === 'sudah' ? 'sudah' : 'belum';
+        $mapsUrl      = $this->request->getPost('maps_url') ? formatMapsUrl($this->request->getPost('maps_url')) : null;
 
         $this->cabangModel->insert([
             'wilayah_id'       => (int) $this->request->getPost('wilayah_id'),
             'code'             => $this->request->getPost('code') ?: null,
             'name'             => trim($this->request->getPost('name')),
             'alamat'           => $this->request->getPost('alamat') ?: null,
+            'maps_url'         => $mapsUrl,
             'pimpinan_nama'    => $this->request->getPost('pimpinan_nama') ?: null,
             'no_wa'            => $this->request->getPost('no_wa') ?: null,
             'has_gelombang'    => $hasGelombang,
@@ -142,6 +145,7 @@ class Cabang extends BaseController
             'name'             => 'required|min_length[3]|max_length[100]',
             'code'             => 'permit_empty|max_length[50]',
             'alamat'           => 'permit_empty',
+            'maps_url'         => 'permit_empty|max_length[500]',
             'pimpinan_nama'    => 'permit_empty|max_length[100]',
             'no_wa'            => 'permit_empty|max_length[20]',
             'has_gelombang'    => 'required|in_list[sudah,belum]',
@@ -156,12 +160,14 @@ class Cabang extends BaseController
         }
 
         $hasGelombang = $this->request->getPost('has_gelombang') === 'sudah' ? 'sudah' : 'belum';
+        $mapsUrl      = $this->request->getPost('maps_url') ? formatMapsUrl($this->request->getPost('maps_url')) : null;
 
         $this->cabangModel->update($id, [
             'wilayah_id'       => (int) $this->request->getPost('wilayah_id'),
             'code'             => $this->request->getPost('code') ?: null,
             'name'             => trim($this->request->getPost('name')),
             'alamat'           => $this->request->getPost('alamat') ?: null,
+            'maps_url'         => $mapsUrl,
             'pimpinan_nama'    => $this->request->getPost('pimpinan_nama') ?: null,
             'no_wa'            => $this->request->getPost('no_wa') ?: null,
             'has_gelombang'    => $hasGelombang,

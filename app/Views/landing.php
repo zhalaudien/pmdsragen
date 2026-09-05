@@ -17,7 +17,7 @@
             <div class="col-lg-8 text-center text-lg-start">
                 <div class="hero-badge-pill mb-3">
                     <i class="bi bi-patch-check-fill text-warning"></i>
-                    <span><?= esc($settings['hero_badge'] ?? "Majelis Tafsir Al-Qur'an (MTA) Perwakilan Sragen") ?></span>
+                    <span><?= esc($settings['hero_badge'] ?? "Majlis Tafsir Al-Qur'an (MTA) Perwakilan Sragen") ?></span>
                 </div>
                 <h1 class="hero-title mb-3">
                     <?= esc($settings['hero_title'] ?? 'Generasi Muda Berilmu, Berakhlak Mulia & Berjiwa Pengabdian') ?>
@@ -63,7 +63,7 @@
                     <div class="card border-0 shadow-lg text-start rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
                         <div class="p-3 bg-pmd-red text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);">
                             <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-people-fill fs-5"></i>
+                                <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" class="rounded-circle bg-white p-1" style="width: 28px; height: 28px; object-fit: contain;">
                                 <span class="fw-bold small">Portal Pendataan Resmi</span>
                             </div>
                             <span class="badge bg-white text-danger fw-semibold px-2 py-1" style="font-size: 0.7rem;">Online</span>
@@ -158,7 +158,7 @@
                 <span class="section-tag"><i class="bi bi-info-circle-fill"></i> <?= esc($settings['tentang_tag'] ?? 'Tentang Organisasi') ?></span>
                 <h2 class="section-heading mb-3"><?= esc($settings['tentang_title'] ?? 'Mengenal Pemuda MTA Perwakilan Sragen') ?></h2>
                 <p class="section-desc mb-3">
-                    <?= nl2br(esc($settings['tentang_desc_1'] ?? "Pemuda MTA Perwakilan Sragen adalah wadah pembinaan, pengkaderan, dan penggerak kegiatan generasi muda Majelis Tafsir Al-Qur'an di tingkat Kabupaten Sragen.")) ?>
+                    <?= nl2br(esc($settings['tentang_desc_1'] ?? "Pemuda MTA Perwakilan Sragen adalah wadah pembinaan, pengkaderan, dan penggerak kegiatan generasi muda Majlis Tafsir Al-Qur'an di tingkat Kabupaten Sragen.")) ?>
                 </p>
                 <p class="section-desc mb-4">
                     <?= nl2br(esc($settings['tentang_desc_2'] ?? "Dengan berlandaskan Al-Qur'an dan As-Sunnah, pemuda MTA berperan aktif dalam dakwah Islam, kegiatan sosial kemanusiaan, kesiapsiagaan kebencanaan melalui Satgas, pelayanan pengajian melalui Tim Ikhrom & Parkir, serta pengembangan ekonomi dan wirausaha generasi muda.")) ?>

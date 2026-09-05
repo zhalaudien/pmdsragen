@@ -29,6 +29,9 @@
 <!-- Page Hero Header -->
 <div class="row justify-content-center mb-4">
     <div class="col-lg-10 text-center">
+        <div class="mb-3">
+            <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" style="width: 58px; height: 64px; object-fit: contain;" class="img-fluid drop-shadow-sm">
+        </div>
         <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-pmd-badge fw-semibold small mb-2">
             <i class="bi bi-patch-check-fill text-pmd-red"></i> Database Pemuda MTA Perwakilan Sragen
         </div>
@@ -597,6 +600,74 @@
                             <div class="invalid-feedback">Pilih status pekerjaan Anda.</div>
                         </div>
 
+                        <!-- Panel Detail Wirausaha / Pemilik Usaha (Muncul otomatis saat status Wirausaha dipilih) -->
+                        <div class="col-12" id="panel-detail-wirausaha" style="display: none;">
+                            <div class="card border-primary border-opacity-25 bg-light bg-opacity-50 p-3 rounded-3 shadow-xs">
+                                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-primary border-opacity-10">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                        <i class="bi bi-shop fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-slate-900 mb-0">Detail Usaha / Kewirausahaan</h6>
+                                        <small class="text-muted">Lengkapi informasi unit usaha mandiri yang Anda kelola</small>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <!-- Nama Usaha -->
+                                    <div class="col-md-6">
+                                        <label for="business_name" class="form-label fw-semibold">Nama Usaha / Bisnis <span class="required-star">*</span></label>
+                                        <input type="text" class="form-control" id="business_name" name="business_name"
+                                            placeholder="Contoh: Berkah Mandiri Snack / Warung Berkah / Studio Kreatif"
+                                            value="<?= old('business_name') ?>" maxlength="150">
+                                        <div class="form-text small">Nama toko, brand, gerai, atau nama usaha Anda.</div>
+                                    </div>
+
+                                    <!-- Jenis / Bidang Usaha -->
+                                    <div class="col-md-6">
+                                        <label for="business_field_wirausaha" class="form-label fw-semibold">Jenis / Bidang Usaha <span class="required-star">*</span></label>
+                                        <input type="text" class="form-control" id="business_field_wirausaha" name="business_field"
+                                            placeholder="Contoh: Kuliner, Retail / Sembako, Fashion, Bengkel, Jasa IT"
+                                            value="<?= old('business_field') ?>" maxlength="150">
+                                        <div class="form-text small">Kategori atau sektor produk/jasa yang dijalankan.</div>
+                                    </div>
+
+                                    <!-- Alamat Usaha -->
+                                    <div class="col-12">
+                                        <label for="business_address" class="form-label fw-semibold">Alamat Tempat Usaha <span class="required-star">*</span></label>
+                                        <textarea class="form-control" id="business_address" name="business_address" rows="2"
+                                            placeholder="Contoh: Jl. Raya Sukowati No. 45 / Kios Pasar Bunder Blok A (Tulis 'Online / Rumahan' jika bisnis online/di rumah)"
+                                            maxlength="500"><?= old('business_address') ?></textarea>
+                                        <div class="form-text small">Alamat gerai/toko atau operasional utama usaha Anda.</div>
+                                    </div>
+
+                                    <!-- Kontak / CP Usaha -->
+                                    <div class="col-md-6">
+                                        <label for="business_contact" class="form-label fw-semibold">Kontak / No. WhatsApp Usaha (CP) <span class="required-star">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-whatsapp text-success"></i></span>
+                                            <input type="tel" class="form-control" id="business_contact" name="business_contact"
+                                                placeholder="Contoh: 081234567890"
+                                                value="<?= old('business_contact') ?>" maxlength="50">
+                                        </div>
+                                        <div class="form-text small">Nomor kontak pemesanan / layanan pelanggan usaha.</div>
+                                    </div>
+
+                                    <!-- Media Sosial / Website Usaha (Opsional) -->
+                                    <div class="col-md-6">
+                                        <label for="business_social" class="form-label fw-semibold">Sosmed / Website Usaha <span class="text-muted fw-normal">(Opsional)</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bi bi-globe2 text-primary"></i></span>
+                                            <input type="text" class="form-control" id="business_social" name="business_social"
+                                                placeholder="Contoh: @berkahmandiri (IG/TikTok) / https://tokopedia.com/..."
+                                                value="<?= old('business_social') ?>" maxlength="255">
+                                        </div>
+                                        <div class="form-text small">Akun Instagram, TikTok, Facebook, marketplace, atau website usaha jika ada.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Profesi / Jabatan -->
                         <div class="col-md-6" id="wrapper-job-title">
                             <label for="job_title" class="form-label">Profesi / Jabatan / Posisi</label>
@@ -607,17 +678,17 @@
 
                         <!-- Nama Perusahaan / Instansi / Usaha -->
                         <div class="col-md-6" id="wrapper-company-name">
-                            <label for="company_name" class="form-label">Nama Perusahaan / Tempat Usaha</label>
+                            <label for="company_name" class="form-label">Nama Perusahaan / Tempat Bekerja</label>
                             <input type="text" class="form-control" id="company_name" name="company_name"
-                                placeholder="Contoh: PT Sumber Pangan / Usaha Sendiri"
+                                placeholder="Contoh: PT Sumber Pangan / CV Karya Mandiri"
                                 value="<?= old('company_name') ?>" maxlength="150">
                         </div>
 
                         <!-- Bidang Usaha / Sektor Industri -->
                         <div class="col-md-6" id="wrapper-business-field">
-                            <label for="business_field" class="form-label">Bidang Industri / Sektor Usaha</label>
+                            <label for="business_field" class="form-label">Bidang Industri / Sektor Pekerjaan</label>
                             <input type="text" class="form-control" id="business_field" name="business_field"
-                                placeholder="Contoh: Teknologi Informasi / Kuliner / Pertanian"
+                                placeholder="Contoh: Teknologi Informasi / Perbankan / Manufaktur"
                                 value="<?= old('business_field') ?>" maxlength="150">
                         </div>
                     </div>
@@ -649,7 +720,7 @@
                         </div>
                     </div>
 
-                    <p class="text-secondary small mb-3">Centang organisasi yang Anda ikuti dan lengkapi jabatan/peran Anda:</p>
+                    <p class="text-secondary small mb-3">Centang unit tugas atau bidang organisasi yang Anda ikuti:</p>
 
                     <?php
                     $availableOrganizations = [
@@ -703,57 +774,30 @@
 
                     <div class="row g-3" id="organizationContainer">
                         <?php foreach ($availableOrganizations as $org): ?>
-                            <div class="col-12">
-                                <div class="org-card" id="org_card_box_<?= $org['key'] ?>">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div class="form-check w-100">
-                                            <input class="form-check-input org-toggle-check" type="checkbox"
-                                                name="organizations[<?= $org['key'] ?>][selected]"
-                                                value="<?= $org['name'] ?>"
-                                                id="org_<?= $org['key'] ?>"
-                                                data-key="<?= $org['key'] ?>"
-                                                data-title="<?= $org['name'] ?>"
-                                                onchange="toggleOrgDetail('<?= $org['key'] ?>')">
-                                            <label class="form-check-label fw-bold text-slate-900 fs-6 w-100 cursor-pointer" for="org_<?= $org['key'] ?>">
-                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                                    <span>
-                                                        <i class="bi bi-<?= $org['icon'] ?> <?= $org['color'] ?> me-2 fs-5 align-middle"></i>
-                                                        <?= $org['title'] ?>
-                                                    </span>
-                                                    <span class="badge bg-light text-secondary border rounded-pill fw-medium small">
-                                                        <?= $org['badge'] ?>
-                                                    </span>
-                                                </div>
-                                                <div class="text-muted fw-normal small mt-1 ms-4"><?= $org['description'] ?></div>
-                                            </label>
-                                        </div>
+                            <div class="col-12 col-md-6">
+                                <div class="org-card h-100" id="org_card_box_<?= $org['key'] ?>">
+                                    <div class="form-check w-100 mb-0">
+                                        <input class="form-check-input org-toggle-check" type="checkbox"
+                                            name="organizations[<?= $org['key'] ?>][selected]"
+                                            value="<?= $org['name'] ?>"
+                                            id="org_<?= $org['key'] ?>"
+                                            data-key="<?= $org['key'] ?>"
+                                            data-title="<?= $org['name'] ?>"
+                                            onchange="toggleOrgDetail('<?= $org['key'] ?>')">
+                                        <label class="form-check-label fw-bold text-slate-900 fs-6 w-100 cursor-pointer" for="org_<?= $org['key'] ?>">
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                <span>
+                                                    <i class="bi bi-<?= $org['icon'] ?> <?= $org['color'] ?> me-2 fs-5 align-middle"></i>
+                                                    <?= $org['title'] ?>
+                                                </span>
+                                                <span class="badge bg-light text-secondary border rounded-pill fw-medium small">
+                                                    <?= $org['badge'] ?>
+                                                </span>
+                                            </div>
+                                            <div class="text-muted fw-normal small mt-1 ms-4"><?= $org['description'] ?></div>
+                                        </label>
                                     </div>
-                                    <div class="mt-3 pt-3 border-top org-detail-wrapper" id="org_detail_<?= $org['key'] ?>" style="display: none;">
-                                        <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= $org['name'] ?>" disabled>
-                                        <div class="row g-2">
-                                            <div class="col-md-5">
-                                                <label class="form-label small text-muted mb-1">Jabatan / Posisi / Peran:</label>
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="organizations[<?= $org['key'] ?>][position]"
-                                                    placeholder="Contoh: Anggota / Koordinator / Sie Lapangan"
-                                                    value="Anggota" disabled>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label small text-muted mb-1">Tahun Bergabung:</label>
-                                                <input type="number" class="form-control form-control-sm"
-                                                    name="organizations[<?= $org['key'] ?>][join_year]"
-                                                    placeholder="Contoh: <?= date('Y') ?>"
-                                                    min="1990" max="<?= date('Y') ?>"
-                                                    value="<?= date('Y') ?>" disabled>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small text-muted mb-1">Keterangan Tambahan:</label>
-                                                <input type="text" class="form-control form-control-sm"
-                                                    name="organizations[<?= $org['key'] ?>][description]"
-                                                    placeholder="Opsional" disabled>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= $org['name'] ?>">
                                 </div>
                             </div>
                         <?php endforeach; ?>

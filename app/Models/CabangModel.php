@@ -17,6 +17,7 @@ class CabangModel extends Model
         'name',
         'description',
         'alamat',
+        'maps_url',
         'pimpinan_nama',
         'no_wa',
         'has_gelombang',

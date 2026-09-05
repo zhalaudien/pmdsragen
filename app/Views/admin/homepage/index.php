@@ -148,7 +148,7 @@
                                         <label class="font-weight-bold">Badge Header (Pill Atas Judul)</label>
                                         <input type="text" name="hero_badge" class="form-control" 
                                                value="<?= esc($settings['hero_badge'] ?? '') ?>" required>
-                                        <small class="text-muted">Contoh: Majelis Tafsir Al-Qur'an (MTA) Perwakilan Sragen</small>
+                                        <small class="text-muted">Contoh: Majlis Tafsir Al-Qur'an (MTA) Perwakilan Sragen</small>
                                     </div>
 
                                     <div class="col-md-12 mb-3">

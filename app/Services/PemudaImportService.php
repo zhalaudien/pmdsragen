@@ -689,7 +689,6 @@ class PemudaImportService
                             $this->organisasiModel->insert([
                                 'pemuda_id'         => $pemudaId,
                                 'organization_name' => mb_strtolower($orgName, 'UTF-8'),
-                                'position'          => 'anggota',
                             ]);
                         }
                     }

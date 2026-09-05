@@ -152,10 +152,21 @@
                                 <?php endif; ?>
                             </div>
 
-                            <?php if (!empty($c['alamat'])): ?>
-                                <div class="d-flex align-items-start text-xs text-muted">
+                            <?php if (!empty($c['alamat']) || !empty($c['maps_url'])): ?>
+                                <div class="d-flex align-items-start text-xs text-muted mb-1">
                                     <i class="fas fa-map-marker-alt mr-2 text-danger mt-1" style="width: 14px;"></i>
-                                    <span class="text-truncate"><?= esc($c['alamat']) ?></span>
+                                    <div>
+                                        <?php if (!empty($c['alamat'])): ?>
+                                            <span class="text-truncate d-inline-block" style="max-width: 260px;"><?= esc($c['alamat']) ?></span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($c['maps_url'])): ?>
+                                            <div class="mt-1">
+                                                <a href="<?= esc(formatMapsUrl($c['maps_url'])) ?>" target="_blank" rel="noopener noreferrer" class="badge badge-light border text-danger font-weight-normal px-2 py-1 text-decoration-none">
+                                                    <i class="fas fa-map-marked-alt mr-1"></i> Google Maps
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -169,6 +180,7 @@
                                     data-code="<?= esc($c['code'] ?? '') ?>"
                                     data-name="<?= esc($c['name']) ?>"
                                     data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                    data-mapsurl="<?= esc($c['maps_url'] ?? '') ?>"
                                     data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
                                     data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
                                     data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
@@ -187,6 +199,7 @@
                                     data-code="<?= esc($c['code'] ?? '') ?>"
                                     data-name="<?= esc($c['name']) ?>"
                                     data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                    data-mapsurl="<?= esc($c['maps_url'] ?? '') ?>"
                                     data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
                                     data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
                                     data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
@@ -293,6 +306,14 @@
                                     <?php else: ?>
                                         <span class="text-muted text-xs">-</span>
                                     <?php endif; ?>
+
+                                    <?php if (!empty($c['maps_url'])): ?>
+                                        <div class="mt-1">
+                                            <a href="<?= esc(formatMapsUrl($c['maps_url'])) ?>" target="_blank" rel="noopener noreferrer" class="badge badge-light border text-danger px-2 py-1 text-decoration-none" title="Buka lokasi di Google Maps">
+                                                <i class="fas fa-map-marked-alt mr-1"></i> Google Maps
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <a href="<?= base_url('admin/pemuda?cabang_id=' . $c['id']) ?>" class="badge badge-info px-2 py-1 text-decoration-none shadow-xs" title="Lihat daftar pemuda cabang ini">
@@ -309,6 +330,7 @@
                                                 data-code="<?= esc($c['code'] ?? '') ?>"
                                                 data-name="<?= esc($c['name']) ?>"
                                                 data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                                data-mapsurl="<?= esc($c['maps_url'] ?? '') ?>"
                                                 data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
                                                 data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
                                                 data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
@@ -327,6 +349,7 @@
                                                 data-code="<?= esc($c['code'] ?? '') ?>"
                                                 data-name="<?= esc($c['name']) ?>"
                                                 data-alamat="<?= esc($c['alamat'] ?? '') ?>"
+                                                data-mapsurl="<?= esc($c['maps_url'] ?? '') ?>"
                                                 data-pimpinan="<?= esc($c['pimpinan_nama'] ?? '') ?>"
                                                 data-nowa="<?= esc($c['no_wa'] ?? '') ?>"
                                                 data-hasgelombang="<?= esc($c['has_gelombang'] ?? 'belum') ?>"
@@ -426,7 +449,14 @@
                         <h6 class="font-weight-bold text-primary text-xs text-uppercase mb-1">
                             <i class="fas fa-map-marker-alt mr-1"></i> Alamat Lengkap
                         </h6>
-                        <p class="text-xs text-dark bg-light p-2 rounded mb-0" id="detailCabangAlamat">-</p>
+                        <p class="text-xs text-dark bg-light p-2 rounded mb-2" id="detailCabangAlamat">-</p>
+
+                        <h6 class="font-weight-bold text-primary text-xs text-uppercase mb-1">
+                            <i class="fas fa-map-marked-alt mr-1"></i> Lokasi Google Maps
+                        </h6>
+                        <div class="bg-light p-2 rounded mb-0" id="detailCabangMapsContainer">
+                            <span class="text-muted text-xs">-</span>
+                        </div>
                     </div>
 
                     <!-- GELOMBANG PEMUDA & DESKRIPSI -->
@@ -516,6 +546,13 @@
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Alamat Cabang / Sekretariat</label>
                                 <textarea name="alamat" class="form-control form-control-sm" rows="2" placeholder="Contoh: Jl. Raya Gesi Km 2, RT 03/RW 01, Gesi"></textarea>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label class="text-xs text-muted font-weight-bold mb-1">
+                                    <i class="fas fa-map-marked-alt text-danger mr-1"></i> Link Google Maps / Lokasi Cabang
+                                </label>
+                                <input type="text" name="maps_url" class="form-control form-control-sm" placeholder="Contoh: https://maps.app.goo.gl/... atau tautan lokasi">
+                                <small class="text-muted text-xs">Salin tautan lokasi dari aplikasi Google Maps (opsional)</small>
                             </div>
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Nama Pimpinan Cabang</label>
@@ -618,6 +655,13 @@
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Alamat Cabang / Sekretariat</label>
                                 <textarea name="alamat" id="editCabangAlamat" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label class="text-xs text-muted font-weight-bold mb-1">
+                                    <i class="fas fa-map-marked-alt text-danger mr-1"></i> Link Google Maps / Lokasi Cabang
+                                </label>
+                                <input type="text" name="maps_url" id="editCabangMapsUrl" class="form-control form-control-sm" placeholder="Contoh: https://maps.app.goo.gl/... atau tautan lokasi">
+                                <small class="text-muted text-xs">Salin tautan lokasi dari aplikasi Google Maps (opsional)</small>
                             </div>
                             <div class="form-group mb-2">
                                 <label class="text-xs text-muted font-weight-bold mb-1">Nama Pimpinan Cabang</label>
@@ -740,6 +784,7 @@
             const code         = $(this).data('code') || '-';
             const name         = $(this).data('name') || '-';
             const alamat       = $(this).data('alamat') || '-';
+            const mapsurl      = $(this).data('mapsurl') || '';
             const pimpinan     = $(this).data('pimpinan') || '-';
             const nowa         = $(this).data('nowa') || '';
             const hasGelombang = $(this).data('hasgelombang') || 'belum';
@@ -757,6 +802,17 @@
             $('#detailCabangPimpinan').text(pimpinan);
             $('#detailCabangAlamat').text(alamat);
             $('#detailCabangDesc').text(desc);
+
+            if (mapsurl) {
+                $('#detailCabangMapsContainer').html(`
+                    <a href="${mapsurl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-danger btn-xs font-weight-bold mb-1">
+                        <i class="fas fa-map-marked-alt mr-1"></i> Buka di Google Maps
+                    </a>
+                    <div class="text-xs text-muted text-break">${mapsurl}</div>
+                `);
+            } else {
+                $('#detailCabangMapsContainer').html('<span class="text-muted text-xs">-</span>');
+            }
 
             if (nowa) {
                 let clean = nowa.replace(/[^0-9]/g, '');
@@ -801,6 +857,7 @@
             const code         = $(this).data('code') || '';
             const name         = $(this).data('name') || '';
             const alamat       = $(this).data('alamat') || '';
+            const mapsurl      = $(this).data('mapsurl') || '';
             const pimpinan     = $(this).data('pimpinan') || '';
             const nowa         = $(this).data('nowa') || '';
             const hasGelombang = $(this).data('hasgelombang') || 'belum';
@@ -813,6 +870,7 @@
             $('#editCabangCode').val(code);
             $('#editCabangName').val(name);
             $('#editCabangAlamat').val(alamat);
+            $('#editCabangMapsUrl').val(mapsurl);
             $('#editCabangPimpinan').val(pimpinan);
             $('#editCabangNowa').val(nowa);
             $('#editHasGelombang').val(hasGelombang);

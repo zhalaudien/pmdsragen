@@ -35,61 +35,38 @@ final class PendataanFormTest extends CIUnitTestCase
     {
         $mockPostOrganizations = [
             'satgas' => [
-                'selected'    => 'Satgas',
-                'name'        => 'Satgas',
-                'position'    => 'Koordinator',
-                'join_year'   => '2023',
-                'description' => 'Satgas Inti',
+                'selected' => 'Satgas',
+                'name'     => 'Satgas',
             ],
             'bankom' => [
-                'name'        => 'Bankom',
-                'position'    => 'Anggota',
-                'join_year'   => '2026',
-                'description' => '',
+                'name'     => 'Bankom',
             ],
             'parkir' => [
-                'name'        => 'Parkir',
-                'position'    => 'Anggota',
-                'join_year'   => '2026',
-                'description' => '',
+                'name'     => 'Parkir',
             ],
             'pemuda' => [
-                'selected'    => 'Pemuda',
-                'name'        => 'Pemuda',
-                'position'    => 'Sie Acara',
-                'join_year'   => '2024',
-                'description' => '',
+                'selected' => 'Pemuda',
+                'name'     => 'Pemuda',
             ],
             'tim_ikhrom' => [
-                'name'        => 'Tim Ikhrom',
-                'position'    => 'Anggota',
-                'join_year'   => '2026',
-                'description' => '',
+                'name'     => 'Tim Ikhrom',
             ],
         ];
 
         $inserted = [];
         foreach ($mockPostOrganizations as $orgKey => $org) {
             if (!empty($org['selected'])) {
-                $orgName  = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
-                $position = !empty($org['position']) ? $org['position'] : 'Anggota';
-                $joinDate = !empty($org['join_year']) ? ($org['join_year'] . '-01-01') : (!empty($org['join_date']) ? $org['join_date'] : null);
-                $desc     = !empty($org['description']) ? $org['description'] : null;
+                $orgName = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
 
                 $inserted[] = [
                     'organization_name' => $orgName,
-                    'position'          => $position,
-                    'join_date'         => $joinDate,
-                    'description'       => $desc,
                 ];
             }
         }
 
         $this->assertCount(2, $inserted);
         $this->assertSame('Satgas', $inserted[0]['organization_name']);
-        $this->assertSame('Koordinator', $inserted[0]['position']);
         $this->assertSame('Pemuda', $inserted[1]['organization_name']);
-        $this->assertSame('Sie Acara', $inserted[1]['position']);
     }
 
     public function testFindDuplicateAndFindExistingMethodBehavior(): void
@@ -125,5 +102,37 @@ final class PendataanFormTest extends CIUnitTestCase
         $this->assertEquals('\App\Controllers\Pendataan::checkData', $postRoutes['pendataan/check-data']);
         $this->assertArrayHasKey('pendataan/check-duplicate', $postRoutes);
         $this->assertEquals('\App\Controllers\Pendataan::checkData', $postRoutes['pendataan/check-duplicate']);
+    }
+
+    public function testOrganisasiFieldsRemovedFromViewsAndModel(): void
+    {
+        // 1. OrganisasiModel does not allow position and join_date
+        $model = new \App\Models\OrganisasiModel();
+        $reflection = new \ReflectionClass($model);
+        $allowedProp = $reflection->getProperty('allowedFields');
+        $allowedProp->setAccessible(true);
+        $allowed = $allowedProp->getValue($model);
+
+        $this->assertNotContains('position', $allowed);
+        $this->assertNotContains('join_date', $allowed);
+        $this->assertNotContains('end_date', $allowed);
+        $this->assertContains('organization_name', $allowed);
+
+        // 2. Public form does not contain position or join_year inputs
+        $publicForm = file_get_contents(APPPATH . 'Views/pendataan/form.php');
+        $this->assertStringNotContainsString('][position]', $publicForm);
+        $this->assertStringNotContainsString('][join_year]', $publicForm);
+        $this->assertStringNotContainsString('lengkapi jabatan/peran Anda', $publicForm);
+
+        // 3. Admin pemuda form does not contain position or join_year inputs
+        $adminForm = file_get_contents(APPPATH . 'Views/admin/pemuda/form.php');
+        $this->assertStringNotContainsString('][position]', $adminForm);
+        $this->assertStringNotContainsString('][join_year]', $adminForm);
+        $this->assertStringNotContainsString('admin_org_detail_', $adminForm);
+
+        // 4. Admin detail view does not contain Masa Keanggotaan or Jabatan columns
+        $adminDetail = file_get_contents(APPPATH . 'Views/admin/pemuda/detail.php');
+        $this->assertStringNotContainsString('Masa Keanggotaan', $adminDetail);
+        $this->assertStringNotContainsString('<th>Jabatan</th>', $adminDetail);
     }
 }

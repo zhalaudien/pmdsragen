@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Biodata Pemuda') ?></title>
+    <link rel="shortcut icon" href="<?= base_url('icons/pemudamta.png') ?>" type="image/png">
+    <link rel="icon" type="image/png" href="<?= base_url('icons/pemudamta.png') ?>">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Cetak Stylesheet -->
@@ -25,10 +27,13 @@
     </div>
 
     <!-- HEADER DOKUMEN -->
-    <div class="cetak-header-box">
-        <h4 class="fw-bold mb-1">MAJELIS TAFSIR AL-QUR'AN (MTA)</h4>
-        <h5 class="fw-bold text-uppercase mb-1">PENGURUS PEMUDA MTA PERWAKILAN SRAGEN</h5>
-        <p class="mb-0 cetak-header-subtitle">Sekretariat Perwakilan Kabupaten Sragen &bull; Dokumen Data Induk Pemuda</p>
+    <div class="cetak-header-box d-flex align-items-center justify-content-center gap-3">
+        <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" style="width: 65px; height: 72px; object-fit: contain;">
+        <div class="text-center">
+            <h4 class="fw-bold mb-1 text-uppercase">MAJLIS TAFSIR AL-QUR'AN (MTA)</h4>
+            <h5 class="fw-bold text-uppercase mb-1">PENGURUS PEMUDA MTA PERWAKILAN SRAGEN</h5>
+            <p class="mb-0 cetak-header-subtitle">Sekretariat Perwakilan Kabupaten Sragen &bull; Dokumen Data Induk Pemuda</p>
+        </div>
     </div>
 
     <div class="row mb-3 align-items-center">
@@ -137,11 +142,24 @@
             <td>:</td>
             <td><?= esc($pemuda['job_status_name'] ?: '-') ?></td>
         </tr>
-        <tr>
-            <td>Profesi / Perusahaan</td>
-            <td>:</td>
-            <td><?= esc($pemuda['job_title'] ?: '-') ?> (<?= esc($pemuda['company_name'] ?: '-') ?>)</td>
-        </tr>
+        <?php if (!empty($pemuda['business_name']) || (int)($pemuda['job_status_id'] ?? 0) === 5): ?>
+            <tr>
+                <td>Nama Usaha / Bisnis</td>
+                <td>:</td>
+                <td><strong><?= esc($pemuda['business_name'] ?: ($pemuda['company_name'] ?: '-')) ?></strong> (Bidang: <?= esc($pemuda['business_field'] ?: '-') ?>)</td>
+            </tr>
+            <tr>
+                <td>Alamat & Kontak Usaha</td>
+                <td>:</td>
+                <td><?= esc($pemuda['business_address'] ?: '-') ?> &bull; CP: <?= esc($pemuda['business_contact'] ?: '-') ?><?= !empty($pemuda['business_social']) ? ' (Sosmed: ' . esc($pemuda['business_social']) . ')' : '' ?></td>
+            </tr>
+        <?php else: ?>
+            <tr>
+                <td>Profesi / Perusahaan</td>
+                <td>:</td>
+                <td><?= esc($pemuda['job_title'] ?: '-') ?> (<?= esc($pemuda['company_name'] ?: '-') ?>)</td>
+            </tr>
+        <?php endif; ?>
     </table>
 
     <!-- 4. ORGANISASI & KEAHLIAN -->
@@ -157,7 +175,7 @@
                     <?php 
                     $orgList = [];
                     foreach ($pemuda['organisasi'] as $o) {
-                        $orgList[] = $o['organization_name'] . ' (' . ($o['position'] ?: 'Anggota') . ')';
+                        $orgList[] = ucwords($o['organization_name']);
                     }
                     echo implode(', ', $orgList);
                     ?>

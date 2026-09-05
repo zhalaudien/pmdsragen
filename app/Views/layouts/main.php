@@ -14,8 +14,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Pemuda MTA">
     <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <link rel="shortcut icon" href="<?= base_url('icons/pemudamta.png') ?>" type="image/png">
+    <link rel="icon" type="image/png" href="<?= base_url('icons/pemudamta.png') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('icons/apple-touch-icon.png') ?>">
-    <link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('icons/icon-192x192.png') ?>">
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,7 +42,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="<?= base_url('/') ?>">
                 <div class="navbar-brand-icon">
-                    <i class="bi bi-people-fill fs-5"></i>
+                    <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" class="navbar-brand-img">
                 </div>
                 <div>
                     <span class="navbar-brand-title">Pemuda MTA Perwakilan Sragen</span>
@@ -105,12 +106,12 @@
                 <!-- Col 1: Profil Brand -->
                 <div class="col-lg-4 col-md-6">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <div class="rounded-circle bg-pmd-red text-white p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px; background-color: #dc2626;">
-                            <i class="bi bi-people-fill fs-5"></i>
+                        <div class="rounded-circle bg-white border p-1 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 40px; height: 40px;">
+                            <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <div>
                             <h6 class="fw-bold text-dark mb-0">Pemuda MTA Perwakilan Sragen</h6>
-                            <small class="text-muted">Majelis Tafsir Al-Qur'an (MTA)</small>
+                            <small class="text-muted">Majlis Tafsir Al-Qur'an (MTA)</small>
                         </div>
                     </div>
                     <p class="text-muted small pe-lg-3 mb-3">

@@ -82,3 +82,52 @@ if (!function_exists('toLowerTrim')) {
         return mb_strtolower($trimmed, 'UTF-8');
     }
 }
+
+if (!function_exists('formatMapsUrl')) {
+    /**
+     * Format/normalize Google Maps link or coordinates into a valid clickable URL
+     */
+    function formatMapsUrl(?string $input): ?string
+    {
+        if ($input === null) {
+            return null;
+        }
+
+        $trimmed = trim($input);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        // If user pasted an iframe embed code, extract src
+        if (stripos($trimmed, '<iframe') !== false) {
+            if (preg_match('/src=["\']([^"\']+)["\']/i', $trimmed, $matches)) {
+                $trimmed = trim($matches[1]);
+            }
+        }
+
+        // Check if already a valid full URL
+        if (preg_match('#^https?://#i', $trimmed)) {
+            return $trimmed;
+        }
+
+        // Check if starts with common maps domains without scheme
+        if (preg_match('#^(maps\.app\.goo\.gl|goo\.gl/maps|maps\.google\.|www\.google\.[a-z.]+/maps)#i', $trimmed)) {
+            return 'https://' . $trimmed;
+        }
+
+        // Check if coordinates format (e.g. -7.4244, 111.0234 or -7.4244,111.0234)
+        if (preg_match('/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/', $trimmed)) {
+            $coords = preg_replace('/\s+/', '', $trimmed);
+            return 'https://www.google.com/maps?q=' . urlencode($coords);
+        }
+
+        // If looks like domain/path (contains dot and slash)
+        if (preg_match('#^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$#', $trimmed)) {
+            return 'https://' . $trimmed;
+        }
+
+        // Otherwise fallback: search query on Google Maps
+        return 'https://www.google.com/maps/search/?api=1&query=' . urlencode($trimmed);
+    }
+}
+

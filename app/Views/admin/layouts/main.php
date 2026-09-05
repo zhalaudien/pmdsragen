@@ -13,8 +13,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Pemuda MTA Admin">
     <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <link rel="shortcut icon" href="<?= base_url('icons/pemudamta.png') ?>" type="image/png">
+    <link rel="icon" type="image/png" href="<?= base_url('icons/pemudamta.png') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('icons/apple-touch-icon.png') ?>">
-    <link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('icons/icon-192x192.png') ?>">
 
     <!-- Google Font: Source Sans Pro & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,11 +172,9 @@
     <!-- MAIN SIDEBAR CONTAINER -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Brand Logo -->
-        <a href="<?= base_url('admin/dashboard') ?>" class="brand-link">
-            <div class="brand-image img-circle elevation-2 bg-primary d-flex align-items-center justify-content-center text-white font-weight-bold" style="width: 33px; height: 33px; font-size: 15px; opacity: .95;">
-                <i class="fas fa-users"></i>
-            </div>
-            <span class="brand-text font-weight-bold pl-1" style="letter-spacing: 0.3px;">Pemuda MTA</span>
+        <a href="<?= base_url('admin/dashboard') ?>" class="brand-link d-flex align-items-center">
+            <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" class="brand-image img-circle elevation-2 bg-white" style="opacity: .95; width: 33px; height: 33px; object-fit: contain; padding: 2px;">
+            <span class="brand-text font-weight-bold pl-2" style="letter-spacing: 0.3px;">Pemuda MTA</span>
         </a>
 
         <!-- Sidebar -->

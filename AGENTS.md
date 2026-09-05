@@ -263,6 +263,7 @@ Tabel `cabang` menyimpan data struktural dan operasional setiap cabang pemuda:
 - `name`: VARCHAR(100) (Nama cabang)
 - `description`: TEXT (Deskripsi/catatan cabang)
 - `alamat`: TEXT (Alamat lengkap/sekretariat cabang)
+- `maps_url`: VARCHAR(500) (Tautan/link Google Maps atau lokasi cabang)
 - `pimpinan_nama`: VARCHAR(100) (Nama pimpinan cabang)
 - `no_wa`: VARCHAR(20) (Nomor WhatsApp/kontak pimpinan)
 - `has_gelombang`: ENUM('sudah', 'belum') (Status ketersediaan gelombang pemuda)
@@ -1655,5 +1656,131 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 
 - **Pengujian Unit (`tests/unit/MobileVersionTest.php`):**
   - Ditambahkan 10 metode pengujian unit yang memvalidasi integritas `manifest.json`, seluruh ikon PWA, service worker, halaman offline, skrip instalasi, meta tag di seluruh layout, tampilan kartu ponsel, dan aturan CSS responsif. Seluruh 69 pengujian unit (382 asersi) berhasil 100%.
+
+### 2026-09-06 — Penambahan Tautan Google Maps / Lokasi Cabang
+
+- **Penambahan Kolom Database pada Tabel `cabang`:**
+  - `maps_url` (VARCHAR 500, NULL): Tautan / link Google Maps atau koordinat lokasi cabang / sekretariat pemuda.
+- **Migration & Model:**
+  - Dibuat migration `2026-09-06-034500_AddMapsUrlToCabang.php` yang menambahkan kolom `maps_url` setelah `alamat`.
+  - Diperbarui `CabangModel.php` whitelist `$allowedFields` menyertakan `maps_url`.
+- **Helper Normalisasi URL Google Maps (`app/Common.php`):**
+  - Ditambahkan fungsi helper `formatMapsUrl(?string $input): ?string` untuk menangani berbagai bentuk masukan admin:
+    - URL penuh HTTPS/HTTP (`https://maps.app.goo.gl/...`, `https://goo.gl/maps/...`).
+    - Domain tanpa protokol (otomatis diberi prefiks `https://`).
+    - Kode sematan iframe (`<iframe src="...">` diekstrak URL-nya secara otomatis).
+    - Format koordinat lintang/bujur (dikonversi ke query pencarian Google Maps).
+    - Kata kunci lokasi umum (dikonversi ke Google Maps search URL).
+- **Controller Admin Cabang (`app/Controllers/Admin/Cabang.php`):**
+  - Whitelist aturan validasi `maps_url` (`permit_empty|max_length[500]`) pada method `simpan()` dan `update()`.
+  - Normalisasi otomatis menggunakan `formatMapsUrl()` sebelum data disimpan ke database.
+- **Tampilan Antarmuka Master Cabang (`app/Views/admin/cabang/index.php`):**
+  - **Tampilan Kartu Ponsel (`.cabang-mobile-cards`):** Ditambahkan badge/tombol buka Google Maps langsung pada informasi alamat cabang.
+  - **Tabel Desktop/Tablet:** Menampilkan badge Google Maps di kolom Alamat yang dapat diklik langsung membuka peta lokasi di tab baru.
+  - **Modal Detail Cabang:** Seksi khusus "Lokasi Google Maps" dengan tombol interaktif "Buka di Google Maps" serta teks URL tujuan.
+  - **Modal Tambah & Edit Cabang:** Formulir input "Link Google Maps / Lokasi Cabang" dengan ikon, placeholder informatif, dan petunjuk penggunaan.
+  - **JavaScript Handler:** Penyesuaian modal detail dan modal edit untuk mengisi dan menampilkan data `maps_url` secara dinamis.
+- **Pengujian Unit (`tests/unit/CabangDetailTest.php`):**
+  - Pengujian CRUD kolom `maps_url` pada `CabangModel`.
+  - Pengujian fungsi helper `formatMapsUrl` untuk berbagai jenis format link, kode iframe, koordinat, dan string kosong.
+  - Pengujian rendering elemen `maps_url` pada antarmuka master cabang.
+  - Seluruh 71 unit test (398 assertions) lulus 100%.
+
+### 2026-09-06 — Penghapusan Masa Keanggotaan & Jabatan pada Keikutsertaan Organisasi
+
+- **Pembaruan Struktur Database Tabel `organisasi`:**
+  - Dibuat migration `2026-09-06-040500_RemoveMasaKeanggotaanDanJabatanFromOrganisasi.php` yang menghapus kolom `position` (jabatan), `join_date`, dan `end_date` (masa keanggotaan).
+  - Diperbarui `OrganisasiModel.php` whitelist `$allowedFields` hanya mencakup `pemuda_id`, `organization_name`, dan `description`.
+  - Diperbarui `PemudaModel::getDetail()` pengurutan relasi organisasi diubah menjadi `orderBy('id', 'ASC')`.
+- **Formulir Pendaftaran Publik (`app/Views/pendataan/form.php`, `public/js/pendataan.js`):**
+  - Pada langkah 5 (Keikutsertaan Organisasi & Penugasan), sub-panel detail (`.org-detail-wrapper`) berisi input "Jabatan/Posisi" dan "Tahun Bergabung" dihilangkan.
+  - Pilihan organisasi kini berupa kartu centang/seleksi langsung yang elegan dan responsif.
+  - Diperbarui `public/js/pendataan.js`:
+    - Fungsi `toggleOrgDetail()` disederhanakan untuk menandai status seleksi kartu (`.selected`).
+    - Skrip review langkah 8 (`prepareReview`) menampilkan nama organisasi murni tanpa embel-embel jabatan.
+    - Pengisian otomatis (autofill) saran warga MTA langsung mencentang kartu organisasi terkait.
+- **Formulir Admin Pemuda (`app/Views/admin/pemuda/form.php`, `app/Controllers/Admin/Pemuda.php`):**
+  - Dihapus panel subform input Jabatan dan Tahun Gabung pada modal/halaman tambah & edit pemuda.
+  - Method `store()` dan `update()` di `Admin\Pemuda.php` diperbarui untuk menyimpan `organization_name` secara ringkas tanpa atribut posisi/tanggal.
+- **Tampilan Detail & Cetak Pemuda (`app/Views/admin/pemuda/detail.php`, `app/Views/admin/pemuda/cetak.php`):**
+  - Pada halaman detail pemuda, tabel riwayat organisasi dengan kolom Jabatan dan Masa Keanggotaan digantikan dengan badge daftar unit tugas/organisasi yang bersih dan rapi.
+  - Pada lembar cetak data pemuda (`cetak.php`), daftar organisasi ditampilkan murni sebagai nama-nama organisasi tanpa teks `(Anggota)`.
+- **Layanan Import Pemuda (`app/Services/PemudaImportService.php`):**
+  - Dihapus pengisian default posisi `'anggota'` saat import data organisasi dari file Excel/CSV.
+- **Pengujian Unit (`tests/unit/PendataanFormTest.php`):**
+  - Diperbarui pengujian pemrosesan organisasi `testOrganizationFilterOnlySelected`.
+  - Ditambahkan metode pengujian `testOrganisasiFieldsRemovedFromViewsAndModel` untuk memverifikasi ketiadaan field `position` dan `join_year/join_date` di form publik, form admin, view detail, dan model.
+  - Seluruh 72 unit test (408 assertions) berjalan sukses 100%.
+
+### 2026-09-06 — Penggunaan Logo Pemuda MTA sebagai Logo Utama Sistem
+
+- **Penetapan Logo Utama (`public/icons/pemudamta.png`):**
+  - Menggunakan logo resmi Pemuda MTA (`public/icons/pemudamta.png`) sebagai identitas visual utama pada seluruh antarmuka aplikasi publik dan dashboard admin.
+- **Penerapan pada Antarmuka Publik & Formulir:**
+  - **Navbar Publik (`app/Views/layouts/main.php`, `public/css/main.css`):** Menggantikan ikon font generic dengan logo resmi Pemuda MTA pada lingkaran badge putih berkontras tinggi (`.navbar-brand-icon` & `.navbar-brand-img`).
+  - **Footer Publik (`app/Views/layouts/main.php`):** Menampilkan logo Pemuda MTA pada identitas lembaga di footer halaman.
+  - **Formulir Pendataan (`app/Views/pendataan/form.php`):** Menambahkan logo resmi Pemuda MTA di atas hero header formulir untuk memperkuat kredibilitas pendaftaran.
+  - **Landing Page (`app/Views/landing.php`):** Menampilkan logo resmi pada kartu informasi portal pendataan.
+- **Penerapan pada Area Admin & Dokumen:**
+  - **Sidebar AdminLTE (`app/Views/admin/layouts/main.php`):** Menggantikan ikon generic pengguna dengan logo resmi Pemuda MTA berlatar putih melingkar di panel Brand Logo navigasi admin.
+  - **Halaman Login Admin (`app/Views/auth/login.php`):** Mengintegrasikan logo Pemuda MTA di dalam brand header kartu login (`.brand-icon`).
+  - **Lembar Cetak Biodata Pemuda (`app/Views/admin/pemuda/cetak.php`):** Menambahkan logo resmi Pemuda MTA berdampingan dengan kop surat resmi Majlis Tafsir Al-Qur'an (MTA) Perwakilan Sragen.
+- **PWA & Identitas Tab Browser:**
+  - Menambahkan `<link rel="shortcut icon">` dan `<link rel="icon">` yang mengarah ke `icons/pemudamta.png` pada seluruh layout (publik, admin, login, cetak, dan `offline.html`).
+  - Meregenerasi seluruh variasi resolusi icon PWA di `public/icons/` (`icon-72x72.png` s/d `icon-512x512.png`, `apple-touch-icon.png`, dan `maskable-icon-512x512.png`) bersumber dari master logo resmi `pemudamta.png`.
+- **Pengujian Unit (`tests/unit/MainLogoTest.php`):**
+  - Ditambahkan 5 pengujian unit untuk memvalidasi keberadaan master file logo `pemudamta.png`, tipe gambar PNG, serta referensi logo pada layout publik, layout admin, halaman login, dan kop cetak biodata.
+  - Seluruh 77 unit test (418 asersi) berhasil 100%.
+
+### 2026-09-06 — Standardisasi Penulisan Kata "Majelis" Menjadi "Majlis"
+
+- **Standardisasi Penulisan:**
+  - Mengubah seluruh kata "majelis" / "Majelis" / "MAJELIS" menjadi "majlis" / "Majlis" / "MAJLIS" (Majlis Tafsir Al-Qur'an / MTA) di seluruh kode, view, database, dan antarmuka.
+- **Pembaruan View & Template:**
+  - `app/Views/layouts/main.php`: Penulisan identitas lembaga pada footer diubah menjadi *Majlis Tafsir Al-Qur'an (MTA)*.
+  - `app/Views/admin/pemuda/cetak.php`: Kop surat resmi diubah menjadi *MAJLIS TAFSIR AL-QUR'AN (MTA)*.
+  - `app/Views/landing.php`: Teks pill hero badge dan deskripsi pengantar diubah menjadi *Majlis Tafsir Al-Qur'an (MTA)*.
+  - `app/Views/admin/homepage/index.php`: Contoh teks placeholder pada form manajemen hero badge diubah menjadi *Majlis Tafsir Al-Qur'an (MTA)*.
+- **Pembaruan Model & Nilai Default:**
+  - `app/Models/HomepageSettingModel.php`: Memperbarui nilai *default* `hero_badge`, `tentang_desc_1`, dan `faq_list` menjadi "Majlis Tafsir Al-Qur'an".
+- **Sinkronisasi Database MySQL:**
+  - Memperbarui data yang tersimpan pada tabel `homepage_settings` (`hero_badge`, `tentang_desc_1`, dan `faq_list`) di database MySQL.
+
+### 2026-09-06 — Penambahan Kolom Detail Usaha / Wirausaha pada Form Pendataan
+
+- **Penambahan Kolom Database pada Tabel `pekerjaan`:**
+  - Dibuat migration `2026-09-06-051000_AddWirausahaDetailFieldsToPekerjaan.php`.
+  - Kolom baru:
+    - `business_name` (VARCHAR 255, NULL): Nama usaha / brand / unit bisnis.
+    - `business_address` (TEXT, NULL): Alamat tempat usaha / operasional.
+    - `business_contact` (VARCHAR 50, NULL): Kontak person usaha / nomor WhatsApp bisnis.
+    - `business_social` (VARCHAR 255, NULL): Media sosial usaha (Instagram, Facebook, TikTok, Website, dll).
+- **Pembaruan Model (`PekerjaanModel.php` & `PemudaModel.php`):**
+  - Diperbarui `$allowedFields` dan callback normalisasi huruf kecil (lowercase) pada `PekerjaanModel`.
+  - Diperbarui `PemudaModel::getDetail()` dan `PemudaModel::getPaginatedScoped()` untuk menyertakan kolom detail usaha pada query select, relasi join, dan fitur pencarian multi-kolom admin.
+- **Formulir Pendataan Publik (`app/Views/pendataan/form.php` & `public/js/pendataan.js`):**
+  - **Panel Dinamis `#panel-detail-wirausaha`:** Ditampilkan secara otomatis ketika pengguna memilih status pekerjaan **Wirausaha / Pemilik Usaha** (ID `5` atau opsi berlabel wirausaha/pemilik usaha).
+  - Menyediakan input:
+    - Nama Usaha (`business_name`)
+    - Jenis / Bidang Usaha (`business_field`)
+    - Alamat Tempat Usaha (`business_address`)
+    - Kontak Person / No. WA Usaha (`business_contact`)
+    - Media Sosial Usaha (`business_social`)
+  - **Interaktivitas & UX Cerdas:**
+    - Input umum perusahaan / instansi disembunyikan saat mode wirausaha aktif untuk mencegah duplikasi pertanyaan.
+    - Input di dalam panel dinonaktifkan (`disabled = true`) saat tersembunyi agar validasi HTML5 langkah tidak terblokir.
+    - Autofill data pemuda terdaftar (`fillFormFromExisting`) memuat detail usaha secara otomatis.
+    - Ringkasan review langkah 8 (`prepareReview`) menampilkan kartu rincian usaha secara lengkap dan rapi.
+- **Formulir & Tampilan Admin Pemuda:**
+  - `app/Views/admin/pemuda/form.php`: Ditambahkan panel input dinamis detail wirausaha lengkap dengan handler JavaScript `toggleAdminWirausaha()`.
+  - `app/Controllers/Admin/Pemuda.php`: Menangani penyimpanan dan pembaruan kolom detail usaha pada method `store()` dan `update()`.
+  - `app/Views/admin/pemuda/detail.php`: Menampilkan seksi kartu informasi detail usaha lengkap dengan tautan interaktif WhatsApp bisnis (`https://wa.me/...`).
+  - `app/Views/admin/pemuda/cetak.php`: Menyertakan rincian data wirausaha pada lembar cetak biodata pemuda resmi.
+- **Pengujian Unit (`tests/unit/WirausahaDetailTest.php`):**
+  - Dibuat 5 metode pengujian unit (31 asersi) yang menguji struktur kolom database, normalisasi lowercase model, elemen form publik & admin, tampilan detail & cetak, serta fungsi toggle JavaScript.
+  - Seluruh 82 unit test proyek (449 asersi) lulus 100%.
+
+
+
 
 

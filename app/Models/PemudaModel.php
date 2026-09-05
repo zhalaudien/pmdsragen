@@ -257,6 +257,7 @@ class PemudaModel extends Model
                                   education_levels.name as education_level_name,
                                   pekerjaan.job_title,
                                   pekerjaan.company_name,
+                                  pekerjaan.business_name,
                                   job_statuses.name as job_status_name')
                         ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
                         ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')
@@ -273,14 +274,15 @@ class PemudaModel extends Model
 
         // 2. Apply filters (respecting user scope)
         if (!empty($filters['search'])) {
-            $s = trim($filters['search']);
+            $s = $filters['search'];
             $builder->groupStart()
                     ->like('pemuda.name', $s)
                     ->orLike('pemuda.registration_number', $s)
                     ->orLike('pemuda.phone', $s)
                     ->orLike('pemuda.email', $s)
-                    ->orLike('pendidikan.school_name', $s)
+                    ->orLike('pekerjaan.job_title', $s)
                     ->orLike('pekerjaan.company_name', $s)
+                    ->orLike('pekerjaan.business_name', $s)
                     ->orLike('alamat.address_detail', $s)
                     ->groupEnd();
         }
@@ -368,6 +370,10 @@ class PemudaModel extends Model
                                   pekerjaan.job_title,
                                   pekerjaan.company_name,
                                   pekerjaan.business_field,
+                                  pekerjaan.business_name,
+                                  pekerjaan.business_address,
+                                  pekerjaan.business_contact,
+                                  pekerjaan.business_social,
                                   job_statuses.name as job_status_name,
                                   creator.name as creator_name')
                         ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
@@ -393,7 +399,7 @@ class PemudaModel extends Model
 
         // Ambil relasi Organisasi
         $organisasiModel = new OrganisasiModel();
-        $pemuda['organisasi'] = $organisasiModel->where('pemuda_id', $id)->orderBy('join_date', 'DESC')->findAll();
+        $pemuda['organisasi'] = $organisasiModel->where('pemuda_id', $id)->orderBy('id', 'ASC')->findAll();
 
         // Ambil relasi Skills
         $pemudaSkillModel = new PemudaSkillModel();

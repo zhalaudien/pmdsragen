@@ -13,8 +13,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Pemuda MTA">
     <link rel="manifest" href="<?= base_url('manifest.json') ?>">
+    <link rel="shortcut icon" href="<?= base_url('icons/pemudamta.png') ?>" type="image/png">
+    <link rel="icon" type="image/png" href="<?= base_url('icons/pemudamta.png') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('icons/apple-touch-icon.png') ?>">
-    <link rel="icon" type="image/png" sizes="192x192" href="<?= base_url('icons/icon-192x192.png') ?>">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -35,8 +36,8 @@
             <div class="col-12 col-sm-9 col-md-7 col-lg-5 col-xl-4">
                 <div class="login-card shadow-lg">
                     <div class="login-header text-center">
-                        <div class="brand-icon mx-auto mb-2">
-                            <i class="bi bi-people-fill"></i>
+                        <div class="brand-icon mx-auto mb-3 bg-white p-2 shadow-sm">
+                            <img src="<?= base_url('icons/pemudamta.png') ?>" alt="Logo Pemuda MTA" style="width: 100%; height: 100%; object-fit: contain;">
                         </div>
                         <h5 class="fw-bold mb-1 text-white">Pemuda MTA Perwakilan Sragen</h5>
                         <p class="mb-0 text-white-50 small">Portal Administrator &amp; Pengurus</p>

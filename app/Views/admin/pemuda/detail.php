@@ -223,12 +223,45 @@
                             <td class="text-muted">Profesi / Jabatan</td>
                             <td class="text-dark">: <?= esc($pemuda['job_title'] ?: '-') ?></td>
                         </tr>
+                        <?php if (!empty($pemuda['business_name']) || (int)($pemuda['job_status_id'] ?? 0) === 5): ?>
+                            <tr>
+                                <td class="text-muted">Nama Usaha</td>
+                                <td class="font-weight-bold text-primary">: <?= esc($pemuda['business_name'] ?: ($pemuda['company_name'] ?: '-')) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Alamat Usaha</td>
+                                <td class="text-dark">: <?= esc($pemuda['business_address'] ?: '-') ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Kontak / CP Usaha</td>
+                                <td class="text-dark">: 
+                                    <?php if (!empty($pemuda['business_contact'])): ?>
+                                        <a href="<?= esc(formatWaNumber($pemuda['business_contact'])) ?>" target="_blank" class="text-success font-weight-bold">
+                                            <i class="fab fa-whatsapp mr-1"></i><?= esc($pemuda['business_contact']) ?>
+                                        </a>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Sosmed / Web Usaha</td>
+                                <td class="text-dark">: 
+                                    <?php if (!empty($pemuda['business_social'])): ?>
+                                        <span class="text-primary"><i class="fas fa-globe mr-1"></i><?= esc($pemuda['business_social']) ?></span>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <tr>
+                                <td class="text-muted">Instansi / Perusahaan</td>
+                                <td class="text-dark">: <?= esc($pemuda['company_name'] ?: '-') ?></td>
+                            </tr>
+                        <?php endif; ?>
                         <tr>
-                            <td class="text-muted">Instansi / Usaha</td>
-                            <td class="text-dark">: <?= esc($pemuda['company_name'] ?: '-') ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Sektor Usaha</td>
+                            <td class="text-muted">Sektor / Bidang Usaha</td>
                             <td class="text-dark">: <?= esc($pemuda['business_field'] ?: '-') ?></td>
                         </tr>
                     </tbody>
@@ -243,32 +276,16 @@
                     <i class="fas fa-users text-success mr-1"></i> Keikutsertaan Organisasi
                 </h3>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-3">
                 <?php if (empty($pemuda['organisasi'])): ?>
-                    <div class="p-3 text-center text-muted text-xs">Tidak ada riwayat organisasi yang tercatat.</div>
+                    <div class="text-center text-muted text-xs">Tidak ada keikutsertaan organisasi yang tercatat.</div>
                 <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="pl-3">Nama Organisasi</th>
-                                    <th>Jabatan</th>
-                                    <th>Masa Keanggotaan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($pemuda['organisasi'] as $org): ?>
-                                    <tr>
-                                        <td class="pl-3 font-weight-bold text-dark"><?= esc($org['organization_name']) ?></td>
-                                        <td><span class="badge badge-light border"><?= esc($org['position'] ?: 'Anggota') ?></span></td>
-                                        <td class="text-muted text-xs">
-                                            <?= $org['join_date'] ? date('Y', strtotime($org['join_date'])) : 'Aktif' ?>
-                                            <?= $org['end_date'] ? (' - ' . date('Y', strtotime($org['end_date']))) : '' ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    <div class="d-flex flex-wrap" style="gap: 8px;">
+                        <?php foreach ($pemuda['organisasi'] as $org): ?>
+                            <span class="badge badge-light border px-3 py-2 text-xs font-weight-bold text-dark shadow-none">
+                                <i class="fas fa-check-circle text-success mr-1"></i> <?= esc(ucwords($org['organization_name'])) ?>
+                            </span>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>

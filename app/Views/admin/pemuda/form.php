@@ -351,6 +351,44 @@
                                placeholder="Nama kantor atau unit usaha">
                     </div>
                 </div>
+
+                <!-- Panel Detail Wirausaha / Pemilik Usaha Admin -->
+                <div id="admin_wirausaha_panel" class="card border-primary bg-light p-3 mt-2 mb-2" style="display: none; border-radius: 8px;">
+                    <h6 class="font-weight-bold text-primary mb-2 text-xs text-uppercase">
+                        <i class="fas fa-store mr-1"></i> Detail Usaha / Kewirausahaan
+                    </h6>
+                    <div class="row">
+                        <div class="col-12 col-md-6 form-group mb-2">
+                            <label for="business_name" class="text-xs text-muted font-weight-bold">Nama Usaha / Bisnis</label>
+                            <input type="text" class="form-control form-control-sm" id="business_name" name="business_name"
+                                   value="<?= old('business_name', $pemuda['business_name'] ?? '') ?>"
+                                   placeholder="Contoh: Berkah Snack / Bengkel Motor">
+                        </div>
+                        <div class="col-12 col-md-6 form-group mb-2">
+                            <label for="business_field" class="text-xs text-muted font-weight-bold">Jenis / Bidang Usaha</label>
+                            <input type="text" class="form-control form-control-sm" id="business_field" name="business_field"
+                                   value="<?= old('business_field', $pemuda['business_field'] ?? '') ?>"
+                                   placeholder="Contoh: Kuliner, Retail, Jasa, Otomotif">
+                        </div>
+                        <div class="col-12 form-group mb-2">
+                            <label for="business_address" class="text-xs text-muted font-weight-bold">Alamat Tempat Usaha</label>
+                            <textarea class="form-control form-control-sm" id="business_address" name="business_address" rows="2"
+                                      placeholder="Alamat gerai/toko atau operasional utama usaha"><?= old('business_address', $pemuda['business_address'] ?? '') ?></textarea>
+                        </div>
+                        <div class="col-12 col-md-6 form-group mb-2">
+                            <label for="business_contact" class="text-xs text-muted font-weight-bold">Kontak / CP Usaha (WhatsApp)</label>
+                            <input type="text" class="form-control form-control-sm" id="business_contact" name="business_contact"
+                                   value="<?= old('business_contact', $pemuda['business_contact'] ?? '') ?>"
+                                   placeholder="Contoh: 081234567890">
+                        </div>
+                        <div class="col-12 col-md-6 form-group mb-2">
+                            <label for="business_social" class="text-xs text-muted font-weight-bold">Sosmed / Website Usaha (Opsional)</label>
+                            <input type="text" class="form-control form-control-sm" id="business_social" name="business_social"
+                                   value="<?= old('business_social', $pemuda['business_social'] ?? '') ?>"
+                                   placeholder="Contoh: @berkahsnack / https://...">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 5. KEIKUTSERTAAN ORGANISASI -->
@@ -363,13 +401,10 @@
                 <div class="row mb-3">
                     <?php foreach ($availableOrganizations as $org): 
                         $isOrgChecked = isset($activeOrganizations[$org['key']]['selected']);
-                        $orgPos       = $activeOrganizations[$org['key']]['position'] ?? 'Anggota';
-                        $orgYear      = $activeOrganizations[$org['key']]['join_year'] ?? date('Y');
-                        $orgDesc      = $activeOrganizations[$org['key']]['description'] ?? '';
                     ?>
                         <div class="col-12 col-lg-6 mb-3">
                             <div class="p-3 border rounded bg-light h-100">
-                                <div class="custom-control custom-checkbox mb-2">
+                                <div class="custom-control custom-checkbox mb-1">
                                     <input class="custom-control-input admin-org-check" 
                                            type="checkbox" 
                                            name="organizations[<?= $org['key'] ?>][selected]" 
@@ -377,40 +412,15 @@
                                            id="admin_org_<?= $org['key'] ?>"
                                            data-key="<?= $org['key'] ?>"
                                            <?= $isOrgChecked ? 'checked' : '' ?>>
-                                    <label class="custom-control-label font-weight-bold text-xs d-flex align-items-center justify-content-between" for="admin_org_<?= $org['key'] ?>">
+                                    <label class="custom-control-label font-weight-bold text-xs d-flex align-items-center justify-content-between cursor-pointer" for="admin_org_<?= $org['key'] ?>">
                                         <span>
                                             <i class="<?= $org['icon'] ?> mr-1"></i> <?= esc($org['title']) ?>
                                         </span>
                                         <span class="badge badge-secondary font-weight-normal"><?= esc($org['badge']) ?></span>
                                     </label>
                                 </div>
-                                <div class="text-muted text-xs mb-2"><?= esc($org['description']) ?></div>
-                                <div class="admin-org-detail border-top pt-2" id="admin_org_detail_<?= $org['key'] ?>" style="<?= $isOrgChecked ? '' : 'display: none;' ?>">
-                                    <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= esc($org['name']) ?>" <?= $isOrgChecked ? '' : 'disabled' ?>>
-                                    <div class="row">
-                                        <div class="col-7 form-group mb-1">
-                                            <label class="text-xs text-muted mb-1">Jabatan / Posisi</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   name="organizations[<?= $org['key'] ?>][position]" 
-                                                   value="<?= esc($orgPos) ?>" 
-                                                   placeholder="Anggota" <?= $isOrgChecked ? '' : 'disabled' ?>>
-                                        </div>
-                                        <div class="col-5 form-group mb-1">
-                                            <label class="text-xs text-muted mb-1">Tahun Gabung</label>
-                                            <input type="number" class="form-control form-control-sm" 
-                                                   name="organizations[<?= $org['key'] ?>][join_year]" 
-                                                   value="<?= esc($orgYear) ?>" 
-                                                   min="1990" max="<?= date('Y') ?>" <?= $isOrgChecked ? '' : 'disabled' ?>>
-                                        </div>
-                                        <div class="col-12 form-group mb-0">
-                                            <label class="text-xs text-muted mb-1">Keterangan Tambahan</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   name="organizations[<?= $org['key'] ?>][description]" 
-                                                   value="<?= esc($orgDesc) ?>" 
-                                                   placeholder="Opsional" <?= $isOrgChecked ? '' : 'disabled' ?>>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input type="hidden" name="organizations[<?= $org['key'] ?>][name]" value="<?= esc($org['name']) ?>">
+                                <div class="text-muted text-xs ms-4"><?= esc($org['description']) ?></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -593,22 +603,20 @@
             });
         });
 
-        // Organization toggle in Admin Form
-        function toggleAdminOrg(key) {
-            const isChecked = $('#admin_org_' + key).is(':checked');
-            const $detail = $('#admin_org_detail_' + key);
-            if (isChecked) {
-                $detail.slideDown(150);
-                $detail.find('input, select').prop('disabled', false);
+        // Toggle Wirausaha Detail Panel
+        function toggleAdminWirausaha() {
+            const statusVal = $('#job_status_id').val();
+            const textVal = $('#job_status_id option:selected').text().toLowerCase();
+            const isWirausaha = (statusVal == '5') || textVal.includes('wirausaha') || textVal.includes('pemilik usaha');
+            if (isWirausaha) {
+                $('#admin_wirausaha_panel').slideDown(200);
             } else {
-                $detail.slideUp(150);
-                $detail.find('input, select').prop('disabled', true);
+                $('#admin_wirausaha_panel').slideUp(200);
             }
         }
+        $('#job_status_id').on('change', toggleAdminWirausaha);
+        toggleAdminWirausaha();
 
-        $('.admin-org-check').on('change', function () {
-            toggleAdminOrg($(this).data('key'));
-        });
 
         // MTA Lookup Search & Autofill
         $('#formSearchLookupMta').on('submit', function(e) {

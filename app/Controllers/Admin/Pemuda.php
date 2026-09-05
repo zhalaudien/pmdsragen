@@ -395,12 +395,34 @@ class Pemuda extends BaseController
             ]);
 
             // 4. Insert Pekerjaan
+            $adminJobStatusId = (int) $this->request->getPost('job_status_id');
+            $adminBizName     = toLowerTrim($this->request->getPost('business_name'));
+            $adminBizField    = toLowerTrim($this->request->getPost('business_field'));
+            $adminBizAddress  = toLowerTrim($this->request->getPost('business_address'));
+            $adminBizContact  = toLowerTrim($this->request->getPost('business_contact'));
+            $adminBizSocial   = toLowerTrim($this->request->getPost('business_social'));
+            $adminJobTitle    = toLowerTrim($this->request->getPost('job_title'));
+            $adminCompName    = toLowerTrim($this->request->getPost('company_name'));
+
+            if (($adminJobStatusId === 5 || !empty($adminBizName))) {
+                if (empty($adminCompName) && !empty($adminBizName)) {
+                    $adminCompName = $adminBizName;
+                }
+                if (empty($adminJobTitle)) {
+                    $adminJobTitle = 'owner / pengelola usaha';
+                }
+            }
+
             $this->pekerjaanModel->insert([
-                'pemuda_id'      => $pemudaId,
-                'job_status_id'  => (int) $this->request->getPost('job_status_id'),
-                'job_title'      => toLowerTrim($this->request->getPost('job_title')),
-                'company_name'   => toLowerTrim($this->request->getPost('company_name')),
-                'business_field' => toLowerTrim($this->request->getPost('business_field')),
+                'pemuda_id'        => $pemudaId,
+                'job_status_id'    => $adminJobStatusId,
+                'job_title'        => $adminJobTitle,
+                'company_name'     => $adminCompName,
+                'business_field'   => $adminBizField,
+                'business_name'    => $adminBizName,
+                'business_address' => $adminBizAddress,
+                'business_contact' => $adminBizContact,
+                'business_social'  => $adminBizSocial,
             ]);
 
             // 5. Insert Organisasi
@@ -408,17 +430,11 @@ class Pemuda extends BaseController
             if (!empty($organizations) && is_array($organizations)) {
                 foreach ($organizations as $orgKey => $org) {
                     if (!empty($org['selected'])) {
-                        $orgName  = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
-                        $position = !empty($org['position']) ? $org['position'] : 'Anggota';
-                        $joinDate = !empty($org['join_year']) ? ($org['join_year'] . '-01-01') : (!empty($org['join_date']) ? $org['join_date'] : null);
-                        $desc     = !empty($org['description']) ? $org['description'] : null;
+                        $orgName = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
 
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
                             'organization_name' => mb_strtolower(trim($orgName), 'UTF-8'),
-                            'position'          => mb_strtolower(trim($position), 'UTF-8'),
-                            'join_date'         => $joinDate,
-                            'description'       => toLowerTrim($desc),
                         ]);
                     }
                 }
@@ -433,7 +449,6 @@ class Pemuda extends BaseController
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
                             'organization_name' => mb_strtolower(trim($name), 'UTF-8'),
-                            'position'          => 'anggota',
                         ]);
                     }
                 }
@@ -590,11 +605,8 @@ class Pemuda extends BaseController
                 }
                 if ($matchedKey) {
                     $activeOrgs[$matchedKey] = [
-                        'selected'    => true,
-                        'name'        => $o['organization_name'],
-                        'position'    => $o['position'] ?? 'Anggota',
-                        'join_year'   => !empty($o['join_date']) ? date('Y', strtotime($o['join_date'])) : date('Y'),
-                        'description' => $o['description'] ?? '',
+                        'selected' => true,
+                        'name'     => $o['organization_name'],
                     ];
                 } else {
                     $otherOrgsList[] = $o['organization_name'];
@@ -776,13 +788,35 @@ class Pemuda extends BaseController
             }
 
             // 4. Update/Insert Pekerjaan
+            $adminJobStatusId = (int) $this->request->getPost('job_status_id');
+            $adminBizName     = toLowerTrim($this->request->getPost('business_name'));
+            $adminBizField    = toLowerTrim($this->request->getPost('business_field'));
+            $adminBizAddress  = toLowerTrim($this->request->getPost('business_address'));
+            $adminBizContact  = toLowerTrim($this->request->getPost('business_contact'));
+            $adminBizSocial   = toLowerTrim($this->request->getPost('business_social'));
+            $adminJobTitle    = toLowerTrim($this->request->getPost('job_title'));
+            $adminCompName    = toLowerTrim($this->request->getPost('company_name'));
+
+            if (($adminJobStatusId === 5 || !empty($adminBizName))) {
+                if (empty($adminCompName) && !empty($adminBizName)) {
+                    $adminCompName = $adminBizName;
+                }
+                if (empty($adminJobTitle)) {
+                    $adminJobTitle = 'owner / pengelola usaha';
+                }
+            }
+
             $pekerjaan = $this->pekerjaanModel->where('pemuda_id', $id)->first();
             $pekerjaanData = [
-                'pemuda_id'      => $id,
-                'job_status_id'  => (int) $this->request->getPost('job_status_id'),
-                'job_title'      => toLowerTrim($this->request->getPost('job_title')),
-                'company_name'   => toLowerTrim($this->request->getPost('company_name')),
-                'business_field' => toLowerTrim($this->request->getPost('business_field')),
+                'pemuda_id'        => $id,
+                'job_status_id'    => $adminJobStatusId,
+                'job_title'        => $adminJobTitle,
+                'company_name'     => $adminCompName,
+                'business_field'   => $adminBizField,
+                'business_name'    => $adminBizName,
+                'business_address' => $adminBizAddress,
+                'business_contact' => $adminBizContact,
+                'business_social'  => $adminBizSocial,
             ];
             if ($pekerjaan) {
                 $this->pekerjaanModel->update($pekerjaan['id'], $pekerjaanData);
@@ -796,17 +830,11 @@ class Pemuda extends BaseController
             if (!empty($organizations) && is_array($organizations)) {
                 foreach ($organizations as $orgKey => $org) {
                     if (!empty($org['selected'])) {
-                        $orgName  = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
-                        $position = !empty($org['position']) ? $org['position'] : 'Anggota';
-                        $joinDate = !empty($org['join_year']) ? ($org['join_year'] . '-01-01') : (!empty($org['join_date']) ? $org['join_date'] : null);
-                        $desc     = !empty($org['description']) ? $org['description'] : null;
+                        $orgName = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
 
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $id,
                             'organization_name' => mb_strtolower(trim($orgName), 'UTF-8'),
-                            'position'          => mb_strtolower(trim($position), 'UTF-8'),
-                            'join_date'         => $joinDate,
-                            'description'       => toLowerTrim($desc),
                         ]);
                     }
                 }
@@ -820,7 +848,6 @@ class Pemuda extends BaseController
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $id,
                             'organization_name' => mb_strtolower(trim($name), 'UTF-8'),
-                            'position'          => 'anggota',
                         ]);
                     }
                 }

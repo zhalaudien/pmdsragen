@@ -17,6 +17,10 @@ class PekerjaanModel extends Model
         'job_title',
         'company_name',
         'business_field',
+        'business_name',
+        'business_address',
+        'business_contact',
+        'business_social',
     ];
 
     // Callbacks
@@ -26,7 +30,15 @@ class PekerjaanModel extends Model
     protected function formatLowercaseFields(array $data): array
     {
         if (isset($data['data']) && is_array($data['data'])) {
-            $fieldsToLower = ['job_title', 'company_name', 'business_field'];
+            $fieldsToLower = [
+                'job_title', 
+                'company_name', 
+                'business_field',
+                'business_name',
+                'business_address',
+                'business_contact',
+                'business_social',
+            ];
             foreach ($fieldsToLower as $f) {
                 if (array_key_exists($f, $data['data']) && is_string($data['data'][$f])) {
                     $trimmed = trim($data['data'][$f]);

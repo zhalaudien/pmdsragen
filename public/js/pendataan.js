@@ -442,6 +442,22 @@ function populateExistingData(pemuda) {
     const fieldEl = document.getElementById('business_field');
     if (fieldEl) fieldEl.value = pemuda.business_field || '';
 
+    // Business details (Wirausaha)
+    const bizNameEl = document.getElementById('business_name');
+    if (bizNameEl) bizNameEl.value = pemuda.business_name || '';
+
+    const bizFieldWirausahaEl = document.getElementById('business_field_wirausaha');
+    if (bizFieldWirausahaEl) bizFieldWirausahaEl.value = pemuda.business_field || '';
+
+    const bizAddressEl = document.getElementById('business_address');
+    if (bizAddressEl) bizAddressEl.value = pemuda.business_address || '';
+
+    const bizContactEl = document.getElementById('business_contact');
+    if (bizContactEl) bizContactEl.value = pemuda.business_contact || '';
+
+    const bizSocialEl = document.getElementById('business_social');
+    if (bizSocialEl) bizSocialEl.value = pemuda.business_social || '';
+
     // 6. Organisasi
     document.querySelectorAll('.org-toggle-check').forEach(chk => {
         chk.checked = false;
@@ -474,15 +490,6 @@ function populateExistingData(pemuda) {
                 if (chk) {
                     chk.checked = true;
                     toggleOrgDetail(matchedKey);
-                    const posInput = document.querySelector(`input[name="organizations[${matchedKey}][position]"]`);
-                    if (posInput && org.position) posInput.value = org.position;
-                    const yearInput = document.querySelector(`input[name="organizations[${matchedKey}][join_year]"]`);
-                    if (yearInput && org.join_date) {
-                        const parsedYear = new Date(org.join_date).getFullYear();
-                        if (!isNaN(parsedYear)) yearInput.value = parsedYear;
-                    }
-                    const descInput = document.querySelector(`input[name="organizations[${matchedKey}][description]"]`);
-                    if (descInput && org.description) descInput.value = org.description;
                 }
             } else if (org.organization_name) {
                 otherOrgs.push(org.organization_name);
@@ -802,6 +809,7 @@ function validateStep(step) {
     let isValid = true;
 
     inputs.forEach(input => {
+        if (input.disabled || input.offsetParent === null) return;
         const tsWrapper = input.nextElementSibling && input.nextElementSibling.classList.contains('ts-wrapper') 
                           ? input.nextElementSibling 
                           : null;
@@ -893,20 +901,82 @@ function toggleSkillLevel(skillId) {
     }
 }
 
-// Handle job status toggles
+// Handle job status toggles & detail wirausaha panel
 function handleJobStatusChange(statusId) {
-    const isNotWorking = (statusId === '1'); // Belum Bekerja
+    const statusStr = statusId ? statusId.toString() : '';
+    const isNotWorking = (statusStr === '1'); // Belum Bekerja
     
-    const titleWrapper = document.getElementById('wrapper-job-title');
-    const compWrapper = document.getElementById('wrapper-company-name');
-    const fieldWrapper = document.getElementById('wrapper-business-field');
+    const selectEl = document.getElementById('job_status_id');
+    let selectedText = '';
+    if (selectEl && selectEl.selectedIndex >= 0) {
+        selectedText = selectEl.options[selectEl.selectedIndex].text.toLowerCase();
+    }
+    const isWirausaha = (statusStr === '5') || selectedText.includes('wirausaha') || selectedText.includes('pemilik usaha');
+
+    const titleWrapper   = document.getElementById('wrapper-job-title');
+    const compWrapper    = document.getElementById('wrapper-company-name');
+    const fieldWrapper   = document.getElementById('wrapper-business-field');
+    const wirausahaPanel = document.getElementById('panel-detail-wirausaha');
+
+    if (wirausahaPanel) {
+        if (isWirausaha) {
+            wirausahaPanel.style.display = 'block';
+            wirausahaPanel.querySelectorAll('input, textarea').forEach(el => {
+                el.disabled = false;
+            });
+
+            // Mark required on core business inputs
+            const reqIds = ['business_name', 'business_field_wirausaha', 'business_address', 'business_contact'];
+            reqIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.setAttribute('required', 'required');
+            });
+
+            // Hide standard company and sector wrappers for cleaner UI
+            if (compWrapper) compWrapper.style.display = 'none';
+            if (fieldWrapper) {
+                fieldWrapper.style.display = 'none';
+                const fInput = document.getElementById('business_field');
+                if (fInput) fInput.disabled = true;
+            }
+            if (titleWrapper) {
+                titleWrapper.style.display = 'block';
+                titleWrapper.style.opacity = '1';
+                const jobTitleInput = document.getElementById('job_title');
+                if (jobTitleInput && !jobTitleInput.value.trim()) {
+                    jobTitleInput.value = 'Owner / Pengelola Usaha';
+                }
+            }
+        } else {
+            wirausahaPanel.style.display = 'none';
+            wirausahaPanel.querySelectorAll('input, textarea').forEach(el => {
+                el.disabled = true;
+                el.removeAttribute('required');
+                el.classList.remove('is-invalid');
+            });
+
+            if (compWrapper) compWrapper.style.display = 'block';
+            if (fieldWrapper) {
+                fieldWrapper.style.display = 'block';
+                const fInput = document.getElementById('business_field');
+                if (fInput) fInput.disabled = false;
+            }
+            if (titleWrapper) {
+                titleWrapper.style.display = 'block';
+                const jobTitleInput = document.getElementById('job_title');
+                if (jobTitleInput && jobTitleInput.value === 'Owner / Pengelola Usaha') {
+                    jobTitleInput.value = '';
+                }
+            }
+        }
+    }
 
     if (titleWrapper && compWrapper && fieldWrapper) {
         if (isNotWorking) {
             titleWrapper.style.opacity = '0.5';
             compWrapper.style.opacity = '0.5';
             fieldWrapper.style.opacity = '0.5';
-        } else {
+        } else if (!isWirausaha) {
             titleWrapper.style.opacity = '1';
             compWrapper.style.opacity = '1';
             fieldWrapper.style.opacity = '1';
@@ -1020,21 +1090,37 @@ function prepareReview() {
     // Pekerjaan
     const jobStatusEl = document.getElementById('job_status_id');
     const jobStatus = jobStatusEl ? (jobStatusEl.options[jobStatusEl.selectedIndex]?.text || '-') : '-';
+    const statusVal = jobStatusEl ? jobStatusEl.value : '';
+    const isWirausahaReview = (statusVal === '5') || jobStatus.toLowerCase().includes('wirausaha') || jobStatus.toLowerCase().includes('pemilik usaha');
+
     const jobTitle = document.getElementById('job_title')?.value || '';
     const compName = document.getElementById('company_name')?.value || '';
     const revJob = document.getElementById('rev_job');
     if (revJob) {
-        revJob.innerText = `${jobStatus} ${jobTitle ? ' | ' + jobTitle : ''} ${compName ? ' di ' + compName : ''}`;
+        if (isWirausahaReview) {
+            const bizName = document.getElementById('business_name')?.value || '';
+            const bizField = document.getElementById('business_field_wirausaha')?.value || '';
+            const bizAddress = document.getElementById('business_address')?.value || '';
+            const bizContact = document.getElementById('business_contact')?.value || '';
+            const bizSocial = document.getElementById('business_social')?.value || '';
+
+            let details = `${jobStatus}`;
+            if (bizName) details += ` | Usaha: ${bizName}`;
+            if (bizField) details += ` (${bizField})`;
+            if (bizAddress) details += ` - Alamat: ${bizAddress}`;
+            if (bizContact) details += ` - CP: ${bizContact}`;
+            if (bizSocial) details += ` - Sosmed: ${bizSocial}`;
+            revJob.innerText = details;
+        } else {
+            revJob.innerText = `${jobStatus} ${jobTitle ? ' | ' + jobTitle : ''} ${compName ? ' di ' + compName : ''}`;
+        }
     }
 
     // Organisasi / Divisi
     const checkedOrgs = [];
     document.querySelectorAll('.org-toggle-check:checked').forEach(chk => {
         const title = chk.getAttribute('data-title') || chk.value;
-        const orgKey = chk.getAttribute('data-key');
-        const posInput = document.querySelector(`input[name="organizations[${orgKey}][position]"]`);
-        const pos = posInput && posInput.value.trim() ? posInput.value.trim() : '';
-        checkedOrgs.push(pos && pos !== 'Anggota' ? `${title} (${pos})` : title);
+        checkedOrgs.push(title);
     });
     const otherOrgInput = document.querySelector('input[name="other_organization"]');
     if (otherOrgInput && otherOrgInput.value.trim()) {
@@ -1074,6 +1160,12 @@ function prepareReview() {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Searchable Dropdowns (Tom Select)
     initSearchableSelects();
+
+    // Initialize Job Status toggle if already selected (e.g. from old input / refresh)
+    const initialJobStatus = document.getElementById('job_status_id');
+    if (initialJobStatus && initialJobStatus.value) {
+        handleJobStatusChange(initialJobStatus.value);
+    }
 
     // Input constraints (Digits only for Phone)
     const phoneInput = document.getElementById('phone');

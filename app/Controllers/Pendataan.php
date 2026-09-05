@@ -109,6 +109,11 @@ class Pendataan extends BaseController
             'school_name'        => 'required|min_length[3]|max_length[150]',
             'education_status'   => 'required|in_list[sedang_sekolah,lulus,putus_sekolah]',
             'job_status_id'      => 'required',
+            'business_name'      => 'permit_empty|max_length[150]',
+            'business_field'     => 'permit_empty|max_length[150]',
+            'business_address'   => 'permit_empty|max_length[500]',
+            'business_contact'   => 'permit_empty|max_length[50]',
+            'business_social'    => 'permit_empty|max_length[255]',
         ];
 
         if (!$this->validate($rules)) {
@@ -231,12 +236,35 @@ class Pendataan extends BaseController
             }
 
             // 6. Insert / Update Pekerjaan
+            $jobStatusId     = (int) $this->request->getPost('job_status_id');
+            $businessName    = toLowerTrim($this->request->getPost('business_name'));
+            $businessField   = toLowerTrim($this->request->getPost('business_field'));
+            $businessAddress = toLowerTrim($this->request->getPost('business_address'));
+            $businessContact = toLowerTrim($this->request->getPost('business_contact'));
+            $businessSocial  = toLowerTrim($this->request->getPost('business_social'));
+            $jobTitle        = toLowerTrim($this->request->getPost('job_title'));
+            $companyName     = toLowerTrim($this->request->getPost('company_name'));
+
+            $isWirausaha = ($jobStatusId === 5) || !empty($businessName);
+            if ($isWirausaha) {
+                if (empty($companyName) && !empty($businessName)) {
+                    $companyName = $businessName;
+                }
+                if (empty($jobTitle)) {
+                    $jobTitle = 'owner / pengelola usaha';
+                }
+            }
+
             $pekerjaanData = [
-                'pemuda_id'      => $pemudaId,
-                'job_status_id'  => (int) $this->request->getPost('job_status_id'),
-                'job_title'      => toLowerTrim($this->request->getPost('job_title')),
-                'company_name'   => toLowerTrim($this->request->getPost('company_name')),
-                'business_field' => toLowerTrim($this->request->getPost('business_field')),
+                'pemuda_id'        => $pemudaId,
+                'job_status_id'    => $jobStatusId,
+                'job_title'        => $jobTitle,
+                'company_name'     => $companyName,
+                'business_field'   => $businessField,
+                'business_name'    => $businessName,
+                'business_address' => $businessAddress,
+                'business_contact' => $businessContact,
+                'business_social'  => $businessSocial,
             ];
 
             $existingPekerjaan = $this->pekerjaanModel->where('pemuda_id', $pemudaId)->first();
@@ -252,17 +280,11 @@ class Pendataan extends BaseController
             if (!empty($organizations) && is_array($organizations)) {
                 foreach ($organizations as $orgKey => $org) {
                     if (!empty($org['selected'])) {
-                        $orgName  = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
-                        $position = !empty($org['position']) ? $org['position'] : 'Anggota';
-                        $joinDate = !empty($org['join_year']) ? ($org['join_year'] . '-01-01') : (!empty($org['join_date']) ? $org['join_date'] : null);
-                        $desc     = !empty($org['description']) ? $org['description'] : null;
+                        $orgName = !empty($org['name']) ? $org['name'] : (is_string($org['selected']) ? $org['selected'] : ucfirst($orgKey));
 
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
                             'organization_name' => mb_strtolower(trim($orgName), 'UTF-8'),
-                            'position'          => mb_strtolower(trim($position), 'UTF-8'),
-                            'join_date'         => $joinDate,
-                            'description'       => toLowerTrim($desc),
                         ]);
                     }
                 }
@@ -277,7 +299,6 @@ class Pendataan extends BaseController
                         $this->organisasiModel->insert([
                             'pemuda_id'         => $pemudaId,
                             'organization_name' => mb_strtolower(trim($name), 'UTF-8'),
-                            'position'          => 'anggota',
                         ]);
                     }
                 }

@@ -14,9 +14,6 @@ class OrganisasiModel extends Model
     protected $allowedFields    = [
         'pemuda_id',
         'organization_name',
-        'position',
-        'join_date',
-        'end_date',
         'description',
     ];
 
@@ -27,7 +24,7 @@ class OrganisasiModel extends Model
     protected function formatLowercaseFields(array $data): array
     {
         if (isset($data['data']) && is_array($data['data'])) {
-            $fieldsToLower = ['organization_name', 'position', 'description'];
+            $fieldsToLower = ['organization_name', 'description'];
             foreach ($fieldsToLower as $f) {
                 if (array_key_exists($f, $data['data']) && is_string($data['data'][$f])) {
                     $trimmed = trim($data['data'][$f]);

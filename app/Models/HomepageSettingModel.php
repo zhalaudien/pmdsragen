@@ -35,7 +35,7 @@ class HomepageSettingModel extends Model
                 'group' => 'hero',
                 'label' => 'Badge Header Hero',
                 'type'  => 'text',
-                'value' => "Majelis Tafsir Al-Qur'an (MTA) Perwakilan Sragen",
+                'value' => "Majlis Tafsir Al-Qur'an (MTA) Perwakilan Sragen",
             ],
             'hero_title' => [
                 'group' => 'hero',
@@ -123,7 +123,7 @@ class HomepageSettingModel extends Model
                 'group' => 'tentang',
                 'label' => 'Paragraf 1 Tentang',
                 'type'  => 'textarea',
-                'value' => "Pemuda MTA Perwakilan Sragen adalah wadah pembinaan, pengkaderan, dan penggerak kegiatan generasi muda Majelis Tafsir Al-Qur'an di tingkat Kabupaten Sragen.",
+                'value' => "Pemuda MTA Perwakilan Sragen adalah wadah pembinaan, pengkaderan, dan penggerak kegiatan generasi muda Majlis Tafsir Al-Qur'an di tingkat Kabupaten Sragen.",
             ],
             'tentang_desc_2' => [
                 'group' => 'tentang',
@@ -313,7 +313,7 @@ class HomepageSettingModel extends Model
                 'value' => json_encode([
                     [
                         'q' => 'Siapa saja yang wajib mengisi formulir pendataan ini?',
-                        'a' => "Seluruh pemuda dan pemudi warga binaan Majelis Tafsir Al-Qur'an (MTA) yang berdomisili atau beraktivitas di seluruh cabang se-Kabupaten Sragen diharapkan mengisi form pendataan ini.",
+                        'a' => "Seluruh pemuda dan pemudi warga binaan Majlis Tafsir Al-Qur'an (MTA) yang berdomisili atau beraktivitas di seluruh cabang se-Kabupaten Sragen diharapkan mengisi form pendataan ini.",
                     ],
                     [
                         'q' => 'Bagaimana jika saya belum mengetahui cabang MTA saya?',
