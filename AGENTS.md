@@ -1823,3 +1823,25 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Menampilkan indikator statis bahwa data hasil import berstatus "Belum Terverifikasi (Pending)" dan akan diverifikasi otomatis saat proses sinkronisasi MTA Pusat dijalankan.
   - Memperbarui petunjuk format spreadsheet pada sheet panduan template Excel (`PemudaImportService::generateTemplate()`).
 
+### 2026-09-07 — Pembuatan Menu Export Kustom Data Pemuda (Pilihan Elemen, Bakat, Minat, Filter Lengkap)
+
+- **Menu & Halaman Ekspor Kustom (`app/Views/admin/pemuda/export.php` & `app/Views/admin/layouts/main.php`):**
+  - Disediakan menu "Export Data" pada sidebar admin (`admin/pemuda/export`) yang dapat diakses oleh semua role sesuai scope masing-masing.
+  - Fitur kustomisasi elemen data (kolom) fleksibel yang terbagi dalam 7 kategori: Data Pribadi, Wilayah & Cabang, Alamat & Domisili, Pendidikan, Pekerjaan & Wirausaha, Organisasi / Bakat / Minat, serta Status & Sistem.
+  - Disediakan tombol preset cepat: Standar (13 kolom), Lengkap/Semua (37 kolom), Kontak & Alamat (12 kolom), Bakat & Potensi (13 kolom), serta Wirausaha / Usaha (12 kolom).
+  - Saringan khusus Bakat & Keahlian (Skills) dan Minat (Interests) dengan kotak pencarian interaktif dan multi-seleksi.
+  - Filter demografi dan wilayah komprehensif: Wilayah & Cabang (dependent dropdown AJAX), Jenis Kelamin, Status Verifikasi, Status Pekerjaan, Jenjang Pendidikan, Rentang Usia (min & max), Riwayat Organisasi, Status Data, dan Periode Registrasi.
+  - Penghitung data real-time (*live count preview*) via AJAX (`admin/pemuda/export/count`) saat filter diubah.
+  - Pilihan format unduhan: Microsoft Excel (`.xlsx`) dengan styling rapi dan Comma-Separated Values (`.csv`) UTF-8 BOM.
+- **Service Ekspor (`app/Services/PemudaExportService.php`):**
+  - Membangun file spreadsheet Excel secara native menggunakan PhpSpreadsheet dengan header hijau emerald, border rapi, auto-fit lebar kolom, dan pemformatan teks nomor telepon.
+  - Mengimplementasikan batch relational loading untuk tabel `organisasi`, `pemuda_skills`, dan `pemuda_interests` guna efisiensi query.
+  - Menyediakan `streamCsv()` untuk keluaran CSV efisien dan `countFiltered()` untuk AJAX counter.
+- **Model Query Builder (`app/Models/PemudaModel.php`):**
+  - Memperkaya `getFilteredQuery()` dengan filter `skill_id` (tunggal/array), `interest_id` (tunggal/array), `organization_name`, `min_age`, dan `max_age`.
+- **Controller & Routing (`app/Controllers/Admin/Pemuda.php` & `app/Config/Routes.php`):**
+  - Registrasi rute GET `admin/pemuda/export`, POST `admin/pemuda/export` (unduh), dan GET `admin/pemuda/export/count`.
+  - Penegakan otorisasi dan scope: `admin_wilayah` hanya mengekspor wilayahnya; `admin_cabang` hanya mengekspor cabangnya; `superadmin` dapat mengekspor seluruh atau sebagian data.
+- **Pengujian Unit (`tests/unit/PemudaExportTest.php`):**
+  - 5 unit tests (133 assertions) berhasil menguji registrasi rute, struktur kategori & preset kolom, pembuatan spreadsheet Excel, filtering bakat/minat model, dan batasan scope role.
+

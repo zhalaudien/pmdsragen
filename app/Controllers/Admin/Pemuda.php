@@ -19,6 +19,7 @@ use App\Models\PemudaInterestModel;
 use App\Models\DistrictModel;
 use App\Models\VillageModel;
 use App\Services\PemudaImportService;
+use App\Services\PemudaExportService;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Config\Database;
 
@@ -1022,136 +1023,199 @@ class Pemuda extends BaseController
     }
 
     /**
-     * Export Data Pemuda ke File Excel / CSV Berdasarkan Filter Aktif
+     * Helper untuk mengekstrak dan membatasi filter ekspor sesuai role user
      */
-    public function export()
+    protected function extractExportFilters(): array
     {
         $scope = $this->getScope();
 
+        $skillId = $this->request->getVar('skill_id');
+        if (is_array($skillId)) {
+            $skillId = array_values(array_filter(array_map('intval', $skillId)));
+            if (empty($skillId)) {
+                $skillId = null;
+            }
+        } elseif (!empty($skillId)) {
+            $skillId = (int) $skillId;
+        } else {
+            $skillId = null;
+        }
+
+        $interestId = $this->request->getVar('interest_id');
+        if (is_array($interestId)) {
+            $interestId = array_values(array_filter(array_map('intval', $interestId)));
+            if (empty($interestId)) {
+                $interestId = null;
+            }
+        } elseif (!empty($interestId)) {
+            $interestId = (int) $interestId;
+        } else {
+            $interestId = null;
+        }
+
         $filters = [
-            'search'             => $this->request->getGet('search'),
-            'wilayah_id'         => $this->request->getGet('wilayah_id'),
-            'cabang_id'          => $this->request->getGet('cabang_id'),
-            'gender'             => $this->request->getGet('gender'),
-            'marital_status'     => $this->request->getGet('marital_status'),
-            'blood_type'         => $this->request->getGet('blood_type'),
-            'status_verifikasi'  => $this->request->getGet('status_verifikasi'),
-            'status_data'        => $this->request->getGet('status_data'),
-            'education_level_id' => $this->request->getGet('education_level_id'),
-            'job_status_id'      => $this->request->getGet('job_status_id'),
-            'start_date'         => $this->request->getGet('start_date'),
-            'end_date'           => $this->request->getGet('end_date'),
+            'search'             => trim((string) $this->request->getVar('search')),
+            'wilayah_id'         => $this->request->getVar('wilayah_id') ? (int) $this->request->getVar('wilayah_id') : null,
+            'cabang_id'          => $this->request->getVar('cabang_id') ? (int) $this->request->getVar('cabang_id') : null,
+            'gender'             => $this->request->getVar('gender') ?: null,
+            'marital_status'     => $this->request->getVar('marital_status') ?: null,
+            'blood_type'         => $this->request->getVar('blood_type') ?: null,
+            'status_verifikasi'  => $this->request->getVar('status_verifikasi') ?: null,
+            'status_data'        => $this->request->getVar('status_data') ?: 'active',
+            'education_level_id' => $this->request->getVar('education_level_id') ? (int) $this->request->getVar('education_level_id') : null,
+            'job_status_id'      => $this->request->getVar('job_status_id') ? (int) $this->request->getVar('job_status_id') : null,
+            'skill_id'           => $skillId,
+            'interest_id'        => $interestId,
+            'organization_name'  => trim((string) $this->request->getVar('organization_name')),
+            'min_age'            => ($this->request->getVar('min_age') !== null && $this->request->getVar('min_age') !== '') ? (int) $this->request->getVar('min_age') : null,
+            'max_age'            => ($this->request->getVar('max_age') !== null && $this->request->getVar('max_age') !== '') ? (int) $this->request->getVar('max_age') : null,
+            'start_date'         => $this->request->getVar('start_date') ?: null,
+            'end_date'           => $this->request->getVar('end_date') ?: null,
         ];
 
         // Enforce scope on export filters
         if ($scope['role'] === 'admin_wilayah') {
-            $filters['wilayah_id'] = $scope['wilayah_id'];
+            $filters['wilayah_id'] = (int) $scope['wilayah_id'];
         } elseif ($scope['role'] === 'admin_cabang') {
-            $filters['wilayah_id'] = $scope['wilayah_id'];
-            $filters['cabang_id']  = $scope['cabang_id'];
+            $filters['wilayah_id'] = (int) $scope['wilayah_id'];
+            $filters['cabang_id']  = (int) $scope['cabang_id'];
         }
 
-        if ($filters['status_data'] === 'all') {
+        if (isset($filters['status_data']) && $filters['status_data'] === 'all') {
             unset($filters['status_data']);
         }
 
-        $query = $this->pemudaModel->getFilteredQuery($filters, $scope)
-                                   ->orderBy('pemuda.created_at', 'DESC');
-        $rows  = $query->findAll();
+        return array_filter($filters, function ($v) {
+            return $v !== null && $v !== '';
+        });
+    }
 
-        $filename = 'Export_Data_Pemuda_' . date('Ymd_His') . '.csv';
-
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        $output = fopen('php://output', 'w');
-
-        // UTF-8 BOM for Microsoft Excel compatibility
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        // Header columns
-        fputcsv($output, [
-            'No',
-            'No Registrasi',
-            'Nama Lengkap',
-            'Jenis Kelamin',
-            'Status Pernikahan',
-            'Golongan Darah',
-            'Tempat Lahir',
-            'Tanggal Lahir',
-            'No Telepon / WhatsApp',
-            'Email',
-            'Wilayah',
-            'Cabang',
-            'Alamat Detail',
-            'Dusun / Dukuh',
-            'RT',
-            'RW',
-            'Desa / Kelurahan',
-            'Kecamatan',
-            'Jenjang Pendidikan',
-            'Nama Sekolah / Kampus',
-            'Jurusan',
-            'Status Pendidikan',
-            'Status Pekerjaan',
-            'Profesi / Jabatan',
-            'Nama Perusahaan / Usaha',
-            'Status Verifikasi',
-            'Status Data',
-            'Tanggal Registrasi',
-        ]);
-
-        $no = 1;
-        $maritalLabels = [
-            'belum_menikah' => 'Belum Menikah',
-            'sudah_menikah' => 'Sudah Menikah',
-            'janda'         => 'Janda',
-            'duda'          => 'Duda',
-        ];
-
-        $verifLabels = [
-            'pending'  => 'Belum Terverifikasi',
-            'verified' => 'Terverifikasi',
-            'rejected' => 'Belum Terverifikasi',
-        ];
-
-        foreach ($rows as $row) {
-            fputcsv($output, [
-                $no++,
-                sanitizeCsvField($row['registration_number']),
-                sanitizeCsvField($row['name']),
-                $row['gender'] === 'L' ? 'Laki-laki' : 'Perempuan',
-                sanitizeCsvField($maritalLabels[$row['marital_status']] ?? $row['marital_status']),
-                sanitizeCsvField($row['blood_type'] ?: '-'),
-                sanitizeCsvField($row['birth_place'] ?: '-'),
-                $row['birth_date'] ? date('d/m/Y', strtotime($row['birth_date'])) : '-',
-                $row['phone'] ? sanitizeCsvField("'" . $row['phone']) : '-', // leading quote for excel phone numbers
-                sanitizeCsvField($row['email'] ?: '-'),
-                sanitizeCsvField($row['wilayah_name'] ?: '-'),
-                sanitizeCsvField($row['cabang_name'] ?: '-'),
-                sanitizeCsvField($row['address_detail'] ?: '-'),
-                sanitizeCsvField($row['dusun'] ?: '-'),
-                sanitizeCsvField($row['rt'] ?: '-'),
-                sanitizeCsvField($row['rw'] ?: '-'),
-                sanitizeCsvField($row['village_name'] ?: '-'),
-                sanitizeCsvField($row['district_name'] ?: '-'),
-                sanitizeCsvField($row['education_level_name'] ?: '-'),
-                sanitizeCsvField($row['school_name'] ?: '-'),
-                sanitizeCsvField($row['major'] ?: '-'),
-                sanitizeCsvField($row['education_status'] ?: '-'),
-                sanitizeCsvField($row['job_status_name'] ?: '-'),
-                sanitizeCsvField($row['job_title'] ?: '-'),
-                sanitizeCsvField($row['company_name'] ?: '-'),
-                sanitizeCsvField($verifLabels[$row['status_verifikasi']] ?? $row['status_verifikasi']),
-                $row['status_data'] === 'active' ? 'Aktif' : 'Arsip',
-                $row['created_at'] ? date('d/m/Y H:i', strtotime($row['created_at'])) : '-',
-            ]);
+    /**
+     * Halaman Menu Export Data Pemuda Kustom (Pilihan Elemen, Bakat, Minat, Filter)
+     */
+    public function export()
+    {
+        // Jika request meminta unduhan langsung via GET (download=1 atau action=download)
+        if ($this->request->getGet('download') || $this->request->getGet('action') === 'download') {
+            return $this->exportDownload();
         }
 
-        fclose($output);
+        $scope = $this->getScope();
+        $filters = $this->extractExportFilters();
+
+        // Wilayah list (disesuaikan dengan scope)
+        $wilayahBuilder = $this->wilayahModel->orderBy('code', 'ASC');
+        if ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
+            $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
+        } elseif ($scope['role'] === 'admin_cabang' && !empty($scope['wilayah_id'])) {
+            $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
+        }
+        $wilayahList = $wilayahBuilder->findAll();
+
+        // Cabang list (disesuaikan dengan scope)
+        $cabangBuilder = $this->cabangModel->orderBy('name', 'ASC');
+        if ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
+            $cabangBuilder->where('id', (int) $scope['cabang_id']);
+        } elseif ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
+            $cabangBuilder->where('wilayah_id', (int) $scope['wilayah_id']);
+        } elseif (!empty($filters['wilayah_id'])) {
+            $cabangBuilder->where('wilayah_id', (int) $filters['wilayah_id']);
+        }
+        $cabangList = $cabangBuilder->findAll();
+
+        // Master Bakat & Minat
+        $skillModel = new SkillModel();
+        $skills = $skillModel->orderBy('name', 'ASC')->findAll();
+
+        $interestModel = new InterestModel();
+        $interests = $interestModel->orderBy('name', 'ASC')->findAll();
+
+        // Master Pendidikan & Pekerjaan
+        $educationLevelModel = new EducationLevelModel();
+        $educationLevels = $educationLevelModel->orderBy('id', 'ASC')->findAll();
+
+        $jobStatusModel = new JobStatusModel();
+        $jobStatuses = $jobStatusModel->orderBy('id', 'ASC')->findAll();
+
+        // Hitung estimasi data awal
+        $exportService = new PemudaExportService();
+        $initialCount = $exportService->countFiltered($filters, $scope);
+
+        return view('admin/pemuda/export', [
+            'title'              => 'Export Kustom Data Pemuda',
+            'scope'              => $scope,
+            'wilayahList'        => $wilayahList,
+            'cabangList'         => $cabangList,
+            'skills'             => $skills,
+            'interests'          => $interests,
+            'educationLevels'    => $educationLevels,
+            'jobStatuses'        => $jobStatuses,
+            'categorizedColumns' => PemudaExportService::CATEGORIZED_COLUMNS,
+            'presets'            => PemudaExportService::PRESETS,
+            'filters'            => $filters,
+            'initialCount'       => $initialCount,
+        ]);
+    }
+
+    /**
+     * Proses Download Berkas Export (Excel .xlsx / CSV .csv)
+     */
+    public function exportDownload()
+    {
+        $scope = $this->getScope();
+        $filters = $this->extractExportFilters();
+
+        $columns = $this->request->getVar('columns');
+        $preset  = (string) $this->request->getVar('preset');
+
+        if ((!is_array($columns) || empty($columns)) && isset(PemudaExportService::PRESETS[$preset])) {
+            $columns = PemudaExportService::PRESETS[$preset];
+        } elseif (!is_array($columns) || empty($columns)) {
+            $columns = PemudaExportService::PRESETS['default'];
+        }
+
+        $format = strtolower((string) ($this->request->getVar('format') ?: 'xlsx'));
+        $exportService = new PemudaExportService();
+
+        $timestamp = date('Ymd_His');
+        $userName = session()->get('name') ?? session()->get('username') ?? 'Admin';
+
+        if ($format === 'csv') {
+            $filename = 'Export_Pemuda_' . $timestamp . '.csv';
+            $exportService->streamCsv($filters, $columns, $scope, $filename);
+            return;
+        }
+
+        // Default: Microsoft Excel (.xlsx)
+        $filename = 'Export_Pemuda_' . $timestamp . '.xlsx';
+        $spreadsheet = $exportService->generateXlsx($filters, $columns, $scope, [
+            'user_name' => $userName,
+        ]);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * AJAX Endpoint: Hitung jumlah data yang sesuai filter secara real-time
+     */
+    public function exportCount()
+    {
+        $scope = $this->getScope();
+        $filters = $this->extractExportFilters();
+
+        $exportService = new PemudaExportService();
+        $count = $exportService->countFiltered($filters, $scope);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'count'   => $count,
+        ]);
     }
 
     /**

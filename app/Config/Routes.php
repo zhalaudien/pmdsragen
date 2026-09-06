@@ -48,6 +48,8 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
         $routes->post('archive/(:num)', 'Admin\Pemuda::archive/$1');
         $routes->post('delete/(:num)', 'Admin\Pemuda::delete/$1');
         $routes->get('export', 'Admin\Pemuda::export');
+        $routes->post('export', 'Admin\Pemuda::exportDownload');
+        $routes->get('export/count', 'Admin\Pemuda::exportCount');
         $routes->get('cetak/(:num)', 'Admin\Pemuda::cetak/$1');
         
         // Import Data Pemuda (Khusus Superadmin)

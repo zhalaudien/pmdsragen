@@ -18,8 +18,8 @@
                     <i class="fas fa-file-excel mr-1"></i> Import Excel
                 </a>
             <?php endif; ?>
-            <a href="<?= base_url('admin/pemuda/export?' . http_build_query($filters)) ?>" class="btn btn-outline-success btn-sm">
-                <i class="fas fa-download mr-1"></i> Export Excel
+            <a href="<?= base_url('admin/pemuda/export?' . http_build_query(array_filter($filters, fn($v) => $v !== null && $v !== ''))) ?>" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-file-export mr-1"></i> Export Data
             </a>
             <a href="<?= base_url('admin/pemuda/tambah') ?>" class="btn btn-primary btn-sm">
                 <i class="fas fa-user-plus mr-1"></i> Tambah Pemuda

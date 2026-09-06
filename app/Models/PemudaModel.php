@@ -334,6 +334,53 @@ class PemudaModel extends Model
             $builder->where('pemuda.created_at <=', $filters['end_date'] . ' 23:59:59');
         }
 
+        // Filter berdasarkan Bakat / Keahlian (Skills)
+        if (!empty($filters['skill_id'])) {
+            $skillIds = is_array($filters['skill_id']) ? array_filter(array_map('intval', $filters['skill_id'])) : [(int) $filters['skill_id']];
+            if (!empty($skillIds)) {
+                $builder->whereIn('pemuda.id', function($sub) use ($skillIds) {
+                    return $sub->select('pemuda_id')
+                               ->from('pemuda_skills')
+                               ->whereIn('skill_id', $skillIds);
+                });
+            }
+        }
+
+        // Filter berdasarkan Minat (Interests)
+        if (!empty($filters['interest_id'])) {
+            $interestIds = is_array($filters['interest_id']) ? array_filter(array_map('intval', $filters['interest_id'])) : [(int) $filters['interest_id']];
+            if (!empty($interestIds)) {
+                $builder->whereIn('pemuda.id', function($sub) use ($interestIds) {
+                    return $sub->select('pemuda_id')
+                               ->from('pemuda_interests')
+                               ->whereIn('interest_id', $interestIds);
+                });
+            }
+        }
+
+        // Filter berdasarkan Organisasi yang diikuti
+        if (!empty($filters['organization_name'])) {
+            $orgName = trim((string) $filters['organization_name']);
+            if ($orgName !== '') {
+                $builder->whereIn('pemuda.id', function($sub) use ($orgName) {
+                    return $sub->select('pemuda_id')
+                               ->from('organisasi')
+                               ->like('organization_name', $orgName);
+                });
+            }
+        }
+
+        // Filter berdasarkan rentang usia (tahun)
+        if (!empty($filters['min_age'])) {
+            $maxBirthDate = date('Y-m-d', strtotime('-' . (int)$filters['min_age'] . ' years'));
+            $builder->where('pemuda.birth_date <=', $maxBirthDate);
+        }
+
+        if (!empty($filters['max_age'])) {
+            $minBirthDate = date('Y-m-d', strtotime('-' . ((int)$filters['max_age'] + 1) . ' years +1 day'));
+            $builder->where('pemuda.birth_date >=', $minBirthDate);
+        }
+
         return $builder;
     }
 

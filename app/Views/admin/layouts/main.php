@@ -226,6 +226,14 @@
                         </a>
                     </li>
 
+                    <li class="nav-item">
+                        <a href="<?= base_url('admin/pemuda/export') ?>" 
+                           class="nav-link <?= url_is('admin/pemuda/export*') ? 'active' : '' ?>">
+                            <i class="nav-icon fas fa-file-export text-info"></i>
+                            <p>Export Data</p>
+                        </a>
+                    </li>
+
                     <?php if (session()->get('role') === 'superadmin'): ?>
                         <li class="nav-item">
                             <a href="<?= base_url('admin/warga-mta') ?>" 
