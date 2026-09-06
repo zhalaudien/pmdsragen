@@ -133,7 +133,7 @@ let villageTomSelect = null;
 function initSearchableSelects() {
     if (typeof TomSelect === 'undefined') return;
 
-    // 1. Cabang Searchable Select (with optgroups)
+    // 1. Cabang Searchable Select
     const cabangEl = document.getElementById('cabang_id');
     if (cabangEl && !cabangTomSelect) {
         cabangTomSelect = new TomSelect(cabangEl, {
@@ -141,7 +141,7 @@ function initSearchableSelects() {
             placeholder: '-- Ketik nama cabang untuk mencari... --',
             allowEmptyOption: true,
             maxOptions: 100,
-            searchField: ['text', 'optgroup'],
+            searchField: ['text'],
             render: {
                 no_results: function(data, escape) {
                     return '<div class="no-results text-muted small p-2"><i class="bi bi-search me-1"></i> Cabang tidak ditemukan</div>';
@@ -1430,37 +1430,21 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
     let itemsHtml = '';
     currentWargaList.forEach((w, idx) => {
         const isMale = (w.kelamin || 'L').toUpperCase() === 'L';
-        const uuidArg = w.uuid ? `'${w.uuid}'` : "''";
-        const localIdArg = w.local_pemuda_id ? parseInt(w.local_pemuda_id, 10) : 0;
-        const sourceArg = `'${w.source || 'mta'}'`;
-        
-        let sourceBadges = '';
-        if (w.is_registered_pmd) {
-            sourceBadges += `<span class="badge bg-success rounded-pill px-2 py-1 small me-1"><i class="bi bi-check-circle-fill me-1"></i>Terdaftar di PMD</span>`;
-            if (w.local_reg_number) {
-                sourceBadges += `<span class="badge bg-light border text-monospace text-dark py-0 px-1 me-1" style="font-size: 0.72rem;">No. Reg: ${escapeHtml(w.local_reg_number)}</span>`;
+        const genderLabel = isMale ? 'L' : 'P';
+
+        let usiaText = '';
+        if (w.usia) {
+            usiaText = `${w.usia} Th`;
+        } else if (w.lahir) {
+            const cleanDate = w.lahir.split(' ')[0];
+            const birthYear = parseInt(cleanDate.split('-')[0], 10);
+            if (!isNaN(birthYear) && birthYear > 1920) {
+                const curYear = new Date().getFullYear();
+                usiaText = `${curYear - birthYear} Th`;
             }
-            if (w.source === 'both') {
-                sourceBadges += `<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill px-2 py-0 small"><i class="bi bi-link-45deg"></i> Terhubung MTA</span>`;
-            }
-        } else {
-            sourceBadges += `<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2 py-1 small me-1"><i class="bi bi-building me-1"></i>Warga MTA Pusat</span>`;
-            if (w.nomor) {
-                sourceBadges += `<span class="badge bg-light border text-monospace text-muted py-0 px-1 me-1" style="font-size: 0.72rem;">No: ${escapeHtml(w.nomor)}</span>`;
-            }
-            sourceBadges += `<span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0 small">Belum Terdaftar PMD</span>`;
         }
 
-        if (w.cabang) {
-            sourceBadges += `<span class="badge bg-light border text-dark py-0 px-1 me-1" style="font-size: 0.72rem;"><i class="bi bi-geo-alt me-1 text-danger"></i>${escapeHtml(w.cabang)}</span>`;
-        }
-
-        let actionBtn = '';
-        if (w.is_registered_pmd) {
-            actionBtn = `<button type="button" class="btn btn-sm btn-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})"><i class="bi bi-pencil-square me-1"></i>Lengkapi Data</button>`;
-        } else {
-            actionBtn = `<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})"><i class="bi bi-check2-circle me-1"></i>Pilih Data Warga</button>`;
-        }
+        const lahirText = formatDateDisplay(w.lahir);
 
         itemsHtml += `
             <div class="warga-item-row p-2 px-3 border-bottom d-flex justify-content-between align-items-center" 
@@ -1470,21 +1454,21 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
                  onmouseout="this.style.backgroundColor=''"
                  onclick="selectSuggestionByIndex(${idx})">
                 <div class="me-2 text-truncate">
-                    <div class="fw-bold text-dark mb-1 d-flex align-items-center flex-wrap gap-1">
-                        <span>${highlightMatch(escapeHtml(w.nama), query)}</span>
-                        ${sourceBadges}
+                    <div class="fw-bold text-dark text-truncate mb-1">
+                        ${highlightMatch(escapeHtml(w.nama), query)}
                     </div>
-                    <div class="small text-muted d-flex flex-wrap align-items-center gap-2">
-                        <span class="badge ${isMale ? 'bg-primary' : 'badge-pink'}" style="font-size: 0.7rem; ${!isMale ? 'background-color:#e83e8c;color:#fff;' : ''}">
-                            <i class="bi ${isMale ? 'bi-gender-male' : 'bi-gender-female'}"></i> ${isMale ? 'Putra' : 'Putri'}
+                    <div class="small text-muted d-flex align-items-center flex-wrap gap-2">
+                        <span class="badge ${isMale ? 'bg-primary' : 'badge-pink'}" style="font-size: 0.72rem; padding: 2px 7px; ${!isMale ? 'background-color:#e83e8c;color:#fff;' : ''}" title="${isMale ? 'Laki-laki' : 'Perempuan'}">
+                            ${genderLabel}
                         </span>
-                        ${w.usia ? `<span><i class="bi bi-clock-history me-1"></i>${w.usia} Th</span>` : ''}
-                        ${w.lahir ? `<span><i class="bi bi-calendar-date me-1"></i>${escapeHtml(formatDateDisplay(w.lahir))}</span>` : ''}
-                        ${w.alamat ? `<span class="text-truncate" style="max-width: 220px;"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(w.alamat)}</span>` : ''}
+                        ${usiaText ? `<span title="Umur"><i class="bi bi-clock-history me-1 text-secondary"></i>${usiaText}</span>` : ''}
+                        ${lahirText ? `<span title="Tanggal Lahir"><i class="bi bi-calendar-date me-1 text-secondary"></i>${escapeHtml(lahirText)}</span>` : ''}
                     </div>
                 </div>
                 <div class="text-end flex-shrink-0 ms-2">
-                    ${actionBtn}
+                    <button type="button" class="btn btn-sm btn-outline-success px-2 py-1 small fw-semibold text-nowrap" onclick="event.stopPropagation(); selectSuggestionByIndex(${idx})">
+                        Pilih
+                    </button>
                 </div>
             </div>
         `;
@@ -1493,7 +1477,7 @@ function renderWargaSuggestions(wargaList, cabangName, query) {
     listContainer.innerHTML = `
         <div class="dropdown-header bg-light py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
             <span class="small fw-bold text-dark">
-                <i class="bi bi-search text-danger me-1"></i> Hasil Pencarian &amp; Pengecekan (${escapeHtml(cabangName)}):
+                <i class="bi bi-search text-danger me-1"></i> Hasil Pencarian (${escapeHtml(cabangName)}):
             </span>
             <span class="badge bg-secondary rounded-pill small">${wargaList.length} ditemukan</span>
         </div>

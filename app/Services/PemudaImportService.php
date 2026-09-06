@@ -266,7 +266,7 @@ class PemudaImportService
             ['A11', 'B. DATA PELENGKAP (KOLOM F s/d AB WARNA ABU-ABU - BISA MENYUSUL / OPSIONAL):'],
             ['A12', '   • No. Telepon/WA, Tempat Lahir, Email, Golongan Darah, Alamat Lengkap, Pendidikan, Pekerjaan, Keahlian, dan Minat bersifat opsional.'],
             ['A13', '   • Jika data pelengkap belum tersedia saat import, kolom tersebut dapat dikosongkan dan dilengkapi kemudian hari melalui dashboard admin.'],
-            ['A14', '   • Status Verifikasi: "verified" (langsung diverifikasi) atau "pending" (menunggu verifikasi). Default: "verified".'],
+            ['A14', '   • Status Verifikasi: Otomatis disetel default "pending" (belum terverifikasi) hingga disinkronkan dengan database MTA Pusat.'],
         ];
 
         foreach ($rules as $r) {
@@ -533,9 +533,10 @@ class PemudaImportService
         $lookups = $this->preloadLookups();
 
         // 4. Parse dan validasi setiap baris
-        $parsedRows  = [];
-        $rowErrors   = [];
-        $totalDataRows = 0;
+        $parsedRows         = [];
+        $rowErrors          = [];
+        $skippedDuplicates  = [];
+        $totalDataRows      = 0;
 
         $defaultVerif = $options['default_verifikasi'] ?? 'pending';
         if (!in_array($defaultVerif, ['verified', 'pending'], true)) {
@@ -559,26 +560,34 @@ class PemudaImportService
                 foreach ($parsed['errors'] as $err) {
                     $rowErrors[] = "Baris {$row}: {$err}";
                 }
-            } else {
-                // Cek duplikasi terhadap database
-                $duplicate = $this->pemudaModel->findDuplicate($parsed['data']['name'], $parsed['data']['birth_date'], $parsed['data']['cabang_id']);
-                if ($duplicate) {
-                    $rowErrors[] = "Baris {$row}: Data pemuda dengan nama \"{$parsed['data']['name']}\", tanggal lahir ({$parsed['data']['birth_date']}), dan cabang tersebut sudah terdaftar di sistem (No. Registrasi: {$duplicate['registration_number']}).";
-                    continue;
-                }
-
-                // Cek duplikasi di dalam file batch yang sama
-                $batchKey = strtolower(trim($parsed['data']['name'])) . '|' . $parsed['data']['birth_date'] . '|' . $parsed['data']['cabang_id'];
-                if (isset($seenInBatch[$batchKey])) {
-                    $rowErrors[] = "Baris {$row}: Data duplikat ditemukan dengan nama dan tanggal lahir yang sama pada baris {$seenInBatch[$batchKey]} dalam file Excel ini.";
-                } else {
-                    $seenInBatch[$batchKey] = $row;
-                    $parsedRows[] = [
-                        'row_num' => $row,
-                        'data'    => $parsed['data'],
-                    ];
-                }
+                continue;
             }
+
+            $name      = $parsed['data']['name'];
+            $gender    = $parsed['data']['gender'];
+            $birthDate = $parsed['data']['birth_date'];
+            $cabangId  = (int) $parsed['data']['cabang_id'];
+
+            // A. Cek duplikasi di dalam file batch yang sama (nama, jenis kelamin, tanggal lahir, cabang yang sama)
+            $batchKey = strtolower(trim($name)) . '|' . strtoupper(trim($gender)) . '|' . $birthDate . '|' . $cabangId;
+            if (isset($seenInBatch[$batchKey])) {
+                $skippedDuplicates[] = "Baris {$row}: Data \"{$name}\" (L/P: {$gender}, Lahir: {$birthDate}) dilewati karena duplikat dengan baris {$seenInBatch[$batchKey]} dalam file Excel ini.";
+                continue;
+            }
+
+            // B. Cek duplikasi terhadap database (nama, jenis kelamin, tanggal lahir, cabang yang sama)
+            $duplicate = $this->pemudaModel->findExistingPemuda($name, $gender, $birthDate, $cabangId);
+            if ($duplicate) {
+                $regNo = $duplicate['registration_number'] ?? '-';
+                $skippedDuplicates[] = "Baris {$row}: Data \"{$name}\" (L/P: {$gender}, Lahir: {$birthDate}) dilewati karena sudah terdaftar di sistem (No. Reg: {$regNo}).";
+                continue;
+            }
+
+            $seenInBatch[$batchKey] = $row;
+            $parsedRows[] = [
+                'row_num' => $row,
+                'data'    => $parsed['data'],
+            ];
         }
 
         if ($totalDataRows === 0) {
@@ -592,26 +601,34 @@ class PemudaImportService
             ];
         }
 
-        // Jika terdapat error dan opsi skip_errors tidak diaktifkan, gagalkan proses
+        // Jika terdapat error validasi format dan opsi skip_errors tidak diaktifkan, gagalkan proses
         if (!empty($rowErrors) && !$skipErrors) {
             return [
-                'success'    => false,
-                'message'    => 'Ditemukan ' . count($rowErrors) . ' kesalahan validasi pada data. Silakan perbaiki file Excel Anda atau aktifkan opsi "Lewati Baris Error".',
-                'total_rows' => $totalDataRows,
-                'imported'   => 0,
-                'skipped'    => count($rowErrors),
-                'errors'     => $rowErrors,
+                'success'            => false,
+                'message'            => 'Ditemukan ' . count($rowErrors) . ' kesalahan validasi format data. Silakan perbaiki file Excel Anda atau aktifkan opsi "Lewati Baris Error".',
+                'total_rows'         => $totalDataRows,
+                'imported'           => 0,
+                'skipped'            => count($rowErrors) + count($skippedDuplicates),
+                'skipped_duplicates' => count($skippedDuplicates),
+                'duplicate_details'  => $skippedDuplicates,
+                'errors'             => array_merge($rowErrors, $skippedDuplicates),
             ];
         }
 
         if (empty($parsedRows)) {
+            $msg = 'Tidak ada baris data baru yang dapat disimpan ke database.';
+            if (!empty($skippedDuplicates)) {
+                $msg .= ' Sebanyak ' . count($skippedDuplicates) . ' data dilewati karena sudah terdaftar atau duplikat.';
+            }
             return [
-                'success'    => false,
-                'message'    => 'Tidak ada baris yang valid untuk disimpan ke database.',
-                'total_rows' => $totalDataRows,
-                'imported'   => 0,
-                'skipped'    => count($rowErrors),
-                'errors'     => $rowErrors,
+                'success'            => false,
+                'message'            => $msg,
+                'total_rows'         => $totalDataRows,
+                'imported'           => 0,
+                'skipped'            => count($rowErrors) + count($skippedDuplicates),
+                'skipped_duplicates' => count($skippedDuplicates),
+                'duplicate_details'  => $skippedDuplicates,
+                'errors'             => array_merge($rowErrors, $skippedDuplicates),
             ];
         }
 
@@ -732,13 +749,15 @@ class PemudaImportService
             }
 
             return [
-                'success'      => true,
-                'message'      => "Berhasil mengimport {$importedCount} data pemuda ke dalam sistem.",
-                'total_rows'   => $totalDataRows,
-                'imported'     => $importedCount,
-                'skipped'      => count($rowErrors),
-                'errors'       => $rowErrors,
-                'imported_ids' => $insertedIds,
+                'success'            => true,
+                'message'            => "Berhasil mengimport {$importedCount} data pemuda ke dalam sistem.",
+                'total_rows'         => $totalDataRows,
+                'imported'           => $importedCount,
+                'skipped'            => count($rowErrors) + count($skippedDuplicates),
+                'skipped_duplicates' => count($skippedDuplicates),
+                'duplicate_details'  => $skippedDuplicates,
+                'errors'             => array_merge($rowErrors, $skippedDuplicates),
+                'imported_ids'       => $insertedIds,
             ];
 
         } catch (\Throwable $e) {

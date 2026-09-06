@@ -305,4 +305,30 @@ final class PemudaImportTest extends CIUnitTestCase
         $this->assertStringContainsString('Cabang', $errorStr);
         $this->assertStringContainsString('Tanggal Lahir', $errorStr);
     }
+
+    public function testDuplicateDetectionWithMatchingNameGenderBirthDateAndCabang(): void
+    {
+        $name      = 'Ahmad Dahlan';
+        $gender    = 'L';
+        $birthDate = '2001-05-15';
+        $cabangId  = 1;
+
+        $batchKey = strtolower(trim($name)) . '|' . strtoupper(trim($gender)) . '|' . $birthDate . '|' . $cabangId;
+
+        // Same criteria matches key
+        $sameKey = strtolower(trim('ahmad dahlan')) . '|' . strtoupper(trim('l')) . '|' . '2001-05-15' . '|' . 1;
+        $this->assertEquals($batchKey, $sameKey);
+
+        // Different gender produces different key
+        $diffGenderKey = strtolower(trim($name)) . '|' . strtoupper(trim('P')) . '|' . $birthDate . '|' . $cabangId;
+        $this->assertNotEquals($batchKey, $diffGenderKey);
+
+        // Different birth date produces different key
+        $diffDateKey = strtolower(trim($name)) . '|' . strtoupper(trim($gender)) . '|' . '2002-05-15' . '|' . $cabangId;
+        $this->assertNotEquals($batchKey, $diffDateKey);
+
+        // Different cabang produces different key
+        $diffCabangKey = strtolower(trim($name)) . '|' . strtoupper(trim($gender)) . '|' . $birthDate . '|' . 2;
+        $this->assertNotEquals($batchKey, $diffCabangKey);
+    }
 }

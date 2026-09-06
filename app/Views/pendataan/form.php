@@ -186,28 +186,36 @@
                     </div>
 
                     <div class="row g-3">
-                        <!-- Wilayah & Cabang Domisili Organisasi -->
+                        <!-- Cabang Domisili Organisasi -->
                         <div class="col-md-6">
-                            <label for="cabang_id" class="form-label">Cabang Pemuda MTA (Wilayah)<span class="required-star">*</span></label>
+                            <label for="cabang_id" class="form-label">Cabang Pemuda MTA<span class="required-star">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="bi bi-diagram-2"></i></span>
                                 <select class="form-select" id="cabang_id" name="cabang_id" required>
-                                    <option value="" selected disabled>-- Pilih Cabang Pemuda MTA Terdaftar --</option>
-                                    <?php if (!empty($wilayahList)): ?>
-                                        <?php foreach ($wilayahList as $w): ?>
-                                            <optgroup label="<?= esc($w['name']) ?> (<?= esc($w['code']) ?>)">
-                                                <?php if (!empty($w['cabang'])): ?>
-                                                    <?php foreach ($w['cabang'] as $c): ?>
-                                                        <option value="<?= $c['id'] ?>" 
-                                                                data-name="<?= esc($c['name']) ?>" 
-                                                                data-code="<?= esc($c['code'] ?? '') ?>" 
-                                                                data-mta-uuid="<?= esc($c['mta_uuid'] ?? '') ?>" 
-                                                                <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
-                                                            <?= !empty($c['code']) ? '[' . esc($c['code']) . '] ' : '' ?><?= esc($c['name']) ?> (<?= esc($w['name']) ?>)
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </optgroup>
+                                    <option value="" selected disabled>-- Pilih Cabang Pemuda MTA --</option>
+                                    <?php 
+                                        $cabangOptions = !empty($cabangList) ? $cabangList : [];
+                                        if (empty($cabangOptions) && !empty($wilayahList)) {
+                                            foreach ($wilayahList as $w) {
+                                                if (!empty($w['cabang'])) {
+                                                    foreach ($w['cabang'] as $c) {
+                                                        $cabangOptions[] = $c;
+                                                    }
+                                                }
+                                            }
+                                            usort($cabangOptions, function ($a, $b) {
+                                                return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+                                            });
+                                        }
+                                    ?>
+                                    <?php if (!empty($cabangOptions)): ?>
+                                        <?php foreach ($cabangOptions as $c): ?>
+                                            <option value="<?= $c['id'] ?>" 
+                                                    data-name="<?= esc($c['name']) ?>" 
+                                                    data-mta-uuid="<?= esc($c['mta_uuid'] ?? '') ?>" 
+                                                    <?= old('cabang_id') == $c['id'] ? 'selected' : '' ?>>
+                                                <?= esc($c['name']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </select>

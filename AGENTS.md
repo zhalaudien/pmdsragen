@@ -1779,8 +1779,47 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 - **Pengujian Unit (`tests/unit/WirausahaDetailTest.php`):**
   - Dibuat 5 metode pengujian unit (31 asersi) yang menguji struktur kolom database, normalisasi lowercase model, elemen form publik & admin, tampilan detail & cetak, serta fungsi toggle JavaScript.
   - Seluruh 82 unit test proyek (449 asersi) lulus 100%.
+### 2026-09-07 — Penyederhanaan Tampilan Hasil Pencarian Nama pada Form Pendataan
 
+- **Penyederhanaan Tampilan Dropdown Saran Nama (`public/js/pendataan.js` & `public/css/pendataan.css`):**
+  - Mengubah tampilan item hasil pencarian nama warga MTA / pemuda (`renderWargaSuggestions`) menjadi lebih ringkas, bersih, dan sederhana.
+  - Hanya menampilkan data esensial:
+    - **Nama Pemuda / Warga**: Dicetak tebal dan menyorot kata kunci yang dicari.
+    - **L/P (Jenis Kelamin)**: Badge visual kompak (`L` / `P`).
+    - **Umur**: Menampilkan usia pemuda (misal `24 Th`) dengan kalkulasi otomatis dari tanggal lahir jika belum tersedia.
+    - **Tanggal Lahir**: Menampilkan tanggal lahir dengan format `DD/MM/YYYY`.
+    - **Tombol Aksi**: Tombol sederhana `Pilih` dan seluruh baris tetap dapat diklik untuk memilih data secara instan.
+  - Menghilangkan badge dan informasi yang memadati tampilan sebelumnya (seperti badge panjang "Terdaftar di PMD", "No. Reg", "Terhubung MTA", "Warga MTA Pusat", status verifikasi, dan teks alamat panjang).
+  - Mengoptimalkan styling CSS mobile pada `public/css/pendataan.css` agar baris hasil pencarian tetap tampil rapi, ringkas, dan proporsional di layar ponsel.
 
+### 2026-09-07 — Penyederhanaan Dropdown Pilihan Cabang pada Form Pendataan
 
+- **Penyederhanaan Pilihan Cabang (`app/Views/pendataan/form.php`, `app/Controllers/Pendataan.php`, & `public/js/pendataan.js`):**
+  - Dropdown cabang disederhanakan dengan **hanya menampilkan nama cabang saja** (misal: "Sragen Kota", "Gemolong 1", "Masaran 2").
+  - Menghapus pembagian grup wilayah (`<optgroup>`), nama wilayah `(Wilayah 1)`, dan kode/id cabang `[CBG-001]`.
+  - Mengubah label form dari `Cabang Pemuda MTA (Wilayah)` menjadi `Cabang Pemuda MTA`.
+  - Mengurutkan daftar cabang secara alfabetis berdasarkan nama cabang.
+  - Memperbarui konfigurasi TomSelect (`searchField: ['text']`) agar pencarian nama cabang lebih cepat dan akurat.
 
+### 2026-09-07 — Pencegahan Data Duplikat / Double Nama pada Menu Import
+
+- **Skip Otomatis Data Duplikat (`app/Services/PemudaImportService.php`):**
+  - Mengimplementasikan pengecekan duplikasi ketat berdasarkan kombinasi 4 data: **Nama**, **Jenis Kelamin (L/P)**, **Tanggal Lahir**, dan **Cabang**.
+  - Jika terdapat data yang sama dengan data yang sudah ada di database, baris tersebut otomatis **diskip (dilewati)** dan tidak diimport ke database.
+  - Jika terdapat data ganda pada berkas Excel yang sama, baris berikutnya otomatis dilewati sehingga tidak ada data kembar yang tersimpan.
+  - Data yang diskip karena duplikat tidak membatalkan proses import data valid lainnya (tidak digolongkan sebagai fatal syntax error yang memblokir file).
+- **Controller & Tampilan Admin (`app/Controllers/Admin/Pemuda.php`, `app/Views/admin/layouts/main.php`, & `app/Views/admin/pemuda/import.php`):**
+  - Notifikasi sukses secara spesifik menampilkan rincian data yang berhasil diimport serta jumlah data duplikat yang dilewati.
+  - Menampilkan alert daftar rincian baris yang dilewati beserta nomor registrasi yang sudah terdaftar.
+  - Ditambahkan informasi panduan pencegahan duplikasi pada halaman unggah import Excel.
+- **Pengujian Unit (`tests/unit/PemudaImportTest.php`):**
+  - Ditambahkan pengujian unit `testDuplicateDetectionWithMatchingNameGenderBirthDateAndCabang` untuk memverifikasi pencocokan kunci 4 atribut.
+
+### 2026-09-07 — Penetapan Status Verifikasi Default Import Menjadi Belum Terverifikasi (Pending)
+
+- **Penetapan Status Default & Penghapusan Opsi Dropdown (`app/Views/admin/pemuda/import.php` & `app/Controllers/Admin/Pemuda.php`):**
+  - Menghapus dropdown pemilihan status verifikasi default pada halaman import Excel.
+  - Menetapkan seluruh data yang diimport otomatis berstatus **Belum Terverifikasi (`pending`)**, sesuai aturan sistem bahwa status `verified` hanya diberikan setelah data sinkron/tercatat di database MTA Pusat.
+  - Menampilkan indikator statis bahwa data hasil import berstatus "Belum Terverifikasi (Pending)" dan akan diverifikasi otomatis saat proses sinkronisasi MTA Pusat dijalankan.
+  - Memperbarui petunjuk format spreadsheet pada sheet panduan template Excel (`PemudaImportService::generateTemplate()`).
 

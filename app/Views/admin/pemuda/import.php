@@ -115,14 +115,17 @@
                                 <i class="fas fa-sliders-h mr-1 text-primary"></i> 3. Pengaturan Opsi Import
                             </h6>
 
-                            <!-- Default Status Verifikasi -->
+                            <!-- Default Status Verifikasi: Belum Terverifikasi -->
                             <div class="form-group mb-2">
-                                <label class="text-xs text-muted font-weight-bold">Status Verifikasi Default</label>
-                                <select name="default_verifikasi" class="form-control form-control-sm">
-                                    <option value="verified" selected>Langsung Terverifikasi (Valid)</option>
-                                    <option value="pending">Menunggu Verifikasi (Pending)</option>
-                                </select>
-                                <div class="text-muted text-xs mt-1">Jika kolom status verifikasi pada file Excel dikosongkan, status ini yang akan digunakan.</div>
+                                <label class="text-xs text-muted font-weight-bold d-block">Status Verifikasi Data</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge badge-secondary px-2 py-1 text-xs">
+                                        <i class="fas fa-clock mr-1"></i> Belum Terverifikasi (Pending)
+                                    </span>
+                                    <small class="text-muted ml-2">
+                                        Seluruh data hasil import berstatus belum terverifikasi sampai disinkronkan dengan basis data MTA Pusat.
+                                    </small>
+                                </div>
                             </div>
 
                             <!-- Skip Errors Checkbox -->
@@ -133,6 +136,14 @@
                                 </label>
                                 <div class="text-muted text-xs">
                                     Jika dicentang, data baris yang valid akan tetap disimpan ke database, dan baris yang bermasalah akan dilaporkan pada ringkasan hasil.
+                                </div>
+                            </div>
+
+                            <!-- Anti-Duplikasi Otomatis -->
+                            <div class="alert alert-light border mt-3 mb-0 py-2 px-3">
+                                <div class="text-xs text-dark">
+                                    <i class="fas fa-shield-alt text-success mr-1"></i>
+                                    <strong>Pencegahan Duplikasi Otomatis:</strong> Data dengan <em>Nama</em>, <em>Jenis Kelamin</em>, <em>Tanggal Lahir</em>, dan <em>Cabang</em> yang sama akan otomatis dilewati (skip) dan tidak akan diimport ganda ke database.
                                 </div>
                             </div>
                         </div>

@@ -374,6 +374,18 @@
                     </div>
                 <?php endif; ?>
 
+                <?php if (session()->getFlashdata('import_warnings')): ?>
+                    <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <h5><i class="icon fas fa-info-circle"></i> Catatan Import (<?= count(session()->getFlashdata('import_warnings')) ?> Baris Dilewati):</h5>
+                        <ul class="mb-0 pl-3" style="max-height: 180px; overflow-y: auto;">
+                            <?php foreach (session()->getFlashdata('import_warnings') as $warn): ?>
+                                <li class="text-xs"><?= esc($warn) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <!-- RENDER CHILD VIEW CONTENT -->
                 <?= $this->renderSection('content') ?>
 

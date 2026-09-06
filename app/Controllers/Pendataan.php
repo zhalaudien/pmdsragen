@@ -57,6 +57,7 @@ class Pendataan extends BaseController
 
         try {
             $wilayahWithCabang = $this->wilayahModel->getWithCabang();
+            $cabangList        = $this->cabangModel->orderBy('name', 'ASC')->findAll();
             $educationLevels   = $educationLevelModel->findAll();
             $jobStatuses       = $jobStatusModel->findAll();
             $skills            = $skillModel->findAll();
@@ -67,6 +68,7 @@ class Pendataan extends BaseController
 
         $data = [
             'wilayahList'     => $wilayahWithCabang,
+            'cabangList'      => $cabangList ?? [],
             'educationLevels' => $educationLevels,
             'jobStatuses'     => $jobStatuses,
             'skills'          => $skills,

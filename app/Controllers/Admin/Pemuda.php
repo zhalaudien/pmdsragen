@@ -1247,7 +1247,7 @@ class Pemuda extends BaseController
         $tempPath = $file->getTempName();
 
         $options = [
-            'default_verifikasi' => $this->request->getPost('default_verifikasi') ?: 'verified',
+            'default_verifikasi' => 'pending',
             'skip_errors'        => (bool) $this->request->getPost('skip_errors'),
         ];
 
@@ -1263,8 +1263,16 @@ class Pemuda extends BaseController
         }
 
         $msg = "Import data pemuda selesai: {$result['imported']} data pemuda berhasil diimport ke sistem.";
-        if (!empty($result['skipped'])) {
-            $msg .= " ({$result['skipped']} baris dilewati karena terdapat kesalahan data).";
+        $skipNotes = [];
+        if (!empty($result['skipped_duplicates'])) {
+            $skipNotes[] = "{$result['skipped_duplicates']} data duplikat dilewati";
+        }
+        $otherSkipped = ($result['skipped'] ?? 0) - ($result['skipped_duplicates'] ?? 0);
+        if ($otherSkipped > 0) {
+            $skipNotes[] = "{$otherSkipped} baris kesalahan dilewati";
+        }
+        if (!empty($skipNotes)) {
+            $msg .= " (" . implode(', ', $skipNotes) . ").";
         }
 
         $redirect = redirect()->to(base_url('admin/pemuda'))->with('success', $msg);
