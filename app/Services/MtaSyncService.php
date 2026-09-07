@@ -14,6 +14,7 @@ use App\Models\VillageModel;
 use App\Models\EducationLevelModel;
 use App\Models\JobStatusModel;
 use App\Models\MtaSyncLogModel;
+use App\Models\MtaSyncQueueModel;
 use Config\Database;
 
 class MtaSyncService
@@ -29,6 +30,7 @@ class MtaSyncService
     protected DistrictModel $districtModel;
     protected VillageModel $villageModel;
     protected MtaSyncLogModel $logModel;
+    protected MtaSyncQueueModel $queueModel;
 
     public function __construct(?MtaApiService $apiService = null)
     {
@@ -43,6 +45,7 @@ class MtaSyncService
         $this->districtModel   = new DistrictModel();
         $this->villageModel    = new VillageModel();
         $this->logModel        = new MtaSyncLogModel();
+        $this->queueModel      = new MtaSyncQueueModel();
     }
 
     /**
@@ -490,6 +493,15 @@ class MtaSyncService
                     'warga'      => $detailRes['data'],
                 ];
             }
+            if (($detailRes['statusCode'] ?? 0) === 429) {
+                return [
+                    'verified'     => false,
+                    'status'       => 'pending',
+                    'rate_limited' => true,
+                    'error'        => $detailRes['message'] ?? 'Batas kuota request tercapai (Rate limit 60 req/menit).',
+                    'warga'        => null,
+                ];
+            }
         }
 
         if (empty($name) || strlen($name) < 2) {
@@ -505,7 +517,25 @@ class MtaSyncService
             'limit' => 10,
         ]);
 
-        if (!($searchRes['success'] ?? false) || empty($searchRes['data'])) {
+        if (!($searchRes['success'] ?? false)) {
+            if (($searchRes['statusCode'] ?? 0) === 429) {
+                return [
+                    'verified'     => false,
+                    'status'       => 'pending',
+                    'rate_limited' => true,
+                    'error'        => $searchRes['message'] ?? 'Batas kuota request tercapai (Rate limit 60 req/menit).',
+                    'warga'        => null,
+                ];
+            }
+            return [
+                'verified' => false,
+                'status'   => 'pending',
+                'error'    => $searchRes['message'] ?? 'Gagal mencari warga di API MTA',
+                'warga'    => null,
+            ];
+        }
+
+        if (empty($searchRes['data'])) {
             return [
                 'verified' => false,
                 'status'   => 'pending',
@@ -567,12 +597,287 @@ class MtaSyncService
     }
 
     /**
-     * Sinkronisasi dan Verifikasi Massal seluruh data pemuda di database PMD dengan MTA Pusat
-     * - Jika ada di MTA Pusat -> status_verifikasi = 'verified', mta_warga_uuid diupdate, mta_synced_at diupdate
-     * - Jika tidak ada di MTA Pusat -> status_verifikasi = 'pending' (jika belum pernah diverifikasi)
+     * Inisialisasi Antrian Sinkronisasi Data Pemuda ke MTA Pusat
+     * Mengisi tabel `mta_sync_queue` dengan pemuda yang akan disinkronkan.
+     *
+     * @param int|null $cabangId ID cabang (opsional)
+     * @param bool     $onlyPending Hanya pemuda berstatus pending
+     * @param int|null $userId User yang memulai antrian
+     * @param bool     $clearExisting Hapus antrian lama jika ada
+     * @return array
+     */
+    public function initSyncQueue(?int $cabangId = null, bool $onlyPending = true, ?int $userId = null, bool $clearExisting = true): array
+    {
+        if ($clearExisting) {
+            $this->queueModel->emptyTable();
+        }
+
+        $builder = $this->pemudaModel->builder();
+        $builder->select('id, cabang_id, name, registration_number');
+        $builder->where('status_data', 'active');
+
+        if ($cabangId) {
+            $builder->where('cabang_id', $cabangId);
+        }
+        if ($onlyPending) {
+            $builder->where('status_verifikasi', 'pending');
+        }
+
+        $pemudaList = $builder->get()->getResultArray();
+        $total = count($pemudaList);
+
+        if ($total === 0) {
+            return [
+                'success' => false,
+                'message' => 'Tidak ditemukan data pemuda yang memenuhi kriteria untuk disinkronisasi.',
+                'total'   => 0,
+                'summary' => $this->queueModel->getQueueSummary(),
+            ];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $batchData = [];
+        foreach ($pemudaList as $p) {
+            $batchData[] = [
+                'pemuda_id'  => (int) $p['id'],
+                'cabang_id'  => (int) $p['cabang_id'],
+                'status'     => 'pending',
+                'result'     => 'pending',
+                'created_by' => $userId ?? (session()->get('user_id') ?? null),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        // Insert batch secara bertahap (500 data per batch)
+        foreach (array_chunk($batchData, 500) as $chunk) {
+            $this->queueModel->insertBatch($chunk);
+        }
+
+        $summary = $this->queueModel->getQueueSummary();
+
+        return [
+            'success'        => true,
+            'message'        => "Antrian sinkronisasi berhasil disiapkan sebanyak {$total} data pemuda.",
+            'total'          => $total,
+            'rate_limit'     => '40 data / menit (1 data per 1.5 detik)',
+            'delay_ms'       => 1500,
+            'estimated_time' => $summary['estimated_formatted'],
+            'summary'        => $summary,
+        ];
+    }
+
+    /**
+     * Proses Satu Item Antrian Berikutnya (Laju: 40 data / menit = 1500ms delay)
+     *
+     * @param int|null $userId User ID pemroses
+     * @return array Status dan hasil pemrosesan item
+     */
+    public function processNextQueueItem(?int $userId = null): array
+    {
+        $item = $this->queueModel->getNextPendingItem();
+
+        if (!$item) {
+            $summary = $this->queueModel->getQueueSummary();
+            if ($summary['remaining'] === 0 && $summary['processed'] > 0) {
+                $this->logModel->log(
+                    'warga',
+                    'success',
+                    $summary['verified'],
+                    "Antrian sinkronisasi 40 data/menit selesai. Total: {$summary['total']}, Terverifikasi: {$summary['verified']}, Belum Terverifikasi: {$summary['pending_unverified']}.",
+                    $userId
+                );
+            }
+
+            return [
+                'success'  => true,
+                'finished' => true,
+                'message'  => 'Seluruh antrian sinkronisasi telah selesai diproses.',
+                'summary'  => $summary,
+            ];
+        }
+
+        // 1. Tandai item sedang diproses & tambah percobaan
+        $this->queueModel->update($item['id'], [
+            'status'   => 'processing',
+            'attempts' => (int) $item['attempts'] + 1,
+        ]);
+
+        $pemuda = $this->pemudaModel->find($item['pemuda_id']);
+        if (!$pemuda) {
+            $this->queueModel->update($item['id'], [
+                'status'       => 'failed',
+                'result'       => 'error',
+                'message'      => 'Data pemuda ID #' . $item['pemuda_id'] . ' tidak ditemukan.',
+                'processed_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            return [
+                'success'      => false,
+                'finished'     => false,
+                'rate_limited' => false,
+                'item'         => [
+                    'id'          => $item['id'],
+                    'pemuda_id'   => $item['pemuda_id'],
+                    'name'        => $item['name'] ?? '-',
+                    'cabang_name' => $item['cabang_name'] ?? '',
+                    'status'      => 'failed',
+                    'result'      => 'error',
+                    'message'     => 'Data pemuda tidak ditemukan.',
+                ],
+                'summary'      => $this->queueModel->getQueueSummary(),
+                'delay_ms'     => 1500,
+            ];
+        }
+
+        // 2. Verifikasi terhadap database MTA Pusat
+        $check = $this->verifyYouthAgainstMta($pemuda);
+
+        // Kasus: Terkena Rate Limiting API (HTTP 429)
+        if (!empty($check['rate_limited'])) {
+            // Kembalikan ke antrian pending agar tidak gagal permanen
+            $this->queueModel->update($item['id'], [
+                'status'  => 'pending',
+                'message' => 'Menunggu jeda kuota API MTA (HTTP 429)',
+            ]);
+
+            return [
+                'success'      => false,
+                'finished'     => false,
+                'rate_limited' => true,
+                'retry_after'  => 10,
+                'message'      => 'Batas kuota API MTA Pusat terdeteksi (HTTP 429). Antrian dijeda otomatis 10 detik...',
+                'item'         => [
+                    'id'          => $item['id'],
+                    'pemuda_id'   => $pemuda['id'],
+                    'name'        => $pemuda['name'],
+                    'cabang_name' => $item['cabang_name'] ?? '',
+                    'status'      => 'pending',
+                    'result'      => 'pending',
+                    'message'     => 'Menunggu cooldown API Pusat',
+                ],
+                'summary'      => $this->queueModel->getQueueSummary(),
+                'delay_ms'     => 10000,
+            ];
+        }
+
+        if ($check['verified'] && !empty($check['warga'])) {
+            $warga = $check['warga'];
+            $updateData = [
+                'status_verifikasi' => 'verified',
+                'mta_warga_uuid'    => $warga['uuid'] ?? ($pemuda['mta_warga_uuid'] ?? null),
+                'mta_status_warga'  => $warga['status'] ?? ($pemuda['mta_status_warga'] ?? 'Warga'),
+                'mta_synced_at'     => date('Y-m-d H:i:s'),
+            ];
+
+            if (!empty($warga['ayah_uuid']) && empty($pemuda['mta_ayah_uuid'])) {
+                $updateData['mta_ayah_uuid'] = $warga['ayah_uuid'];
+            }
+            if (!empty($warga['ibu_uuid']) && empty($pemuda['mta_ibu_uuid'])) {
+                $updateData['mta_ibu_uuid'] = $warga['ibu_uuid'];
+            }
+            if (!empty($warga['foto']) && empty($pemuda['mta_foto_url'])) {
+                $updateData['mta_foto_url'] = $warga['foto'];
+            }
+
+            $this->pemudaModel->update($pemuda['id'], $updateData);
+
+            $this->queueModel->update($item['id'], [
+                'status'         => 'completed',
+                'result'         => 'verified',
+                'mta_warga_uuid' => $warga['uuid'] ?? null,
+                'message'        => 'Terverifikasi di MTA Pusat (' . ($check['match_type'] ?? 'Match') . ')',
+                'processed_at'   => date('Y-m-d H:i:s'),
+            ]);
+
+            $resultItem = [
+                'id'           => $item['id'],
+                'pemuda_id'    => $pemuda['id'],
+                'name'         => $pemuda['name'],
+                'cabang_name'  => $item['cabang_name'] ?? '',
+                'status'       => 'completed',
+                'result'       => 'verified',
+                'result_label' => 'Terverifikasi',
+                'message'      => 'Terverifikasi di MTA Pusat (' . ($check['match_type'] ?? 'Match') . ')',
+                'uuid'         => $warga['uuid'] ?? null,
+                'processed_at' => date('H:i:s'),
+            ];
+        } else {
+            // Sesuai aturan: jika belum/tidak terdata di MTA Pusat, status_verifikasi tetap 'pending'
+            if (empty($pemuda['mta_warga_uuid'])) {
+                $this->pemudaModel->update($pemuda['id'], ['status_verifikasi' => 'pending']);
+            }
+
+            $this->queueModel->update($item['id'], [
+                'status'       => 'completed',
+                'result'       => 'pending',
+                'message'      => 'Belum terdata di Database Warga MTA Pusat',
+                'processed_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            $resultItem = [
+                'id'           => $item['id'],
+                'pemuda_id'    => $pemuda['id'],
+                'name'         => $pemuda['name'],
+                'cabang_name'  => $item['cabang_name'] ?? '',
+                'status'       => 'completed',
+                'result'       => 'pending',
+                'result_label' => 'Menunggu Verifikasi',
+                'message'      => 'Belum terdata di MTA Pusat',
+                'uuid'         => null,
+                'processed_at' => date('H:i:s'),
+            ];
+        }
+
+        return [
+            'success'      => true,
+            'finished'     => false,
+            'rate_limited' => false,
+            'item'         => $resultItem,
+            'summary'      => $this->queueModel->getQueueSummary(),
+            'delay_ms'     => 1500, // 40 data / menit = 1500 ms delay aman
+        ];
+    }
+
+    /**
+     * Dapatkan Status dan Ringkasan Antrian Saat Ini
+     */
+    public function getQueueStatus(): array
+    {
+        return [
+            'summary'          => $this->queueModel->getQueueSummary(),
+            'recent_processed' => $this->queueModel->getRecentProcessed(20),
+        ];
+    }
+
+    /**
+     * Batalkan Antrian yang Tersisa
+     */
+    public function cancelQueue(?int $userId = null): array
+    {
+        $this->queueModel->clearPendingQueue();
+        $summary = $this->queueModel->getQueueSummary();
+
+        $this->logModel->log(
+            'warga',
+            'success',
+            $summary['processed'],
+            "Antrian sinkronisasi dibatalkan oleh pengguna. Total tersisa dibersihkan.",
+            $userId
+        );
+
+        return [
+            'success' => true,
+            'message' => 'Antrian yang tersisa berhasil dibatalkan dan dibersihkan.',
+            'summary' => $summary,
+        ];
+    }
+
+    /**
+     * Sinkronisasi dan Verifikasi Seluruh Pemuda Sragen dengan Laju Terkendali (40 data / menit)
      *
      * @param int|null $cabangId Batasi ke cabang tertentu (opsional)
-     * @param bool $onlyPending Hanya proses yang masih berstatus pending
+     * @param bool     $onlyPending Hanya proses yang masih berstatus pending
      * @return array
      */
     public function syncAndVerifyAllPemudaSragen(?int $cabangId = null, bool $onlyPending = false): array
@@ -591,8 +896,20 @@ class MtaSyncService
         $pendingCount = 0;
         $newlyVerified = 0;
 
-        foreach ($pemudaList as $pemuda) {
+        foreach ($pemudaList as $index => $pemuda) {
+            // Laju antrian: jeda 1.5 detik per data (40 data / menit) untuk mencegah terlampauinya limit 60 req/menit
+            if ($index > 0) {
+                usleep(1500000); // 1.500.000 mikrodetik = 1.5 detik
+            }
+
             $check = $this->verifyYouthAgainstMta($pemuda);
+
+            // Jika terkena batas 429 pada eksekusi langsung, beri jeda pendinginan dan ulangi 1 kali
+            if (!empty($check['rate_limited'])) {
+                sleep(10);
+                $check = $this->verifyYouthAgainstMta($pemuda);
+            }
+
             if ($check['verified'] && !empty($check['warga'])) {
                 $warga = $check['warga'];
                 $updateData = [
@@ -627,7 +944,7 @@ class MtaSyncService
             }
         }
 
-        $msg = "Sinkronisasi & Verifikasi selesai. Total diperiksa: {$total}. Terverifikasi di MTA Pusat: {$verifiedCount} (Baru diverifikasi: {$newlyVerified}), Belum Terverifikasi: {$pendingCount}.";
+        $msg = "Sinkronisasi & Verifikasi selesai (Laju 40 data/menit). Total diperiksa: {$total}. Terverifikasi di MTA Pusat: {$verifiedCount} (Baru diverifikasi: {$newlyVerified}), Belum Terverifikasi: {$pendingCount}.";
         $this->logModel->log('warga', 'success', $verifiedCount, $msg);
 
         return [
@@ -637,6 +954,7 @@ class MtaSyncService
             'verified_count' => $verifiedCount,
             'newly_verified' => $newlyVerified,
             'pending_count'  => $pendingCount,
+            'rate_limit'     => '40 data / menit',
         ];
     }
 }

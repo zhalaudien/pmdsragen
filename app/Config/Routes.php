@@ -101,6 +101,10 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
         $routes->post('import-warga', 'Admin\MtaSync::importWarga');
         $routes->post('sync-pemuda/(:num)', 'Admin\MtaSync::syncPemuda/$1');
         $routes->post('sync-verify-all', 'Admin\MtaSync::syncVerifyAll');
+        $routes->post('queue-init', 'Admin\MtaSync::queueInit');
+        $routes->post('queue-process-item', 'Admin\MtaSync::queueProcessItem');
+        $routes->get('queue-status', 'Admin\MtaSync::queueStatus');
+        $routes->post('queue-cancel', 'Admin\MtaSync::queueCancel');
     });
 
     // Kelola Konten Beranda / Homepage (Superadmin)

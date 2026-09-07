@@ -52,6 +52,7 @@ class MtaSync extends BaseController
         // Hitung total pemuda lokal yang sudah tersinkronisasi MTA
         $syncedPemudaCount = $this->pemudaModel->where('mta_warga_uuid IS NOT NULL')->countAllResults();
         $totalPemudaCount  = $this->pemudaModel->countAll();
+        $queueStatus       = $this->syncService->getQueueStatus();
 
         $data = [
             'title'             => 'Integrasi Database Warga MTA (Perwakilan Sragen)',
@@ -65,6 +66,7 @@ class MtaSync extends BaseController
             'totalCabangCount'  => count($localCabang),
             'syncedPemudaCount' => $syncedPemudaCount,
             'totalPemudaCount'  => $totalPemudaCount,
+            'queueStatus'       => $queueStatus,
             'user'              => session()->get(),
         ];
 
@@ -313,5 +315,58 @@ class MtaSync extends BaseController
         }
 
         return redirect()->to(base_url('admin/mta-sync'))->with('error', $result['message']);
+    }
+
+    /**
+     * Inisialisasi Antrian Sinkronisasi Data Pemuda (POST via AJAX)
+     * Menyiapkan tabel antrian mta_sync_queue
+     */
+    public function queueInit()
+    {
+        $cabangId    = $this->request->getPost('cabang_id') ? (int) $this->request->getPost('cabang_id') : null;
+        $onlyPending = $this->request->getPost('only_pending') !== '0';
+        $userId      = session()->get('user_id') ? (int) session()->get('user_id') : null;
+
+        $result = $this->syncService->initSyncQueue($cabangId, $onlyPending, $userId, true);
+        $result['csrfHash'] = csrf_hash();
+
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * Proses Satu Item Antrian Berikutnya (POST via AJAX)
+     * Dipanggil dengan laju 40 data / menit (1 data per 1.5 detik)
+     */
+    public function queueProcessItem()
+    {
+        $userId = session()->get('user_id') ? (int) session()->get('user_id') : null;
+        $result = $this->syncService->processNextQueueItem($userId);
+        $result['csrfHash'] = csrf_hash();
+
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * Cek Status & Riwayat Antrian (GET via AJAX)
+     */
+    public function queueStatus()
+    {
+        $status = $this->syncService->getQueueStatus();
+        return $this->response->setJSON([
+            'success' => true,
+            'data'    => $status,
+        ]);
+    }
+
+    /**
+     * Batalkan Antrian yang Tersisa (POST via AJAX)
+     */
+    public function queueCancel()
+    {
+        $userId = session()->get('user_id') ? (int) session()->get('user_id') : null;
+        $result = $this->syncService->cancelQueue($userId);
+        $result['csrfHash'] = csrf_hash();
+
+        return $this->response->setJSON($result);
     }
 }

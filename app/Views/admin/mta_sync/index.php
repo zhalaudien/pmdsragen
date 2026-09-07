@@ -128,17 +128,47 @@
                 <h5 class="font-weight-bold mb-1">
                     <i class="fas fa-user-check text-success mr-2"></i> Sinkronisasi &amp; Verifikasi Otomatis Pemuda Sragen
                 </h5>
-                <p class="text-sm mb-0 text-white-50">
+                <p class="text-sm mb-1 text-white-50">
                     Sistem akan memindai database pemuda di PMD Sragen dan mencocokkannya dengan Database Warga MTA Pusat.
                     Data yang <strong>ada di MTA Pusat</strong> otomatis diubah statusnya menjadi <span class="badge badge-success px-2 py-1">Terverifikasi</span>, sedangkan yang <strong>belum ada</strong> berstatus <span class="badge badge-warning px-2 py-1 text-dark">Menunggu Verifikasi</span>.
                 </p>
+                <div class="d-flex flex-wrap align-items-center mt-2">
+                    <span class="badge badge-info px-2 py-1 mr-2 mb-1" style="font-size: 0.8rem;">
+                        <i class="fas fa-tachometer-alt mr-1"></i> Antrian Terkendali: 40 Data / Menit
+                    </span>
+                    <span class="badge badge-light text-dark px-2 py-1 mb-1" style="font-size: 0.8rem;">
+                        <i class="fas fa-shield-alt text-success mr-1"></i> Perlindungan Koneksi API Pusat (Batas aman di bawah 60 req/menit)
+                    </span>
+                </div>
             </div>
             <div class="col-md-4 text-md-right mt-3 mt-md-0">
-                <button type="button" class="btn btn-success btn-lg font-weight-bold shadow" data-toggle="modal" data-target="#modalSyncVerifyAll">
+                <button type="button" class="btn btn-success btn-lg font-weight-bold shadow" id="btnOpenModalSync">
                     <i class="fas fa-bolt mr-1"></i> Mulai Verifikasi Otomatis
                 </button>
             </div>
         </div>
+
+        <?php if (!empty($queueStatus['summary']['remaining']) && $queueStatus['summary']['remaining'] > 0): ?>
+            <div class="alert alert-warning text-dark mt-3 mb-0 d-flex flex-wrap align-items-center justify-content-between p-2 shadow-sm" id="bannerExistingQueue">
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <i class="fas fa-history fa-2x text-warning mr-3"></i>
+                    <div>
+                        <strong class="d-block">Terdapat antrian sinkronisasi yang belum selesai!</strong>
+                        <span class="text-xs">
+                            Masih ada <strong class="text-danger"><?= $queueStatus['summary']['remaining'] ?> data</strong> tersisa dalam antrian (Total: <?= $queueStatus['summary']['total'] ?> data, Selesai: <?= $queueStatus['summary']['processed'] ?>).
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-primary font-weight-bold mr-1" id="btnResumeQueueFromAlert">
+                        <i class="fas fa-play mr-1"></i> Lanjutkan Antrian (40 data/mnt)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearQueueFromAlert">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Antrian
+                    </button>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -658,104 +688,496 @@ $(document).ready(function() {
         $('#modalImportWarga').modal('show');
     });
 
-    // 5. Submit Sinkronisasi & Verifikasi Otomatis Seluruh Pemuda
+    // 5. Antrian Sinkronisasi & Verifikasi Otomatis (40 Data / Menit)
+    let isQueueRunning = false;
+    let isQueuePaused  = false;
+    let queueTimer     = null;
+    let cooldownTimer  = null;
+    const QUEUE_DELAY_MS = 1500; // 40 data / menit = 1500ms delay aman
+
+    function updateCsrf(newHash) {
+        if (newHash) {
+            $('meta[name="csrf-token-hash"]').attr('content', newHash);
+            $('input[name="<?= csrf_token() ?>"]').val(newHash);
+        }
+    }
+
+    function appendQueueLog(text, type = 'info') {
+        const time = new Date().toTimeString().split(' ')[0];
+        let colorClass = 'text-light';
+        if (type === 'verified') colorClass = 'text-success font-weight-bold';
+        if (type === 'pending')  colorClass = 'text-warning';
+        if (type === 'error')    colorClass = 'text-danger';
+        if (type === 'warning')  colorClass = 'text-info';
+
+        const row = $('<div class="queue-log-line mb-1"></div>')
+            .html('<span class="text-muted">[' + time + ']</span> <span class="' + colorClass + '">' + text + '</span>');
+
+        const box = $('#queueLogBox');
+        if (box.find('.placeholder-log').length) {
+            box.empty();
+        }
+        box.append(row);
+        box.scrollTop(box[0].scrollHeight);
+    }
+
+    function updateQueueUI(summary) {
+        if (!summary) return;
+
+        const total      = summary.total || 0;
+        const processed  = summary.processed || 0;
+        const remaining  = summary.remaining || 0;
+        const verified   = summary.verified || 0;
+        const pending    = summary.pending_unverified || 0;
+        const failed     = summary.failed || 0;
+        const percent    = summary.percent || 0;
+        const timeEst    = summary.estimated_formatted || '-';
+
+        $('#metricTotal').text(total);
+        $('#metricVerified').text(verified);
+        $('#metricPending').text(pending);
+        $('#metricFailed').text(failed);
+
+        $('#queueProgressBar').css('width', percent + '%').text(percent + '%');
+        $('#queueProgressPercent').text(percent + '%');
+        $('#queueProgressText').text(processed + ' dari ' + total + ' data diproses (Sisa: ' + remaining + ' data)');
+        $('#queueEstimateText').html('<i class="fas fa-clock mr-1"></i> Estimasi sisa: ' + timeEst);
+    }
+
+    function processQueueStep() {
+        if (!isQueueRunning || isQueuePaused) {
+            return;
+        }
+
+        $.ajax({
+            url: '<?= base_url('admin/mta-sync/queue-process-item') ?>',
+            type: 'POST',
+            data: {
+                '<?= csrf_token() ?>': $('meta[name="csrf-token-hash"]').attr('content') || '<?= csrf_hash() ?>'
+            },
+            dataType: 'json',
+            success: function(res) {
+                updateCsrf(res.csrfHash);
+
+                if (res.summary) {
+                    updateQueueUI(res.summary);
+                }
+
+                // Selesai seluruh antrian
+                if (res.finished) {
+                    isQueueRunning = false;
+                    $('#queueWorkerBadge').removeClass('badge-primary badge-warning').addClass('badge-success')
+                                         .html('<i class="fas fa-check-circle mr-1"></i> Selesai');
+                    $('#queueApiBadge').html('<i class="fas fa-wifi text-success mr-1"></i> API Pusat: Normal');
+                    $('#queueProgressBar').removeClass('progress-bar-animated').addClass('bg-success');
+                    $('#btnPauseResumeQueue').hide();
+                    $('#btnStopQueue').hide();
+                    $('#btnFinishQueue').show();
+                    $('#queueCooldownAlert').hide();
+
+                    appendQueueLog('🎉 Seluruh antrian sinkronisasi telah selesai diproses! Total diproses: ' + (res.summary ? res.summary.total : 0) + ' pemuda.', 'verified');
+                    return;
+                }
+
+                // Kasus Rate Limit (HTTP 429)
+                if (res.rate_limited) {
+                    $('#queueWorkerBadge').removeClass('badge-primary').addClass('badge-warning')
+                                         .html('<i class="fas fa-hourglass-half mr-1"></i> Cooldown Kuota');
+                    $('#queueApiBadge').html('<i class="fas fa-exclamation-triangle text-warning mr-1"></i> Kuota 60 req/mnt Terdeteksi');
+
+                    let secondsLeft = res.retry_after || 10;
+                    $('#queueCooldownText').text('Batas kuota 60 req/menit server pusat terdeteksi. Melakukan jeda pendinginan aman: ' + secondsLeft + ' detik...');
+                    $('#queueCooldownAlert').show();
+                    appendQueueLog('⚠️ [Batas Kuota 429] Server MTA Pusat mencapai batas limit. Jeda otomatis ' + secondsLeft + ' detik agar koneksi tetap tersambung.', 'warning');
+
+                    if (cooldownTimer) clearInterval(cooldownTimer);
+                    cooldownTimer = setInterval(function() {
+                        secondsLeft--;
+                        if (secondsLeft > 0) {
+                            $('#queueCooldownText').text('Batas kuota 60 req/menit server pusat terdeteksi. Melakukan jeda pendinginan aman: ' + secondsLeft + ' detik...');
+                        } else {
+                            clearInterval(cooldownTimer);
+                            $('#queueCooldownAlert').hide();
+                            $('#queueWorkerBadge').removeClass('badge-warning').addClass('badge-primary')
+                                                 .html('<i class="fas fa-sync fa-spin mr-1"></i> Memproses Antrian (40/mnt)');
+                            $('#queueApiBadge').html('<i class="fas fa-wifi text-success mr-1"></i> API Pusat: Normal');
+                            processQueueStep();
+                        }
+                    }, 1000);
+
+                    return;
+                }
+
+                // Normal Item Diproses
+                if (res.item) {
+                    const item = res.item;
+                    let logType = 'pending';
+                    let statusLabel = item.result_label || item.result;
+
+                    if (item.result === 'verified') {
+                        logType = 'verified';
+                    } else if (item.result === 'error' || item.status === 'failed') {
+                        logType = 'error';
+                    }
+
+                    appendQueueLog(item.name + ' (' + (item.cabang_name || 'Cabang') + ') &rarr; ' + statusLabel + ' (' + (item.message || '') + ')', logType);
+                }
+
+                // Jeda antrian aman: 1500 ms (40 data / menit)
+                const delay = res.delay_ms || QUEUE_DELAY_MS;
+                queueTimer = setTimeout(processQueueStep, delay);
+            },
+            error: function(xhr) {
+                appendQueueLog('⚠️ Gagal menghubungi server (' + (xhr.statusText || 'Error') + '). Mencoba kembali dalam 5 detik...', 'warning');
+                queueTimer = setTimeout(processQueueStep, 5000);
+            }
+        });
+    }
+
+    function startQueueProcess() {
+        isQueueRunning = true;
+        isQueuePaused  = false;
+
+        $('#queueSetupSection').hide();
+        $('#queueProgressSection').show();
+
+        $('#queueWorkerBadge').removeClass('badge-warning badge-success').addClass('badge-primary')
+                             .html('<i class="fas fa-sync fa-spin mr-1"></i> Memproses Antrian (40 data/menit)');
+        $('#queueApiBadge').html('<i class="fas fa-wifi text-success mr-1"></i> API Pusat: Normal');
+        $('#queueProgressBar').addClass('progress-bar-animated');
+        $('#btnPauseResumeQueue').show().html('<i class="fas fa-pause mr-1"></i> Jeda Antrian').removeClass('btn-success').addClass('btn-warning');
+        $('#btnStopQueue').show();
+        $('#btnFinishQueue').hide();
+        $('#queueCooldownAlert').hide();
+
+        processQueueStep();
+    }
+
+    // Tombol Buka Modal Baru
+    $('#btnOpenModalSync').on('click', function() {
+        $('#queueSetupSection').show();
+        $('#queueProgressSection').hide();
+        $('#modalSyncVerifyAll').modal('show');
+    });
+
+    // Submit Form Pembuatan Antrian
     $('#formExecuteSyncVerifyAll').on('submit', function(e) {
         e.preventDefault();
         const form = $(this);
         const btn = $('#btnRunSyncVerifyAll');
-        const modal = $('#modalSyncVerifyAll');
         const cabangId = form.find('select[name="cabang_id"]').val();
         const onlyPending = form.find('input[name="only_pending"]').is(':checked') ? 1 : 0;
 
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sedang Memverifikasi...');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyiapkan Antrian...');
 
         $.ajax({
-            url: '<?= base_url('admin/mta-sync/sync-verify-all') ?>',
+            url: '<?= base_url('admin/mta-sync/queue-init') ?>',
             type: 'POST',
             data: {
                 cabang_id: cabangId,
                 only_pending: onlyPending,
-                '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                '<?= csrf_token() ?>': $('meta[name="csrf-token-hash"]').attr('content') || '<?= csrf_hash() ?>'
             },
             dataType: 'json',
             success: function(res) {
-                btn.prop('disabled', false).html('<i class="fas fa-bolt mr-1"></i> Mulai Verifikasi Sekarang');
-                modal.modal('hide');
+                btn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i> Mulai Antrian Sinkronisasi (40 data/menit)');
+                updateCsrf(res.csrfHash);
 
                 if (res.success) {
-                    const d = res.data;
-                    const summaryHtml = 'Proses verifikasi otomatis selesai!\n\n' +
-                        '• Total Pemuda Diperiksa: ' + d.total + '\n' +
-                        '• Terverifikasi di MTA Pusat: ' + d.verified_count + ' (Baru diverifikasi: ' + d.newly_verified + ')\n' +
-                        '• Menunggu Verifikasi: ' + d.pending_count;
-                    alert(summaryHtml);
-                    location.reload();
+                    $('#queueLogBox').html('<div class="placeholder-log text-muted py-1">Memulai antrian sinkronisasi...</div>');
+                    appendQueueLog('Inisialisasi antrian: ' + res.total + ' data pemuda. Estimasi waktu: ' + (res.estimated_time || '-') + '.', 'warning');
+                    updateQueueUI(res.summary);
+                    startQueueProcess();
                 } else {
-                    alert('Gagal: ' + res.message);
+                    alert(res.message || 'Gagal menyiapkan antrian.');
                 }
             },
             error: function(xhr) {
-                btn.prop('disabled', false).html('<i class="fas fa-bolt mr-1"></i> Mulai Verifikasi Sekarang');
-                alert('Terjadi kesalahan saat memproses verifikasi otomatis: ' + xhr.statusText);
+                btn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i> Mulai Antrian Sinkronisasi (40 data/menit)');
+                alert('Terjadi kesalahan saat menyiapkan antrian: ' + xhr.statusText);
             }
         });
+    });
+
+    // Lanjutkan Antrian yang Tersisa dari Banner Alert
+    $('#btnResumeQueueFromAlert').on('click', function() {
+        $('#queueSetupSection').hide();
+        $('#queueProgressSection').show();
+        $('#modalSyncVerifyAll').modal('show');
+
+        $.ajax({
+            url: '<?= base_url('admin/mta-sync/queue-status') ?>',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res.success && res.data && res.data.summary) {
+                    updateQueueUI(res.data.summary);
+                    appendQueueLog('Melanjutkan sisa antrian: ' + res.data.summary.remaining + ' data pemuda tersisa.', 'warning');
+                    startQueueProcess();
+                }
+            }
+        });
+    });
+
+    // Hapus Antrian yang Tersisa dari Banner Alert
+    $('#btnClearQueueFromAlert').on('click', function() {
+        if (!confirm('Apakah Anda yakin ingin menghapus antrian yang tersisa?')) {
+            return;
+        }
+
+        const btn = $(this);
+        btn.prop('disabled', true);
+
+        $.ajax({
+            url: '<?= base_url('admin/mta-sync/queue-cancel') ?>',
+            type: 'POST',
+            data: {
+                '<?= csrf_token() ?>': $('meta[name="csrf-token-hash"]').attr('content') || '<?= csrf_hash() ?>'
+            },
+            dataType: 'json',
+            success: function(res) {
+                updateCsrf(res.csrfHash);
+                $('#bannerExistingQueue').slideUp();
+                alert(res.message || 'Antrian berhasil dibersihkan.');
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false);
+                alert('Gagal membersihkan antrian: ' + xhr.statusText);
+            }
+        });
+    });
+
+    // Jeda / Lanjutkan Antrian dari Modal
+    $('#btnPauseResumeQueue').on('click', function() {
+        if (!isQueuePaused) {
+            isQueuePaused = true;
+            if (queueTimer) clearTimeout(queueTimer);
+            $(this).html('<i class="fas fa-play mr-1"></i> Lanjutkan Antrian').removeClass('btn-warning').addClass('btn-success');
+            $('#queueWorkerBadge').removeClass('badge-primary').addClass('badge-secondary')
+                                 .html('<i class="fas fa-pause mr-1"></i> Antrian Dijeda');
+            appendQueueLog('Antrian dijeda oleh pengguna.', 'warning');
+        } else {
+            isQueuePaused = false;
+            $(this).html('<i class="fas fa-pause mr-1"></i> Jeda Antrian').removeClass('btn-success').addClass('btn-warning');
+            $('#queueWorkerBadge').removeClass('badge-secondary').addClass('badge-primary')
+                                 .html('<i class="fas fa-sync fa-spin mr-1"></i> Memproses Antrian (40 data/menit)');
+            appendQueueLog('Melanjutkan antrian...', 'warning');
+            processQueueStep();
+        }
+    });
+
+    // Batalkan Antrian dari Modal
+    $('#btnStopQueue').on('click', function() {
+        if (!confirm('Apakah Anda yakin ingin membatalkan antrian yang sedang berjalan? Data yang belum diproses akan dibersihkan dari antrian.')) {
+            return;
+        }
+
+        isQueueRunning = false;
+        if (queueTimer) clearTimeout(queueTimer);
+        if (cooldownTimer) clearInterval(cooldownTimer);
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Membatalkan...');
+
+        $.ajax({
+            url: '<?= base_url('admin/mta-sync/queue-cancel') ?>',
+            type: 'POST',
+            data: {
+                '<?= csrf_token() ?>': $('meta[name="csrf-token-hash"]').attr('content') || '<?= csrf_hash() ?>'
+            },
+            dataType: 'json',
+            success: function(res) {
+                btn.prop('disabled', false).html('<i class="fas fa-stop mr-1"></i> Batalkan Antrian');
+                updateCsrf(res.csrfHash);
+                $('#queueWorkerBadge').removeClass('badge-primary badge-warning').addClass('badge-danger')
+                                     .html('<i class="fas fa-ban mr-1"></i> Dibatalkan');
+                $('#btnPauseResumeQueue').hide();
+                $('#btnStopQueue').hide();
+                $('#btnFinishQueue').show().text('Tutup Jendela');
+                appendQueueLog('Antrian dibatalkan dan sisa data telah dibersihkan.', 'error');
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html('<i class="fas fa-stop mr-1"></i> Batalkan Antrian');
+                alert('Gagal membatalkan antrian: ' + xhr.statusText);
+            }
+        });
+    });
+
+    // Tombol Selesai & Refresh Halaman
+    $('#btnFinishQueue').on('click', function() {
+        location.reload();
     });
 
 });
 </script>
 
-<!-- MODAL SINKRONISASI & VERIFIKASI MASSAL PEMUDA SRAGEN -->
-<div class="modal fade" id="modalSyncVerifyAll" tabindex="-1" role="dialog" aria-labelledby="modalSyncVerifyAllLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md" role="document">
+<!-- MODAL SINKRONISASI & VERIFIKASI ANTRIAN PEMUDA SRAGEN (40 DATA / MENIT) -->
+<div class="modal fade" id="modalSyncVerifyAll" tabindex="-1" role="dialog" aria-labelledby="modalSyncVerifyAllLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <form id="formExecuteSyncVerifyAll">
-                <?= csrf_field() ?>
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title font-weight-bold" id="modalSyncVerifyAllLabel">
-                        <i class="fas fa-user-check mr-1"></i> Verifikasi Otomatis dengan MTA Pusat
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info text-sm mb-3">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Sistem akan memeriksa setiap pemuda terdaftar di PMD Sragen terhadap Database Warga MTA Pusat:
-                        <ul class="mb-0 pl-3 mt-1">
-                            <li><strong>Jika Ditemukan:</strong> Status diubah menjadi <span class="badge badge-success">Terverifikasi</span> dan ditautkan UUID Warga MTA.</li>
-                            <li><strong>Jika Tidak Ditemukan:</strong> Status tetap <span class="badge badge-warning text-dark">Menunggu Verifikasi</span>.</li>
-                        </ul>
+            
+            <!-- 1. TAMPILAN PENGATURAN ANTRIAN -->
+            <div id="queueSetupSection">
+                <form id="formExecuteSyncVerifyAll">
+                    <div class="modal-header bg-gradient-navy text-white">
+                        <h5 class="modal-title font-weight-bold" id="modalSyncVerifyAllLabel">
+                            <i class="fas fa-user-check text-success mr-2"></i> Sinkronisasi &amp; Verifikasi Otomatis dengan MTA Pusat
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
+                    <div class="modal-body">
+                        <!-- Peringatan Kuota & Mekanisme Antrian 40 data/menit -->
+                        <div class="callout callout-info py-2 mb-3 bg-light">
+                            <h6 class="font-weight-bold text-dark mb-1">
+                                <i class="fas fa-tachometer-alt text-info mr-1"></i> Antrian Terkendali 40 Data / Menit
+                            </h6>
+                            <p class="text-sm text-muted mb-0">
+                                Server API MTA Pusat memiliki batas ketat <strong>60 request / menit</strong>.
+                                Untuk mencegah pemutusan koneksi dan kegagalan data, sistem menerapkan antrian dengan jeda <strong>1.5 detik per data (40 data/menit)</strong>. Seluruh proses berjalan stabil dan terpantau secara real-time.
+                            </p>
+                        </div>
 
-                    <div class="form-group">
-                        <label class="font-weight-bold text-dark">Pilih Cakupan Cabang:</label>
-                        <select name="cabang_id" class="form-control">
-                            <option value="">-- Seluruh Cabang di PMD Sragen --</option>
-                            <?php foreach ($localCabang as $c): ?>
-                                <option value="<?= $c['id'] ?>">
-                                    <?= esc($c['name']) ?> (<?= esc($c['wilayah_name'] ?? 'Wilayah ' . $c['wilayah_id']) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold text-dark">Pilih Cakupan Cabang Pemuda:</label>
+                            <select name="cabang_id" class="form-control">
+                                <option value="">-- Seluruh Cabang di PMD Sragen (Semua) --</option>
+                                <?php foreach ($localCabang as $c): ?>
+                                    <option value="<?= $c['id'] ?>">
+                                        <?= esc($c['name']) ?> (<?= esc($c['wilayah_name'] ?? 'Wilayah ' . $c['wilayah_id']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                    <div class="form-group mb-0">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="checkOnlyPending" name="only_pending" value="1" checked>
-                            <label class="custom-control-label font-weight-bold text-dark" for="checkOnlyPending">
-                                Hanya periksa pemuda yang saat ini berstatus 'Menunggu Verifikasi' (Pending)
-                            </label>
+                        <div class="form-group mb-0">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="checkOnlyPending" name="only_pending" value="1" checked>
+                                <label class="custom-control-label font-weight-bold text-dark" for="checkOnlyPending">
+                                    Hanya periksa pemuda yang saat ini berstatus 'Menunggu Verifikasi' (Pending)
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Disarankan dicentang agar hanya memeriksa pemuda yang belum pernah terverifikasi di MTA Pusat.</small>
                         </div>
                     </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success font-weight-bold" id="btnRunSyncVerifyAll">
+                            <i class="fas fa-play mr-1"></i> Mulai Antrian Sinkronisasi (40 data/menit)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 2. TAMPILAN MONITOR PROGRESS ANTRIAN REAL-TIME -->
+            <div id="queueProgressSection" style="display: none;">
+                <div class="modal-header bg-gradient-navy text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-stream text-primary mr-2"></i> Monitor Antrian Sinkronisasi API MTA Pusat
+                    </h5>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success font-weight-bold" id="btnRunSyncVerifyAll">
-                        <i class="fas fa-bolt mr-1"></i> Mulai Verifikasi Sekarang
-                    </button>
+                <div class="modal-body p-3 p-md-4">
+                    
+                    <!-- Header Rate & Status Badges -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between p-2 rounded mb-3 bg-light border">
+                        <div class="mb-1 mb-md-0">
+                            <span class="badge badge-info px-2 py-1 mr-1">
+                                <i class="fas fa-tachometer-alt mr-1"></i> Kecepatan: 40 Data / Menit
+                            </span>
+                            <span class="badge badge-light border px-2 py-1" id="queueApiBadge">
+                                <i class="fas fa-wifi text-success mr-1"></i> API Pusat: Normal
+                            </span>
+                        </div>
+                        <div>
+                            <span class="badge badge-primary px-3 py-1 font-weight-bold" id="queueWorkerBadge" style="font-size: 0.85rem;">
+                                <i class="fas fa-sync fa-spin mr-1"></i> Memproses Antrian
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Cooldown 429 -->
+                    <div id="queueCooldownAlert" class="alert alert-warning text-sm py-2 px-3 mb-3 shadow-sm" style="display: none;">
+                        <i class="fas fa-hourglass-half mr-1 text-danger"></i>
+                        <span id="queueCooldownText" class="font-weight-bold">
+                            Batas kuota 60 req/menit server pusat terdeteksi. Melakukan jeda pendinginan aman...
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar & Persentase -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-sm font-weight-bold mb-1">
+                            <span class="text-dark"><i class="fas fa-tasks mr-1 text-primary"></i> Kemajuan Sinkronisasi</span>
+                            <span id="queueProgressPercent" class="text-primary font-weight-bold" style="font-size: 1.1rem;">0%</span>
+                        </div>
+                        <div class="progress shadow-sm" style="height: 24px; border-radius: 6px;">
+                            <div id="queueProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success font-weight-bold" role="progressbar" style="width: 0%; font-size: 0.85rem;">
+                                0%
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-xs text-muted mt-2">
+                            <span id="queueProgressText" class="font-weight-semibold">0 dari 0 data diproses (Sisa: 0 data)</span>
+                            <span id="queueEstimateText" class="font-weight-semibold"><i class="fas fa-clock mr-1"></i> Estimasi sisa: -</span>
+                        </div>
+                    </div>
+
+                    <!-- Kartu Metrik Hasil -->
+                    <div class="row text-center mb-3">
+                        <div class="col-3 pr-1">
+                            <div class="border rounded p-2 bg-light shadow-xs">
+                                <span class="text-xs text-muted d-block font-weight-semibold">Total Antrian</span>
+                                <strong id="metricTotal" class="text-dark" style="font-size: 1.25rem;">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 px-1">
+                            <div class="border rounded p-2 bg-light shadow-xs">
+                                <span class="text-xs text-muted d-block font-weight-semibold">Terverifikasi</span>
+                                <strong id="metricVerified" class="text-success" style="font-size: 1.25rem;">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 px-1">
+                            <div class="border rounded p-2 bg-light shadow-xs">
+                                <span class="text-xs text-muted d-block font-weight-semibold">Belum Terdata</span>
+                                <strong id="metricPending" class="text-warning" style="font-size: 1.25rem;">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-3 pl-1">
+                            <div class="border rounded p-2 bg-light shadow-xs">
+                                <span class="text-xs text-muted d-block font-weight-semibold">Gagal/Error</span>
+                                <strong id="metricFailed" class="text-danger" style="font-size: 1.25rem;">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kotak Streaming Log Real-time -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="font-weight-bold text-xs text-uppercase text-muted mb-0">
+                            <i class="fas fa-terminal mr-1"></i> Log Proses Real-time
+                        </label>
+                        <small class="text-muted text-xs">Auto-scroll aktif</small>
+                    </div>
+                    <div id="queueLogBox" class="border rounded p-2 bg-dark text-white text-xs mb-3 shadow-inner" style="height: 160px; overflow-y: auto; font-family: 'Courier New', Courier, monospace;">
+                        <div class="placeholder-log text-muted py-1">Menunggu inisialisasi antrian...</div>
+                    </div>
+
                 </div>
-            </form>
+                <div class="modal-footer bg-light d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnStopQueue">
+                            <i class="fas fa-stop mr-1"></i> Batalkan Antrian
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-warning font-weight-bold mr-1" id="btnPauseResumeQueue">
+                            <i class="fas fa-pause mr-1"></i> Jeda Antrian
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnFinishQueue" style="display: none;">
+                            <i class="fas fa-check-circle mr-1"></i> Selesai &amp; Refresh Halaman
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

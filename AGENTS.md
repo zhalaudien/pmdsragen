@@ -1845,3 +1845,45 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 - **Pengujian Unit (`tests/unit/PemudaExportTest.php`):**
   - 5 unit tests (133 assertions) berhasil menguji registrasi rute, struktur kategori & preset kolom, pembuatan spreadsheet Excel, filtering bakat/minat model, dan batasan scope role.
 
+### 2026-09-08 — Sistem Antrian Sinkronisasi Data Pemuda API Pusat (Laju Terkendali 40 Data / Menit)
+
+- **Latar Belakang & Masalah:**
+  - Server API MTA Pusat membatasi permintaan maksimal **60 request / menit**.
+  - Jika sinkronisasi massal dijalankan sekaligus tanpa kontrol laju, request ke-61 dan seterusnya terkena limit kuota (HTTP 429 Too Many Requests), menyebabkan banyak data pemuda gagal disinkronkan dan web server mengalami *gateway timeout*.
+- **Solusi & Arsitektur Antrian (Queue):**
+  - Diterapkan antrian terkendali dengan laju aman **40 data / menit** (1 data setiap **1.5 detik / 1500 ms**).
+  - Laju 40 data/menit berada 33.3% di bawah batas maksimal 60 req/menit server pusat sehingga koneksi API Pusat selalu terjaga stabil tanpa risiko terputus atau terblokir.
+- **Database & Migration (`mta_sync_queue`):**
+  - Dibuat migration `2026-09-08-060000_CreateMtaSyncQueueTable.php` untuk mencatat antrian pemuda yang akan disinkronkan.
+  - Kolom: `id`, `pemuda_id` (FK cascade), `cabang_id` (FK cascade), `status` (`pending`, `processing`, `completed`, `failed`), `result` (`verified`, `pending`, `error`), `message`, `mta_warga_uuid`, `attempts`, `created_by`, `processed_at`.
+  - Dibuat model `MtaSyncQueueModel.php` dengan method kalkulasi ringkasan antrian (`getQueueSummary`), estimasi sisa waktu, pemanggilan item pending berikutnya (`getNextPendingItem`), dan pembersihan antrian (`clearPendingQueue`).
+- **Service Layer (`app/Services/MtaSyncService.php`):**
+  - Ditambahkan method `initSyncQueue(?int $cabangId, bool $onlyPending, ?int $userId, bool $clearExisting)` untuk menyiapkan antrian data pemuda aktif.
+  - Ditambahkan method `processNextQueueItem(?int $userId)`: Memproses 1 item antrian dengan proteksi deteksi HTTP 429. Jika limit kuota terdeteksi, status dikembalikan ke `pending` dan antrian melakukan jeda pendinginan aman (cooldown) otomatis selama 10 detik tanpa menghilangkan data.
+  - Ditambahkan method `getQueueStatus()` dan `cancelQueue(?int $userId)`.
+  - Pembaruan `syncAndVerifyAllPemudaSragen()`: Diberikan *throttling* jeda 1.5 detik per iterasi untuk eksekusi server-side/CLI.
+- **Spark CLI Command (`app/Commands/MtaSyncQueue.php`):**
+  - Disediakan perintah `php spark mta:sync-queue` dengan opsi `--cabang`, `--only-pending`, dan `--init` untuk menjalankan antrian sinkronisasi via konsol terminal atau cron job di background.
+- **Controller & Routing (`app/Controllers/Admin/MtaSync.php` & `app/Config/Routes.php`):**
+  - Didaftarkan endpoint AJAX baru di bawah route group `admin/mta-sync`:
+    - `POST admin/mta-sync/queue-init`
+    - `POST admin/mta-sync/queue-process-item`
+    - `GET admin/mta-sync/queue-status`
+    - `POST admin/mta-sync/queue-cancel`
+  - Seluruh endpoint dilindungi filter `csrf`, `auth`, dan `role:superadmin` serta selalu menyinkronkan token hash CSRF pada response JSON.
+- **User Interface & UX Monitor Real-time (`app/Views/admin/mta_sync/index.php`):**
+  - **Banner Peringatan Antrian Tersimpan:** Jika admin memiliki antrian belum selesai dari sesi sebelumnya, sistem menampilkan alert informatif dengan tombol "Lanjutkan Antrian" dan "Hapus Antrian".
+  - **Modal Antrian Interaktif (Modal-LG):**
+    - Panel pengaturan cakupan cabang dan opsi khusus pemuda pending disertai penjelasan laju 40 data/menit.
+    - Panel Monitor Kemajuan Real-time:
+      - Badge status koneksi API Pusat dan indikator kecepatan 40 data/menit.
+      - Alert pendinginan otomatis jika terjadi limit 429 dengan hitung mundur detik (countdown timer).
+      - Progress bar animasi bergaris lengkap dengan persentase dan estimasi sisa waktu.
+      - 4 Kartu Metrik: Total Antrian, Terverifikasi (hijau), Belum Terdata (kuning), Gagal/Error (merah).
+      - Kotak streaming log real-time dengan auto-scroll untuk memantau pemrosesan setiap individu pemuda.
+      - Kontrol penuh: Tombol "Jeda Antrian" (Pause), "Lanjutkan Antrian" (Resume), dan "Batalkan Antrian" (Stop).
+- **Pengujian Unit (`tests/unit/MtaSyncQueueTest.php`):**
+  - 6 unit tests (46 asersi) berhasil memverifikasi model, konfigurasi route, laju pacing 1500 ms (40 data/menit), controller methods, dan elemen UI.
+  - Seluruh 95 unit test sistem (638 asersi) lulus 100%.
+
+
