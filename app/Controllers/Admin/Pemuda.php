@@ -20,6 +20,7 @@ use App\Models\DistrictModel;
 use App\Models\VillageModel;
 use App\Services\PemudaImportService;
 use App\Services\PemudaExportService;
+use App\Services\PemudaBackupService;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Config\Database;
 
@@ -1344,5 +1345,208 @@ class Pemuda extends BaseController
             $redirect->with('import_warnings', $result['errors']);
         }
         return $redirect;
+    }
+
+    /**
+     * Halaman Backup & Pemeliharaan Data Pemuda (Khusus Superadmin)
+     */
+    public function backup()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Fitur backup dan pemeliharaan hanya dapat diakses oleh Super Administrator.');
+        }
+
+        $backupService = new PemudaBackupService();
+        $countsSummary = $backupService->getCountsSummary();
+        $statusSummary = $this->pemudaModel->getCountsSummary($scope);
+        $backupList    = $backupService->getBackupList();
+
+        $data = [
+            'title'         => 'Backup & Pembersihan Data Pemuda',
+            'user'          => session()->get(),
+            'countsSummary' => $countsSummary,
+            'statusSummary' => $statusSummary,
+            'backupList'    => $backupList,
+            'backupDir'     => $backupService->getBackupDir(),
+        ];
+
+        return view('admin/pemuda/backup', $data);
+    }
+
+    /**
+     * Proses Pembuatan dan Pengunduhan/Penyimpanan Berkas Backup Data Pemuda
+     */
+    public function generateBackup()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Fitur backup data hanya dapat diakses oleh Super Administrator.');
+        }
+
+        $format = strtolower((string) ($this->request->getPost('format') ?: 'sql'));
+        $action = strtolower((string) ($this->request->getPost('action') ?: 'download'));
+
+        $backupService = new PemudaBackupService();
+
+        if ($format === 'sql') {
+            if ($action === 'save') {
+                $result = $backupService->generateSqlBackup(true);
+                return redirect()->to(base_url('admin/pemuda/backup'))
+                                 ->with('success', "Berkas cadangan database SQL ({$result['filename']}) berhasil dibuat dan disimpan di server.");
+            }
+
+            // Langsung unduh ke browser
+            $result = $backupService->generateSqlBackup(false);
+            return $this->response
+                        ->setHeader('Content-Type', 'application/sql')
+                        ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+                        ->setHeader('Cache-Control', 'max-age=0')
+                        ->setBody($result['content']);
+        }
+
+        if ($format === 'json') {
+            if ($action === 'save') {
+                $result = $backupService->generateJsonBackup(true);
+                return redirect()->to(base_url('admin/pemuda/backup'))
+                                 ->with('success', "Berkas cadangan format JSON ({$result['filename']}) berhasil dibuat dan disimpan di server.");
+            }
+
+            // Langsung unduh ke browser
+            $result = $backupService->generateJsonBackup(false);
+            return $this->response
+                        ->setHeader('Content-Type', 'application/json')
+                        ->setHeader('Content-Disposition', 'attachment; filename="' . $result['filename'] . '"')
+                        ->setHeader('Cache-Control', 'max-age=0')
+                        ->setBody($result['content']);
+        }
+
+        if ($format === 'xlsx') {
+            if ($action === 'save') {
+                $result = $backupService->generateXlsxBackup(true);
+                return redirect()->to(base_url('admin/pemuda/backup'))
+                                 ->with('success', "Berkas cadangan format Excel ({$result['filename']}) berhasil dibuat dan disimpan di server.");
+            }
+
+            // Langsung unduh ke browser
+            $result = $backupService->generateXlsxBackup(false);
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $result['filename'] . '"');
+            header('Cache-Control: max-age=0');
+
+            $writer = new Xlsx($result['spreadsheet']);
+            $writer->save('php://output');
+            exit;
+        }
+
+        return redirect()->to(base_url('admin/pemuda/backup'))->with('error', 'Format cadangan tidak valid.');
+    }
+
+    /**
+     * Unduh Berkas Backup yang Tersimpan di Server
+     */
+    public function downloadBackup(string $filename)
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Fitur ini hanya untuk Super Administrator.');
+        }
+
+        $backupService = new PemudaBackupService();
+        $path = $backupService->getBackupFilePath($filename);
+
+        if (!$path) {
+            return redirect()->to(base_url('admin/pemuda/backup'))
+                             ->with('error', 'Berkas cadangan tidak ditemukan atau nama berkas tidak valid.');
+        }
+
+        return $this->response->download($path, null);
+    }
+
+    /**
+     * Hapus Berkas Backup yang Tersimpan di Server
+     */
+    public function deleteBackupFile(string $filename)
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Fitur ini hanya untuk Super Administrator.');
+        }
+
+        $backupService = new PemudaBackupService();
+        $deleted = $backupService->deleteBackupFile($filename);
+
+        if (!$deleted) {
+            return redirect()->to(base_url('admin/pemuda/backup'))
+                             ->with('error', 'Gagal menghapus berkas cadangan atau berkas tidak ditemukan.');
+        }
+
+        return redirect()->to(base_url('admin/pemuda/backup'))
+                         ->with('success', 'Berkas cadangan ' . esc($filename) . ' berhasil dihapus dari server.');
+    }
+
+    /**
+     * Hapus Seluruh Data Pemuda (Reset Total Data Pemuda - Superadmin Only)
+     */
+    public function hapusSemua()
+    {
+        $scope = $this->getScope();
+        if ($scope['role'] !== 'superadmin') {
+            return redirect()->to(base_url('admin/pemuda'))
+                             ->with('error', 'Akses ditolak. Hanya Super Administrator yang berhak menghapus seluruh data pemuda.');
+        }
+
+        $rules = [
+            'confirm_text' => [
+                'label' => 'Teks Konfirmasi',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => 'Kolom konfirmasi wajib diisi.',
+                ],
+            ],
+            'password' => [
+                'label' => 'Password Konfirmasi',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => 'Password akun Super Administrator wajib diisi untuk verifikasi keamanan.',
+                ],
+            ],
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->to(base_url('admin/pemuda/backup'))
+                             ->with('error', 'Silakan lengkapi konfirmasi teks dan password.');
+        }
+
+        $confirmText = trim((string) $this->request->getPost('confirm_text'));
+        if ($confirmText !== 'HAPUS SEMUA PEMUDA') {
+            return redirect()->to(base_url('admin/pemuda/backup'))
+                             ->with('error', 'Teks konfirmasi salah. Harap ketik teks "HAPUS SEMUA PEMUDA" secara persis untuk melanjutkan.');
+        }
+
+        $password = (string) $this->request->getPost('password');
+        $userId   = (int) session()->get('user_id');
+
+        $backupService = new PemudaBackupService();
+        $result = $backupService->deleteAllYouthData($userId, $password);
+
+        if (!$result['success']) {
+            return redirect()->to(base_url('admin/pemuda/backup'))
+                             ->with('error', $result['message']);
+        }
+
+        $deletedPemudaCount = $result['deleted_counts']['pemuda'] ?? 0;
+        $msg = "Seluruh data pemuda ({$deletedPemudaCount} pemuda) berhasil dihapus permanen dari sistem.";
+
+        if (!empty($result['auto_backup'])) {
+            $msg .= " Salinan cadangan otomatis darurat telah disimpan di server: {$result['auto_backup']}.";
+        }
+
+        return redirect()->to(base_url('admin/pemuda/backup'))
+                         ->with('success', $msg);
     }
 }

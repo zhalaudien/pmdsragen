@@ -17,6 +17,9 @@
                 <a href="<?= base_url('admin/pemuda/import') ?>" class="btn btn-outline-primary btn-sm">
                     <i class="fas fa-file-excel mr-1"></i> Import Excel
                 </a>
+                <a href="<?= base_url('admin/pemuda/backup') ?>" class="btn btn-outline-warning btn-sm font-weight-bold">
+                    <i class="fas fa-database mr-1"></i> Backup &amp; Hapus Data
+                </a>
             <?php endif; ?>
             <a href="<?= base_url('admin/pemuda/export?' . http_build_query(array_filter($filters, fn($v) => $v !== null && $v !== ''))) ?>" class="btn btn-outline-success btn-sm">
                 <i class="fas fa-file-export mr-1"></i> Export Data

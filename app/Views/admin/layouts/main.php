@@ -254,6 +254,14 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="<?= base_url('admin/pemuda/backup') ?>" 
+                               class="nav-link <?= url_is('admin/pemuda/backup*') ? 'active' : '' ?>">
+                                <i class="nav-icon fas fa-database text-warning"></i>
+                                <p>Backup &amp; Reset Data</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
                             <a href="<?= base_url('admin/wilayah') ?>" 
                                class="nav-link <?= url_is('admin/wilayah*') ? 'active' : '' ?>">
                                 <i class="nav-icon fas fa-map-marked-alt text-warning"></i>

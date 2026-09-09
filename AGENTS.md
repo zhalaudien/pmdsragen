@@ -1882,8 +1882,44 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
       - 4 Kartu Metrik: Total Antrian, Terverifikasi (hijau), Belum Terdata (kuning), Gagal/Error (merah).
       - Kotak streaming log real-time dengan auto-scroll untuk memantau pemrosesan setiap individu pemuda.
       - Kontrol penuh: Tombol "Jeda Antrian" (Pause), "Lanjutkan Antrian" (Resume), dan "Batalkan Antrian" (Stop).
-- **Pengujian Unit (`tests/unit/MtaSyncQueueTest.php`):**
-  - 6 unit tests (46 asersi) berhasil memverifikasi model, konfigurasi route, laju pacing 1500 ms (40 data/menit), controller methods, dan elemen UI.
-  - Seluruh 95 unit test sistem (638 asersi) lulus 100%.
+### 2026-09-09 — Penambahan Fitur Backup dan Hapus Semua Data Pemuda (Role Superadmin)
+
+- **Latar Belakang & Kebutuhan:**
+  - Kebutuhan administrasi bagi Super Administrator untuk mencadangkan (backup) seluruh basis data pemuda sebelum peremajaan sistem, ekspor berkala, atau migrasi.
+  - Kebutuhan pembersihan/penghapusan menyeluruh data pemuda (reset total) saat pengujian selesai, sebelum peluncuran resmi sistem, atau reset data tahunan.
+- **Service Layer (`app/Services/PemudaBackupService.php`):**
+  - Dibuat `PemudaBackupService` yang menangani 3 format cadangan:
+    1. **SQL Database Dump (`generateSqlBackup`):** Menghasilkan skrip dump SQL berformat `.sql` berisi DDL/DML lengkap tabel `pemuda`, `alamat`, `pendidikan`, `pekerjaan`, `organisasi`, `pemuda_skills`, `pemuda_interests`, dan `mta_sync_queue`. Dilengkapi `SET FOREIGN_KEY_CHECKS = 0` dan batch per 50 baris untuk kompatibilitas import MySQL/phpMyAdmin.
+    2. **JSON Structured Export (`generateJsonBackup`):** Menghasilkan berkas `.json` hierarkis terstruktur memuat data induk pemuda beserta child relation lengkap dan raw database tables.
+    3. **Excel Spreadsheet Backup (`generateXlsxBackup`):** Memanfaatkan PhpSpreadsheet untuk menghasilkan berkas `.xlsx` komprehensif berisi seluruh atribut pemuda dari seluruh cabang dan wilayah MTA Sragen.
+  - Manajemen berkas cadangan internal di server (`writable/backups/`) dengan proteksi keamanan `.htaccess` (`Deny from all`) dan `index.html`.
+  - Fungsi `getBackupList()`, `getBackupFilePath()`, dan `deleteBackupFile()` dengan validasi ketat anti-*directory traversal*.
+  - Fungsi `deleteAllYouthData(int $superadminUserId, string $password)`:
+    - Verifikasi otentikasi password akun superadmin menggunakan `password_verify()`.
+    - Pengecekan ketersediaan data pemuda sebelum eksekusi.
+    - **Proteksi Auto-Backup Darurat:** Secara otomatis membuat dan menyimpan snapshot cadangan SQL (`auto_backup_sebelum_reset_YYYYMMDD_HHmmss.sql`) di server sebelum penghapusan dilakukan.
+    - Menjalankan penghapusan menyeluruh dalam database transaction (`transStart()`, `transComplete()`) secara berurutan: tabel relasi anak (`pemuda_interests`, `pemuda_skills`, `organisasi`, `pekerjaan`, `pendidikan`, `alamat`, `mta_sync_queue`), pemutusan FK pada `responses` (SET NULL), dan tabel induk `pemuda`.
+    - Reset `AUTO_INCREMENT` kembali ke 1.
+    - Pencatatan log audit keamanan.
+- **Controller & Routing (`app/Controllers/Admin/Pemuda.php` & `app/Config/Routes.php`):**
+  - Didaftarkan rute khusus di bawah filter `auth` dan `role:superadmin`:
+    - `GET admin/pemuda/backup` (`Admin\Pemuda::backup`)
+    - `POST admin/pemuda/backup/generate` (`Admin\Pemuda::generateBackup`)
+    - `GET admin/pemuda/backup/download/(:segment)` (`Admin\Pemuda::downloadBackup`)
+    - `POST admin/pemuda/backup/delete-file/(:segment)` (`Admin\Pemuda::deleteBackupFile`)
+    - `POST admin/pemuda/hapus-semua` (`Admin\Pemuda::hapusSemua`)
+  - Validasi multi-layer pada controller: pemeriksaan role session, verifikasi teks konfirmasi (`HAPUS SEMUA PEMUDA`), dan validasi server-side.
+- **User Interface & UX Admin Panel:**
+  - Halaman baru `app/Views/admin/pemuda/backup.php`:
+    - Ringkasan metrik data pemuda, data terverifikasi, status pending, dan total relasi.
+    - 3 Kartu Format Backup (SQL, JSON, Excel) dengan opsi "Download Langsung" dan "Simpan di Server".
+    - Tabel Riwayat Berkas Cadangan di Server dengan badge format, ukuran berkas, waktu pembuatan, tombol unduh, dan hapus berkas.
+    - Kartu Zona Bahaya (*Danger Zone*) dengan peringatan berbingkai merah dan tombol buka modal.
+    - Modal Konfirmasi Keamanan Ganda: Input teks `HAPUS SEMUA PEMUDA`, input password Superadmin dengan tombol show/hide eye, checkbox persetujuan tanggung jawab, dan tombol eksekusi yang dinonaktifkan otomatis sampai seluruh syarat terpenuhi.
+  - Diperbarui `app/Views/admin/pemuda/index.php`: Ditambahkan tombol "Backup & Hapus Data" pada header action bar khusus Superadmin.
+  - Diperbarui `app/Views/admin/layouts/main.php`: Ditambahkan item menu sidebar "Backup & Reset Data" (`fas fa-database text-warning`) di bawah Master & Pengaturan khusus Superadmin.
+- **Pengujian Unit (`tests/unit/PemudaBackupTest.php`):**
+  - 7 unit tests (58 asersi) memverifikasi direktori backup dan proteksi, integritas SQL dump, struktur JSON hierarkis, instansiasi Excel spreadsheet, penyimpanan dan penghapusan berkas cadangan aman, pencegahan directory traversal, validasi password superadmin, auto-backup darurat, dan alur transaksi reset pemuda.
+
 
 

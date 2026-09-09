@@ -56,6 +56,13 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
         $routes->get('import', 'Admin\Pemuda::import', ['filter' => 'role:superadmin']);
         $routes->post('import', 'Admin\Pemuda::prosesImport', ['filter' => 'role:superadmin']);
         $routes->get('template-import', 'Admin\Pemuda::templateImport', ['filter' => 'role:superadmin']);
+
+        // Backup & Hapus Semua Data Pemuda (Khusus Superadmin)
+        $routes->get('backup', 'Admin\Pemuda::backup', ['filter' => 'role:superadmin']);
+        $routes->post('backup/generate', 'Admin\Pemuda::generateBackup', ['filter' => 'role:superadmin']);
+        $routes->get('backup/download/(:segment)', 'Admin\Pemuda::downloadBackup/$1', ['filter' => 'role:superadmin']);
+        $routes->post('backup/delete-file/(:segment)', 'Admin\Pemuda::deleteBackupFile/$1', ['filter' => 'role:superadmin']);
+        $routes->post('hapus-semua', 'Admin\Pemuda::hapusSemua', ['filter' => 'role:superadmin']);
     });
 
     // Master Wilayah (Superadmin)
