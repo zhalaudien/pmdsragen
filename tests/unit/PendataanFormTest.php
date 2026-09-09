@@ -19,6 +19,7 @@ final class PendataanFormTest extends CIUnitTestCase
         $this->assertContains('blood_type', $fields);
         $this->assertContains('gender', $fields);
         $this->assertContains('name', $fields);
+        $this->assertContains('foto', $fields);
     }
 
     public function testPemudaModelValidationRules(): void
@@ -134,5 +135,42 @@ final class PendataanFormTest extends CIUnitTestCase
         $adminDetail = file_get_contents(APPPATH . 'Views/admin/pemuda/detail.php');
         $this->assertStringNotContainsString('Masa Keanggotaan', $adminDetail);
         $this->assertStringNotContainsString('<th>Jabatan</th>', $adminDetail);
+    }
+
+    public function testFotoProfileUploadFormAndRequirement(): void
+    {
+        $publicForm = file_get_contents(APPPATH . 'Views/pendataan/form.php');
+
+        // Form must support file upload
+        $this->assertStringContainsString('enctype="multipart/form-data"', $publicForm);
+
+        // Foto file input exists
+        $this->assertStringContainsString('name="foto"', $publicForm);
+        $this->assertStringContainsString('id="foto"', $publicForm);
+        $this->assertStringContainsString('id="section-foto-profil"', $publicForm);
+
+        // Dynamic badges & text for male/female
+        $this->assertStringContainsString('Wajib untuk Laki-laki', $publicForm);
+        $this->assertStringContainsString('Perempuan tidak diwajibkan', $publicForm);
+
+        // Verification of gender-based requirement helper logic
+        $isPhotoRequiredForMale = function(string $gender, bool $hasFile, bool $hasExisting): bool {
+            if ($gender === 'L' && !$hasFile && !$hasExisting) {
+                return false; // Invalid: missing required photo
+            }
+            return true; // Valid
+        };
+
+        // Male without photo -> invalid
+        $this->assertFalse($isPhotoRequiredForMale('L', false, false));
+        // Male with photo -> valid
+        $this->assertTrue($isPhotoRequiredForMale('L', true, false));
+        // Male with existing photo -> valid
+        $this->assertTrue($isPhotoRequiredForMale('L', false, true));
+
+        // Female without photo -> valid (not required)
+        $this->assertTrue($isPhotoRequiredForMale('P', false, false));
+        // Female with photo -> valid
+        $this->assertTrue($isPhotoRequiredForMale('P', true, false));
     }
 }

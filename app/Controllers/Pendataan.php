@@ -142,10 +142,72 @@ class Pendataan extends BaseController
 
         $isUpdate = ($existingPemuda !== null);
 
+        // 1b. Validasi Upload Foto Profil:
+        // Wajib bagi pendaftar laki-laki ('L'), tidak wajib / opsional bagi perempuan ('P')
+        $fotoFile        = $this->request->getFile('foto');
+        $hasUploadedFoto = ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved());
+        $hasExistingFoto = ($isUpdate && !empty($existingPemuda['foto']));
+
+        if ($gender === 'L' && !$hasUploadedFoto && !$hasExistingFoto) {
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'Foto profil wajib diunggah bagi pendaftar laki-laki.');
+        }
+
+        // Jika user memilih file foto, validasi ukuran dan formatnya
+        if ($fotoFile && $fotoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (!$fotoFile->isValid()) {
+                $errCode = $fotoFile->getError();
+                $errMsg  = ($errCode === UPLOAD_ERR_INI_SIZE || $errCode === UPLOAD_ERR_FORM_SIZE)
+                    ? 'Ukuran file foto melebihi batas maksimal 2 MB.'
+                    : 'Terjadi kesalahan saat mengunggah foto profil: ' . $fotoFile->getErrorString();
+
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', $errMsg);
+            }
+
+            // Maksimal 2MB (2048 KB)
+            if ($fotoFile->getSizeByUnit('kb') > 2048) {
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Ukuran file foto melebihi batas maksimal 2 MB.');
+            }
+
+            // Ekstensi file yang diperbolehkan
+            $ext = strtolower($fotoFile->getClientExtension());
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.');
+            }
+
+            // Mime type yang diperbolehkan
+            $mime = strtolower($fotoFile->getMimeType());
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/x-png', 'image/pjpeg'];
+            if (!in_array($mime, $allowedMimes, true)) {
+                return redirect()->back()
+                                 ->withInput()
+                                 ->with('error', 'Berkas yang diunggah bukan format gambar yang valid.');
+            }
+        }
+
+        $newFotoName = null;
+        $uploadDir   = FCPATH . 'uploads/pemuda';
+
         $db = Database::connect();
         $db->transStart();
 
         try {
+            // Proses upload file foto jika valid
+            if ($hasUploadedFoto) {
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $newFotoName = $fotoFile->getRandomName();
+                $fotoFile->move($uploadDir, $newFotoName);
+            }
+
             // 2. Verifikasi Otomatis dengan Database Warga MTA Pusat (Perwakilan Sragen)
             $syncService  = new \App\Services\MtaSyncService();
             $verifyCheck  = $syncService->verifyYouthAgainstMta([
@@ -182,6 +244,7 @@ class Pendataan extends BaseController
                 'mta_ayah_uuid'     => $mtaAyahUuid ? mb_strtolower(trim($mtaAyahUuid), 'UTF-8') : null,
                 'mta_ibu_uuid'      => $mtaIbuUuid ? mb_strtolower(trim($mtaIbuUuid), 'UTF-8') : null,
                 'mta_foto_url'      => $mtaFotoUrl,
+                'foto'              => $newFotoName ?? ($existingPemuda['foto'] ?? null),
                 'mta_synced_at'     => $mtaSyncedAt,
             ];
 
@@ -191,6 +254,14 @@ class Pendataan extends BaseController
                 $regNumber = $existingPemuda['registration_number'];
 
                 $this->pemudaModel->update($pemudaId, $pemudaData);
+
+                // Hapus foto lama jika diganti dengan foto baru
+                if ($newFotoName !== null && !empty($existingPemuda['foto']) && $existingPemuda['foto'] !== $newFotoName) {
+                    $oldFotoPath = $uploadDir . '/' . $existingPemuda['foto'];
+                    if (file_exists($oldFotoPath)) {
+                        @unlink($oldFotoPath);
+                    }
+                }
             } else {
                 // 3b. Generate Registration Number baru dan insert pemuda
                 $regNumber = $this->pemudaModel->generateRegistrationNumber((int) $cabangId, $birthDate);
@@ -350,6 +421,12 @@ class Pendataan extends BaseController
 
         } catch (\Throwable $e) {
             $db->transRollback();
+            if (!empty($newFotoName)) {
+                $failedPath = (FCPATH . 'uploads/pemuda/') . $newFotoName;
+                if (file_exists($failedPath)) {
+                    @unlink($failedPath);
+                }
+            }
             return redirect()->back()
                              ->withInput()
                              ->with('error', 'Gagal menyimpan data: ' . $e->getMessage());

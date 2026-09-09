@@ -18,6 +18,12 @@
                         Dashboard Super Administrator
                     <?php elseif ($userRole === 'admin_wilayah'): ?>
                         Dashboard Admin Wilayah: <?= esc($wilayahName) ?>
+                    <?php elseif ($userRole === 'admin_wilayah_pemuda'): ?>
+                        Dashboard Admin Wilayah Pemuda (L): <?= esc($wilayahName) ?>
+                    <?php elseif ($userRole === 'admin_pemuda'): ?>
+                        Dashboard Admin Pemuda (L): <?= esc($cabangName) ?>
+                    <?php elseif ($userRole === 'admin_pemudi'): ?>
+                        Dashboard Admin Pemudi (P): <?= esc($cabangName) ?>
                     <?php else: ?>
                         Dashboard Admin Cabang: <?= esc($cabangName) ?>
                     <?php endif; ?>
@@ -28,6 +34,12 @@
                         Pantau seluruh data pemuda, distribusi wilayah &amp; cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di Kabupaten Sragen.
                     <?php elseif ($userRole === 'admin_wilayah'): ?>
                         Pantau dan analisis sebaran data pemuda pada seluruh cabang dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
+                    <?php elseif ($userRole === 'admin_wilayah_pemuda'): ?>
+                        Pantau dan analisis sebaran data pemuda laki-laki pada seluruh cabang dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
+                    <?php elseif ($userRole === 'admin_pemuda'): ?>
+                        Kelola, input, dan verifikasi data pemuda laki-laki khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
+                    <?php elseif ($userRole === 'admin_pemudi'): ?>
+                        Kelola, input, dan verifikasi data pemuda perempuan (pemudi) khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
                     <?php else: ?>
                         Kelola, input, dan verifikasi data pemuda khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
                     <?php endif; ?>
@@ -300,7 +312,7 @@
                     <i class="fas fa-trophy mr-1 text-warning"></i>
                     <?php if ($userRole === 'superadmin'): ?>
                         10 Cabang Terbanyak
-                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                    <?php elseif ($userRole === 'admin_wilayah' || $userRole === 'admin_wilayah_pemuda'): ?>
                         Cabang Terbanyak di <?= esc($wilayahName) ?>
                     <?php else: ?>
                         Statistik Cabang <?= esc($cabangName) ?>

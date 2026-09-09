@@ -27,6 +27,21 @@ class UserRoleSeeder extends Seeder
                 'name'        => 'admin_cabang',
                 'description' => 'Administrator tingkat Cabang',
             ],
+            [
+                'id'          => 4,
+                'name'        => 'admin_pemuda',
+                'description' => 'Administrator tingkat Cabang khusus pemuda Laki-laki',
+            ],
+            [
+                'id'          => 5,
+                'name'        => 'admin_pemudi',
+                'description' => 'Administrator tingkat Cabang khusus pemuda Perempuan',
+            ],
+            [
+                'id'          => 6,
+                'name'        => 'admin_wilayah_pemuda',
+                'description' => 'Administrator tingkat Wilayah khusus pemuda Laki-laki',
+            ],
         ];
 
         $this->db->table('user_roles')->insertBatch($data);

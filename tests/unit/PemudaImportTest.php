@@ -141,6 +141,13 @@ final class PemudaImportTest extends CIUnitTestCase
         $this->assertEquals(25, $map['skills']);
         $this->assertEquals(26, $map['interests']);
         $this->assertEquals(27, $map['status_verifikasi']);
+
+        // Verify Element Dakwah and Elemen Dakwah variants also map to organisasi
+        $elementDakwahMap = $method->invoke($this->importService, ['Element Dakwah (Opsional)']);
+        $this->assertEquals(0, $elementDakwahMap['organisasi']);
+
+        $elemenDakwahMap = $method->invoke($this->importService, ['Elemen Dakwah']);
+        $this->assertEquals(0, $elemenDakwahMap['organisasi']);
     }
 
     public function testDateParsingFormats(): void

@@ -126,7 +126,7 @@
                 <!-- Cabang -->
                 <div class="col-12 col-sm-6 col-md-4 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Cabang</label>
-                    <?php if (session()->get('role') === 'admin_cabang'): ?>
+                    <?php if (in_array(session()->get('role'), ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <select class="form-control form-control-sm bg-light" disabled>
                             <?php foreach ($cabangList as $c): ?>
                                 <option selected><?= esc($c['name']) ?></option>
@@ -148,11 +148,23 @@
                 <!-- Gender -->
                 <div class="col-6 col-md-2 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Gender</label>
-                    <select name="gender" class="form-control form-control-sm">
-                        <option value="">-- Semua --</option>
-                        <option value="L" <?= ($filters['gender'] ?? '') === 'L' ? 'selected' : '' ?>>Laki-laki (L)</option>
-                        <option value="P" <?= ($filters['gender'] ?? '') === 'P' ? 'selected' : '' ?>>Perempuan (P)</option>
-                    </select>
+                    <?php if (in_array(session()->get('role'), ['admin_wilayah_pemuda', 'admin_pemuda'], true)): ?>
+                        <select class="form-control form-control-sm bg-light font-weight-bold text-primary" disabled>
+                            <option selected>Laki-laki (L)</option>
+                        </select>
+                        <input type="hidden" name="gender" value="L">
+                    <?php elseif (session()->get('role') === 'admin_pemudi'): ?>
+                        <select class="form-control form-control-sm bg-light font-weight-bold text-danger" disabled>
+                            <option selected>Perempuan (P)</option>
+                        </select>
+                        <input type="hidden" name="gender" value="P">
+                    <?php else: ?>
+                        <select name="gender" class="form-control form-control-sm">
+                            <option value="">-- Semua --</option>
+                            <option value="L" <?= ($filters['gender'] ?? '') === 'L' ? 'selected' : '' ?>>Laki-laki (L)</option>
+                            <option value="P" <?= ($filters['gender'] ?? '') === 'P' ? 'selected' : '' ?>>Perempuan (P)</option>
+                        </select>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Status Pernikahan -->
@@ -247,9 +259,15 @@
                 <?php foreach ($pemudaList as $p): ?>
                     <div class="pemuda-card-item">
                         <div class="d-flex align-items-start gap-2 mb-2">
-                            <div class="pemuda-card-avatar mr-2">
-                                <?= strtoupper(substr($p['name'], 0, 1)) ?>
-                            </div>
+                            <?php if (!empty($p['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $p['foto'])): ?>
+                                <img src="<?= base_url('uploads/pemuda/' . $p['foto']) ?>" alt="" class="pemuda-card-avatar mr-2 rounded-circle shadow-none" style="object-fit: cover;">
+                            <?php elseif (!empty($p['mta_foto_url'])): ?>
+                                <img src="<?= esc($p['mta_foto_url']) ?>" alt="" class="pemuda-card-avatar mr-2 rounded-circle shadow-none" style="object-fit: cover;">
+                            <?php else: ?>
+                                <div class="pemuda-card-avatar mr-2">
+                                    <?= strtoupper(substr($p['name'], 0, 1)) ?>
+                                </div>
+                            <?php endif; ?>
                             <div class="flex-grow-1 min-w-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h6 class="font-weight-bold text-dark mb-0 text-truncate" style="font-size: 0.95rem;">

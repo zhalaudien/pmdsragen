@@ -292,7 +292,7 @@
                 <!-- CABANG -->
                 <div class="col-md-3 col-sm-6 mb-3">
                     <label class="form-label text-xs font-weight-bold text-muted mb-1">Cabang Pemuda</label>
-                    <?php if ($scope['role'] === 'admin_cabang'): ?>
+                    <?php if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <input type="text" class="form-control form-control-sm bg-light" value="<?= esc($cabangList[0]['name'] ?? 'Cabang Anda') ?>" readonly>
                         <input type="hidden" name="cabang_id" value="<?= esc($scope['cabang_id']) ?>">
                     <?php else: ?>
@@ -310,11 +310,19 @@
                 <!-- JENIS KELAMIN -->
                 <div class="col-md-3 col-sm-6 mb-3">
                     <label class="form-label text-xs font-weight-bold text-muted mb-1">Jenis Kelamin</label>
-                    <select class="form-control form-control-sm filter-input" id="filter_gender" name="gender">
-                        <option value="">Semua Gender</option>
-                        <option value="L" <?= (!empty($filters['gender']) && $filters['gender'] === 'L') ? 'selected' : '' ?>>Laki-laki (Ikhwan)</option>
-                        <option value="P" <?= (!empty($filters['gender']) && $filters['gender'] === 'P') ? 'selected' : '' ?>>Perempuan (Akhwat)</option>
-                    </select>
+                    <?php if (in_array($scope['role'], ['admin_wilayah_pemuda', 'admin_pemuda'], true)): ?>
+                        <input type="text" class="form-control form-control-sm bg-light text-primary font-weight-bold" value="Laki-laki (Ikhwan)" readonly>
+                        <input type="hidden" name="gender" value="L">
+                    <?php elseif ($scope['role'] === 'admin_pemudi'): ?>
+                        <input type="text" class="form-control form-control-sm bg-light text-danger font-weight-bold" value="Perempuan (Akhwat)" readonly>
+                        <input type="hidden" name="gender" value="P">
+                    <?php else: ?>
+                        <select class="form-control form-control-sm filter-input" id="filter_gender" name="gender">
+                            <option value="">Semua Gender</option>
+                            <option value="L" <?= (!empty($filters['gender']) && $filters['gender'] === 'L') ? 'selected' : '' ?>>Laki-laki (Ikhwan)</option>
+                            <option value="P" <?= (!empty($filters['gender']) && $filters['gender'] === 'P') ? 'selected' : '' ?>>Perempuan (Akhwat)</option>
+                        </select>
+                    <?php endif; ?>
                 </div>
 
                 <!-- STATUS VERIFIKASI -->
@@ -375,10 +383,10 @@
                     </select>
                 </div>
 
-                <!-- NAMA ORGANISASI -->
+                <!-- ELEMENT DAKWAH -->
                 <div class="col-md-4 col-sm-6 mb-3">
-                    <label class="form-label text-xs font-weight-bold text-muted mb-1">Riwayat Organisasi Yang Diikuti</label>
-                    <input type="text" class="form-control form-control-sm filter-input" name="organization_name" id="filter_organization_name" placeholder="Misal: OSIS, BEM, IPNU, HMI..." value="<?= esc($filters['organization_name'] ?? '') ?>">
+                    <label class="form-label text-xs font-weight-bold text-muted mb-1">Riwayat Element Dakwah Yang Diikuti</label>
+                    <input type="text" class="form-control form-control-sm filter-input" name="organization_name" id="filter_organization_name" placeholder="Misal: Satgas, Bankom, Tim Parkir, Tim Ikhrom..." value="<?= esc($filters['organization_name'] ?? '') ?>">
                 </div>
 
                 <!-- PENCARIAN KATA KUNCI -->

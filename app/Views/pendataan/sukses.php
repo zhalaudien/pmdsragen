@@ -54,24 +54,37 @@
                 <?php if (isset($pemuda)): ?>
                     <div class="text-start bg-white p-3 rounded-3 border mb-4">
                         <h6 class="fw-bold text-danger border-bottom pb-2 mb-3"><i class="bi bi-person-check me-1"></i> Ringkasan Registrasi:</h6>
-                        <div class="row g-2 small">
-                            <div class="col-sm-4 text-muted">Nama Lengkap:</div>
-                            <div class="col-sm-8 fw-semibold text-slate-900"><?= esc($pemuda['name'] ?? '-') ?></div>
+                        <div class="row g-3 align-items-center">
+                            <?php if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])): ?>
+                                <div class="col-auto text-center">
+                                    <img src="<?= base_url('uploads/pemuda/' . $pemuda['foto']) ?>" alt="<?= esc($pemuda['name'] ?? '') ?>" class="rounded-3 border shadow-sm" style="width: 80px; height: 100px; object-fit: cover;">
+                                </div>
+                            <?php elseif (!empty($pemuda['mta_foto_url'])): ?>
+                                <div class="col-auto text-center">
+                                    <img src="<?= esc($pemuda['mta_foto_url']) ?>" alt="<?= esc($pemuda['name'] ?? '') ?>" class="rounded-3 border shadow-sm" style="width: 80px; height: 100px; object-fit: cover;">
+                                </div>
+                            <?php endif; ?>
+                            <div class="col">
+                                <div class="row g-2 small">
+                                    <div class="col-sm-4 text-muted">Nama Lengkap:</div>
+                                    <div class="col-sm-8 fw-semibold text-slate-900"><?= esc($pemuda['name'] ?? '-') ?></div>
 
-                            <div class="col-sm-4 text-muted">Nomor WhatsApp:</div>
-                            <div class="col-sm-8 fw-semibold text-slate-900"><?= esc($pemuda['phone'] ?? '-') ?></div>
+                                    <div class="col-sm-4 text-muted">Nomor WhatsApp:</div>
+                                    <div class="col-sm-8 fw-semibold text-slate-900"><?= esc($pemuda['phone'] ?? '-') ?></div>
 
-                            <div class="col-sm-4 text-muted">Status Verifikasi:</div>
-                            <div class="col-sm-8">
-                                <?php if (($pemuda['status_verifikasi'] ?? '') === 'verified'): ?>
-                                    <span class="badge bg-success bg-opacity-25 text-success fw-bold">
-                                        <i class="bi bi-patch-check-fill me-1"></i> Terverifikasi Otomatis (Tercatat di MTA Pusat)
-                                    </span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary bg-opacity-25 text-secondary fw-bold">
-                                        <i class="bi bi-x-circle me-1"></i> Belum Terverifikasi (Belum Sinkron dengan MTA Pusat)
-                                    </span>
-                                <?php endif; ?>
+                                    <div class="col-sm-4 text-muted">Status Verifikasi:</div>
+                                    <div class="col-sm-8">
+                                        <?php if (($pemuda['status_verifikasi'] ?? '') === 'verified'): ?>
+                                            <span class="badge bg-success bg-opacity-25 text-success fw-bold">
+                                                <i class="bi bi-patch-check-fill me-1"></i> Terverifikasi Otomatis (Tercatat di MTA Pusat)
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary bg-opacity-25 text-secondary fw-bold">
+                                                <i class="bi bi-x-circle me-1"></i> Belum Terverifikasi (Belum Sinkron dengan MTA Pusat)
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

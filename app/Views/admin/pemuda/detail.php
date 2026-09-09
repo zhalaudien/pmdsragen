@@ -14,9 +14,15 @@
     <div class="card-body p-3">
         <div class="row align-items-center">
             <div class="col-auto">
-                <div class="user-avatar user-avatar-lg">
-                    <?= strtoupper(substr($pemuda['name'], 0, 1)) ?>
-                </div>
+                <?php if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])): ?>
+                    <img src="<?= base_url('uploads/pemuda/' . $pemuda['foto']) ?>" alt="<?= esc($pemuda['name']) ?>" class="rounded-circle elevation-2" style="width: 70px; height: 70px; object-fit: cover;">
+                <?php elseif (!empty($pemuda['mta_foto_url'])): ?>
+                    <img src="<?= esc($pemuda['mta_foto_url']) ?>" alt="<?= esc($pemuda['name']) ?>" class="rounded-circle elevation-2" style="width: 70px; height: 70px; object-fit: cover;">
+                <?php else: ?>
+                    <div class="user-avatar user-avatar-lg">
+                        <?= strtoupper(substr($pemuda['name'], 0, 1)) ?>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="col">
                 <div class="d-flex flex-wrap align-items-center mb-1">
@@ -178,7 +184,7 @@
         </div>
     </div>
 
-    <!-- KOLOM KANAN: PENDIDIKAN, PEKERJAAN, ORGANISASI, SKILLS, INTERESTS -->
+    <!-- KOLOM KANAN: PENDIDIKAN, PEKERJAAN, ELEMENT DAKWAH, SKILLS, INTERESTS -->
     <div class="col-12 col-lg-6">
         <!-- 3. PENDIDIKAN & PEKERJAAN -->
         <div class="card card-warning card-outline shadow-sm mb-3">
@@ -269,16 +275,16 @@
             </div>
         </div>
 
-        <!-- 4. ORGANISASI -->
+        <!-- 4. ELEMENT DAKWAH -->
         <div class="card card-success card-outline shadow-sm mb-3">
             <div class="card-header border-0">
                 <h3 class="card-title font-weight-bold text-sm">
-                    <i class="fas fa-users text-success mr-1"></i> Keikutsertaan Organisasi
+                    <i class="fas fa-users text-success mr-1"></i> Keikutsertaan Element Dakwah
                 </h3>
             </div>
             <div class="card-body p-3">
                 <?php if (empty($pemuda['organisasi'])): ?>
-                    <div class="text-center text-muted text-xs">Tidak ada keikutsertaan organisasi yang tercatat.</div>
+                    <div class="text-center text-muted text-xs">Tidak ada keikutsertaan element dakwah yang tercatat.</div>
                 <?php else: ?>
                     <div class="d-flex flex-wrap" style="gap: 8px;">
                         <?php foreach ($pemuda['organisasi'] as $org): ?>

@@ -54,12 +54,15 @@ final class PemudaExportTest extends CIUnitTestCase
         $this->assertArrayHasKey('pendidikan', $categories);
         $this->assertArrayHasKey('pekerjaan', $categories);
         $this->assertArrayHasKey('organisasi_potensi', $categories);
+        $this->assertEquals('Element Dakwah, Bakat & Minat', $categories['organisasi_potensi']['category_name']);
         $this->assertArrayHasKey('status_sistem', $categories);
 
         $allLabels = $this->exportService->getAllColumnLabels();
         $this->assertNotEmpty($allLabels);
         $this->assertArrayHasKey('registration_number', $allLabels);
         $this->assertArrayHasKey('name', $allLabels);
+        $this->assertArrayHasKey('organizations', $allLabels);
+        $this->assertEquals('Element Dakwah Yang Diikuti', $allLabels['organizations']);
         $this->assertArrayHasKey('skills', $allLabels);
         $this->assertArrayHasKey('interests', $allLabels);
 

@@ -216,7 +216,7 @@
                         <span class="badge badge-light border mb-1">Alamat Lengkap / RT / RW</span>
                         <span class="badge badge-light border mb-1">Jenjang &amp; Nama Sekolah</span>
                         <span class="badge badge-light border mb-1">Status Pekerjaan</span>
-                        <span class="badge badge-light border mb-1">Organisasi</span>
+                        <span class="badge badge-light border mb-1">Element Dakwah</span>
                         <span class="badge badge-light border mb-1">Keahlian</span>
                         <span class="badge badge-light border mb-1">Minat</span>
                     </div>

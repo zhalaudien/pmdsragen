@@ -43,8 +43,14 @@
             <div class="text-muted" style="font-size: 11px;">Status: <?= ($pemuda['status_verifikasi'] === 'verified') ? 'TERVERIFIKASI (SINKRON PUSAT)' : 'BELUM TERVERIFIKASI' ?> &bull; Tanggal Daftar: <?= date('d/m/Y H:i', strtotime($pemuda['created_at'])) ?></div>
         </div>
         <div class="col-4 text-end">
-            <div class="cetak-photo-box">
-                Foto 3x4
+            <div class="cetak-photo-box p-0 overflow-hidden d-inline-flex align-items-center justify-content-center">
+                <?php if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])): ?>
+                    <img src="<?= base_url('uploads/pemuda/' . $pemuda['foto']) ?>" alt="Foto" style="width: 100%; height: 100%; object-fit: cover;">
+                <?php elseif (!empty($pemuda['mta_foto_url'])): ?>
+                    <img src="<?= esc($pemuda['mta_foto_url']) ?>" alt="Foto" style="width: 100%; height: 100%; object-fit: cover;">
+                <?php else: ?>
+                    Foto 3x4
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -162,11 +168,11 @@
         <?php endif; ?>
     </table>
 
-    <!-- 4. ORGANISASI & KEAHLIAN -->
-    <div class="cetak-section-title">IV. ORGANISASI & KEAHLIAN</div>
+    <!-- 4. ELEMENT DAKWAH & KEAHLIAN -->
+    <div class="cetak-section-title">IV. ELEMENT DAKWAH & KEAHLIAN</div>
     <table class="w-100 table-cetak">
         <tr>
-            <td style="width: 25%;">Organisasi yang Diikuti</td>
+            <td style="width: 25%;">Element Dakwah yang Diikuti</td>
             <td style="width: 2%;">:</td>
             <td style="width: 73%;">
                 <?php if (empty($pemuda['organisasi'])): ?>

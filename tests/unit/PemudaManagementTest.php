@@ -83,4 +83,76 @@ final class PemudaManagementTest extends CIUnitTestCase
 
         $this->assertStringContainsString('pemuda', $sql);
     }
+
+    public function testScopeFilteringForAdminPemuda(): void
+    {
+        $db = Database::connect('default');
+        $pemudaModel = new PemudaModel($db);
+
+        $scope = [
+            'role'      => 'admin_pemuda',
+            'cabang_id' => 2,
+        ];
+
+        // Even if client attempts to pass gender P, it should enforce L
+        $pemudaModel->getFilteredQuery(['gender' => 'P'], $scope);
+        $sql = $pemudaModel->builder()->getCompiledSelect(false);
+
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 2", $sql);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'L'", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`gender` = 'P'", $sql);
+    }
+
+    public function testScopeFilteringForAdminPemudi(): void
+    {
+        $db = Database::connect('default');
+        $pemudaModel = new PemudaModel($db);
+
+        $scope = [
+            'role'      => 'admin_pemudi',
+            'cabang_id' => 3,
+        ];
+
+        // Even if client attempts to pass gender L, it should enforce P
+        $pemudaModel->getFilteredQuery(['gender' => 'L'], $scope);
+        $sql = $pemudaModel->builder()->getCompiledSelect(false);
+
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 3", $sql);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'P'", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`gender` = 'L'", $sql);
+    }
+
+    public function testScopeFilteringForAdminWilayahPemuda(): void
+    {
+        $db = Database::connect('default');
+        $pemudaModel = new PemudaModel($db);
+
+        $scope = [
+            'role'       => 'admin_wilayah_pemuda',
+            'wilayah_id' => 4,
+        ];
+
+        // Even if client attempts to pass gender P, it should enforce L
+        $pemudaModel->getFilteredQuery(['gender' => 'P'], $scope);
+        $sql = $pemudaModel->builder()->getCompiledSelect(false);
+
+        $this->assertStringContainsString("`cabang`.`wilayah_id` = 4", $sql);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'L'", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`gender` = 'P'", $sql);
+    }
+
+    public function testNewUserRolesExistInDatabase(): void
+    {
+        $db = Database::connect('default');
+        $roles = $db->table('user_roles')->whereIn('name', [
+            'admin_pemuda',
+            'admin_pemudi',
+            'admin_wilayah_pemuda',
+        ])->get()->getResultArray();
+
+        $roleNames = array_column($roles, 'name');
+        $this->assertContains('admin_pemuda', $roleNames);
+        $this->assertContains('admin_pemudi', $roleNames);
+        $this->assertContains('admin_wilayah_pemuda', $roleNames);
+    }
 }

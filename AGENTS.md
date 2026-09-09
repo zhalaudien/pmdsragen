@@ -109,11 +109,14 @@ Pemuda
 
 Role utama:
 
-| Role            | Scope          |
-| --------------- | -------------- |
-| `superadmin`    | Seluruh sistem |
-| `admin_wilayah` | Satu wilayah   |
-| `admin_cabang`  | Satu cabang    |
+| Role                   | Scope               | Gender Filter          |
+| ---------------------- | ------------------- | ---------------------- |
+| `superadmin`           | Seluruh sistem      | Semua (Laki-laki & Perempuan) |
+| `admin_wilayah`        | Satu wilayah        | Semua (Laki-laki & Perempuan) |
+| `admin_wilayah_pemuda` | Satu wilayah        | Khusus Laki-laki (`L`) |
+| `admin_cabang`         | Satu cabang         | Semua (Laki-laki & Perempuan) |
+| `admin_pemuda`         | Satu cabang         | Khusus Laki-laki (`L`) |
+| `admin_pemudi`         | Satu cabang         | Khusus Perempuan (`P`) |
 
 ## 4.1 Superadmin
 
@@ -137,14 +140,15 @@ wilayah_id -> NULL
 cabang_id  -> NULL
 ```
 
-## 4.2 Admin Wilayah
+## 4.2 Admin Wilayah & Admin Wilayah Pemuda
 
-Admin wilayah hanya boleh mengakses data pada wilayahnya.
+- **`admin_wilayah`**: mengelola seluruh data pemuda (Laki-laki & Perempuan) pada wilayahnya.
+- **`admin_wilayah_pemuda`**: mengelola hanya data pemuda berjenis kelamin Laki-laki (`gender = 'L'`) pada wilayahnya.
 
 Pada tabel `users`:
 
 ```text
-role_id    -> admin_wilayah
+role_id    -> admin_wilayah / admin_wilayah_pemuda
 wilayah_id -> wilayah yang dikelola
 cabang_id  -> NULL
 ```
@@ -156,17 +160,19 @@ users.wilayah_id
     |
     +-- cabang
           |
-          +-- pemuda
+          +-- pemuda (filtered by gender for admin_wilayah_pemuda)
 ```
 
-## 4.3 Admin Cabang
+## 4.3 Admin Cabang, Admin Pemuda, & Admin Pemudi
 
-Admin cabang hanya boleh mengakses data pada cabangnya.
+- **`admin_cabang`**: mengelola seluruh data pemuda (Laki-laki & Perempuan) pada cabangnya.
+- **`admin_pemuda`**: mengelola hanya data pemuda berjenis kelamin Laki-laki (`gender = 'L'`) pada cabangnya.
+- **`admin_pemudi`**: mengelola hanya data pemuda berjenis kelamin Perempuan (`gender = 'P'`) pada cabangnya.
 
 Pada tabel `users`:
 
 ```text
-role_id    -> admin_cabang
+role_id    -> admin_cabang / admin_pemuda / admin_pemudi
 wilayah_id -> wilayah cabang tersebut
 cabang_id  -> cabang yang dikelola
 ```
@@ -176,7 +182,7 @@ Scope data:
 ```text
 users.cabang_id
     |
-    +-- pemuda
+    +-- pemuda (filtered by gender for admin_pemuda & admin_pemudi)
 ```
 
 ## 4.4 Authorization wajib dilakukan di server
@@ -1920,6 +1926,117 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Diperbarui `app/Views/admin/layouts/main.php`: Ditambahkan item menu sidebar "Backup & Reset Data" (`fas fa-database text-warning`) di bawah Master & Pengaturan khusus Superadmin.
 - **Pengujian Unit (`tests/unit/PemudaBackupTest.php`):**
   - 7 unit tests (58 asersi) memverifikasi direktori backup dan proteksi, integritas SQL dump, struktur JSON hierarkis, instansiasi Excel spreadsheet, penyimpanan dan penghapusan berkas cadangan aman, pencegahan directory traversal, validasi password superadmin, auto-backup darurat, dan alur transaksi reset pemuda.
+
+### 2026-09-09 — Penambahan Field Terakhir Upload Foto Profil pada Form Pendataan
+
+- **Latar Belakang & Kebutuhan:**
+  - Penambahan input berkas pas foto profil pada form pendataan pemuda di bagian akhir formulir (Step 8 sebelum persetujuan & kirim data).
+  - Kebijakan syar'i & privasi organisasi: Wajib diunggah bagi pendaftar Laki-laki ('L'), dan tidak diwajibkan / opsional bagi pendaftar Perempuan ('P').
+- **Database & Migration:**
+  - Migration `2026-09-09-201500_AddFotoToPemuda.php`: Menambahkan kolom `foto` (VARCHAR 255, NULL, default NULL) pada tabel `pemuda` setelah kolom `mta_foto_url`.
+  - Whitelist model: Ditambahkan kolom `foto` pada `$allowedFields` di `app/Models/PemudaModel.php`.
+- **Public Form Pendataan (`app/Views/pendataan/form.php` & `public/js/pendataan.js`):**
+  - Form ditambahkan atribut `enctype="multipart/form-data"`.
+  - Pada Step 8 (Konfirmasi & Ringkasan Data), ditambahkan kartu upload foto profil sebagai field input terakhir sebelum checkbox persetujuan dan tombol submit.
+  - Komponen Upload Foto Profil:
+    - Indikator dinamis berdasarkan jenis kelamin yang dipilih: Badge merah "Wajib untuk Laki-laki" dengan tanda bintang merah vs badge abu-abu "Opsional untuk Perempuan".
+    - Kotak preview interaktif dengan placeholder avatar, tampilan gambar langsung saat memilih berkas, dan tombol hapus/batal.
+    - Validasi client-side: Maksimal ukuran 2MB, format file didukung (JPG, JPEG, PNG, WEBP).
+    - Status foto ditampilkan pada tabel ringkasan review data pribadi.
+    - Dukungan mode update / warga MTA: Foto yang sudah ada di sistem otomatis ditampilkan dengan notifikasi.
+- **Backend Controller (`app/Controllers/Pendataan.php`):**
+  - Validasi server-side pada `Pendataan::simpan()`:
+    - Memastikan pendaftar laki-laki ('L') wajib memiliki foto (baik unggahan baru atau foto yang sudah tersimpan pada mode pembaruan data). Pendaftar perempuan ('P') bebas mengunggah atau mengosongkan foto.
+    - Validasi berkas: Format (JPG, JPEG, PNG, WEBP), MIME type gambar, dan ukuran maksimal 2 MB.
+  - Penyimpanan file: Disimpan pada direktori aman `public/uploads/pemuda/` dengan penamaan acak unik (`getRandomName()`).
+  - Pembersihan file: Menghapus berkas foto lama saat diganti baru pada mode pembaruan, dan auto-cleanup berkas jika transaksi database mengalami rollback.
+- **Integrasi Panel Admin & Dokumen:**
+  - `app/Views/pendataan/sukses.php`: Menampilkan foto profil pemuda pada ringkasan bukti pendaftaran.
+  - `app/Views/admin/pemuda/detail.php`: Menampilkan foto profil pemuda pada hero card.
+  - `app/Views/admin/pemuda/index.php`: Menampilkan thumbnail foto profil pada kartu daftar pemuda.
+  - `app/Views/admin/pemuda/cetak.php`: Menampilkan foto profil pada dokumen cetak biodata 3x4.
+  - `app/Views/admin/pemuda/form.php` & `Admin\Pemuda.php`: Admin dapat mengunggah dan memperbarui foto profil dari panel admin.
+- **Pengujian Unit (`tests/unit/PendataanFormTest.php`):**
+  - Pengujian whitelist kolom `foto` pada `PemudaModel`.
+  - Pengujian keberadaan elemen input foto, multipart form, dan logika verifikasi kewajiban foto profil berdasarkan jenis kelamin (wajib bagi laki-laki, tidak wajib bagi perempuan).
+
+### 2026-09-09 — Penambahan Role Baru: Admin Pemuda, Admin Pemudi, dan Admin Wilayah Pemuda
+
+- **Latar Belakang & Kebutuhan:**
+  - Penambahan hak akses berorientasi gender sesuai struktur organisasi pemuda:
+    1. `admin_pemuda`: Administrator tingkat Cabang yang **hanya dapat mengakses dan mengelola data pemuda Laki-laki (`gender = 'L'`)**.
+    2. `admin_pemudi`: Administrator tingkat Cabang yang **hanya dapat mengakses dan mengelola data pemuda Perempuan (`gender = 'P'`)**.
+    3. `admin_wilayah_pemuda`: Administrator tingkat Wilayah yang **hanya dapat mengakses dan mengelola data pemuda Laki-laki (`gender = 'L'`)**.
+- **Database & Migration:**
+  - Migration `2026-09-09-205000_AddNewRolesAdminPemudaPemudi.php`: Menambahkan 3 role baru ke tabel `user_roles` (`admin_pemuda` id 4, `admin_pemudi` id 5, `admin_wilayah_pemuda` id 6).
+  - Diperbarui `app/Database/Seeds/UserRoleSeeder.php` dengan entri 3 role baru tersebut.
+- **Enforcement Scope & Keamanan Server-Side (`app/Models/PemudaModel.php`):**
+  - `applyScope()`: Ditambahkan klausul filter query builder server-side:
+    - `admin_wilayah_pemuda`: `cabang.wilayah_id = $scope['wilayah_id'] AND pemuda.gender = 'L'`.
+    - `admin_pemuda`: `pemuda.cabang_id = $scope['cabang_id'] AND pemuda.gender = 'L'`.
+    - `admin_pemudi`: `pemuda.cabang_id = $scope['cabang_id'] AND pemuda.gender = 'P'`.
+  - `getFilteredQuery()`: Enforce gender override jika user ber-role gender khusus, mencegah manipulasi query parameter `?gender=...`.
+  - `getDashboardStats()`: Scope wilayah, cabang, users, statistik pemuda per wilayah, dan statistik cabang teratas disinkronkan dengan gender scope masing-masing role.
+- **Controller Enforcement (`app/Controllers/Admin/`):**
+  - `Admin\Users.php`: Validasi simpan & update user baru untuk role 4, 5, 6 (role cabang mewajibkan pemilihan cabang, role wilayah mewajibkan pemilihan wilayah).
+  - `Admin\Pemuda.php`:
+    - `index()`: Filter list dan summary counter dibatasi scope role dan gender terkunci.
+    - `tambah()` & `simpan()`: Server-side validation menolak jika role gender khusus mencoba mendaftarkan jenis kelamin yang berlawanan.
+    - `edit()` & `update()`: Verifikasi akses data `getPemudaDetail` dan server-side validation gender pada update.
+    - `detail()`, `verifikasi()`, `archive()`, `cetak()`: Memakai `getPemudaDetail` yang menerapkan `applyScope`, otomatis memblokir ID yang berbeda gender / cabang / wilayah.
+    - `export()`, `exportDownload()`, `exportCount()`: Mengunci filter gender dan cabang/wilayah sesuai role scope.
+  - `Admin\Ajax.php`: Pembatasan lookup cabang berdasarkan role admin cabang / wilayah.
+  - `Auth.php`: Pengambilan otomatis `wilayah_id` dari cabang jika user adalah `admin_pemuda` atau `admin_pemudi`.
+- **UI & Layout Panel Admin:**
+  - `app/Views/admin/users/index.php`:
+    - Badge role dan scope yang informatif (`Admin Pemuda (L)`, `Admin Pemudi (P)`, `Admin Wilayah Pemuda (L)`).
+    - Dynamic dropdown JavaScript untuk menampilkan input Wilayah/Cabang pada form Tambah & Edit User.
+  - `app/Views/admin/layouts/main.php`:
+    - Badge scope di header navbar, badge role di dropdown profil, dan badge user panel di sidebar.
+  - `app/Views/admin/dashboard/index.php`:
+    - Header banner, deskripsi ringkasan, dan kartu cabang teratas disesuaikan untuk role baru.
+  - `app/Views/admin/pemuda/index.php`:
+    - Filter dropdown gender dan cabang otomatis terkunci (disabled dengan hidden input) sesuai role yang login.
+  - `app/Views/admin/pemuda/form.php`:
+    - Dropdown jenis kelamin terkunci sesuai izin role (Laki-laki untuk admin pemuda/wilayah pemuda, Perempuan untuk admin pemudi).
+    - Proteksi lookup modal Warga MTA: jika data warga yang dipilih tidak cocok dengan gender role, sistem menampilkan peringatan dan mencegah form diisi.
+  - `app/Views/admin/pemuda/export.php`:
+    - Filter gender dan cabang pada menu export otomatis terkunci sesuai role scope.
+- **Pengujian Unit (`tests/unit/PemudaManagementTest.php`):**
+  - Ditambahkan unit test verifikasi keberadaan role baru di database, dan pengujian filter query builder SQL untuk `admin_pemuda`, `admin_pemudi`, dan `admin_wilayah_pemuda` termasuk proteksi tamper filter parameter.
+
+### 2026-09-09 — Penyesuaian Terminologi: "Organisasi" Menjadi "Element Dakwah"
+
+- **Latar Belakang & Kebutuhan:**
+  - Penyesuaian terminologi keikutsertaan pemuda dalam unit-unit tugas (seperti Satgas, Bankom, Tim Parkir, Kepengurusan Pemuda, Tim Ikhrom, dll.) dari istilah "Organisasi" menjadi **"Element Dakwah"**.
+  - Sesuai prinsip *backward compatibility* dan arsitektur database (`AGENTS.md` Bab 30), nama tabel (`organisasi`), kolom (`organization_name`), model (`OrganisasiModel`), dan nama input form (`organizations`, `other_organization`) tetap dipertahankan agar tidak merusak relasi dan data tersimpan.
+- **Formulir Pendataan Publik (`app/Views/pendataan/form.php` & `public/js/pendataan.js`):**
+  - Judul Bagian 5: "5. Keikutsertaan Element Dakwah" beserta panduan "Pilih element dakwah yang Anda ikuti...".
+  - Field Element Dakwah Tambahan: "Element Dakwah Lainnya (Jika ada)".
+  - Ringkasan / Review Step 8: "Keikutsertaan Element Dakwah / Unit Tugas".
+  - Stepper wizard & progress label: "Element Dakwah & Penugasan".
+- **Panel Admin Data Pemuda (`app/Views/admin/pemuda/`):**
+  - Formulir Tambah/Edit Pemuda (`form.php`): Bagian 5 diubah menjadi "5. Keikutsertaan Element Dakwah / Unit Tugas" dan label "Element Dakwah / Komunitas Lainnya".
+  - Tampilan Detail Pemuda (`detail.php`): Header kartu informasi diubah menjadi "Keikutsertaan Element Dakwah" dan empty state menjadi "Tidak ada keikutsertaan element dakwah yang tercatat".
+  - Dokumen Cetak Biodata (`cetak.php`): Bagian IV diubah menjadi "IV. ELEMENT DAKWAH & KEAHLIAN" dan baris "Element Dakwah yang Diikuti".
+  - Modul Export Data (`export.php` & `PemudaExportService.php`):
+    - Filter form: "Riwayat Element Dakwah Yang Diikuti" beserta placeholder yang relevan.
+    - Kategori kolom export: "Element Dakwah, Bakat & Minat".
+    - Label kolom spreadsheet: "Element Dakwah Yang Diikuti".
+  - Modul Import Excel (`import.php` & `PemudaImportService.php`):
+    - Badge kolom opsional pada panduan import: "Element Dakwah".
+    - Header template unduhan Excel: `Element Dakwah (Opsional)`.
+    - Algoritma pemetaan header fleksibel: mengenali "Element Dakwah", "Elemen Dakwah", dan tetap mempertahankan kompatibilitas dengan header lama "Organisasi" / "Organization".
+    - Mengamankan deteksi kolom nomor telepon/WhatsApp agar tidak false-positive mendeteksi substring `wa` dalam kata `dakwah`.
+  - Modul Backup & Restore (`backup.php`):
+    - Keterangan ringkasan dan rincian tabel cadangan disesuaikan menjadi "keaktifan element dakwah".
+- **Pengaturan Beranda (`app/Models/HomepageSettingModel.php`):**
+  - Deskripsi alur pendaftaran tahap 3 disesuaikan menjadi "... serta pilihan element dakwah (Satgas, Bankom, dll)".
+- **Pengujian Unit (`tests/unit/`):**
+  - Diperbarui `PemudaExportTest.php` untuk memvalidasi nama kategori dan label kolom "Element Dakwah".
+  - Diperbarui `PemudaImportTest.php` untuk memverifikasi pemetaan kolom "Element Dakwah (Opsional)" dan "Elemen Dakwah" secara akurat.
+
+
 
 
 

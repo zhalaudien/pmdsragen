@@ -19,6 +19,7 @@
     <div class="card-body p-4">
         <form action="<?= $mode === 'create' ? base_url('admin/pemuda/simpan') : base_url('admin/pemuda/update/' . $pemuda['id']) ?>" 
               method="POST" 
+              enctype="multipart/form-data"
               id="adminPemudaForm"
               autocomplete="off">
             <?= csrf_field() ?>
@@ -37,7 +38,7 @@
                         $userCabangId = session()->get('cabang_id');
                     ?>
 
-                    <?php if ($userRole === 'admin_cabang'): ?>
+                    <?php if (in_array($userRole, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <div class="col-12 col-md-6 form-group mb-2">
                             <label class="text-xs text-muted font-weight-bold">Wilayah</label>
                             <input type="text" class="form-control form-control-sm bg-light" value="<?= esc(session()->get('wilayah_name') ?? ('Wilayah ' . $userWilayahId)) ?>" readonly>
@@ -47,7 +48,7 @@
                             <input type="text" class="form-control form-control-sm bg-light" value="<?= esc(session()->get('cabang_name') ?? ('Cabang ' . $userCabangId)) ?>" readonly>
                             <input type="hidden" name="cabang_id" id="cabang_id" value="<?= esc($userCabangId) ?>">
                         </div>
-                    <?php elseif ($userRole === 'admin_wilayah'): ?>
+                    <?php elseif (in_array($userRole, ['admin_wilayah', 'admin_wilayah_pemuda'], true)): ?>
                         <div class="col-12 col-md-6 form-group mb-2">
                             <label class="text-xs text-muted font-weight-bold">Wilayah</label>
                             <input type="text" class="form-control form-control-sm bg-light" value="<?= esc(session()->get('wilayah_name') ?? ('Wilayah ' . $userWilayahId)) ?>" readonly>
@@ -122,10 +123,22 @@
 
                     <div class="col-12 col-sm-6 col-md-3 form-group mb-2">
                         <label class="text-xs text-muted font-weight-bold">Jenis Kelamin <span class="text-danger">*</span></label>
-                        <select name="gender" class="form-control form-control-sm" required>
-                            <option value="L" <?= old('gender', $pemuda['gender'] ?? '') === 'L' ? 'selected' : '' ?>>Laki-laki</option>
-                            <option value="P" <?= old('gender', $pemuda['gender'] ?? '') === 'P' ? 'selected' : '' ?>>Perempuan</option>
-                        </select>
+                        <?php if (in_array($userRole, ['admin_wilayah_pemuda', 'admin_pemuda'], true)): ?>
+                            <select class="form-control form-control-sm bg-light font-weight-bold text-primary" disabled>
+                                <option selected>Laki-laki</option>
+                            </select>
+                            <input type="hidden" name="gender" value="L">
+                        <?php elseif ($userRole === 'admin_pemudi'): ?>
+                            <select class="form-control form-control-sm bg-light font-weight-bold text-danger" disabled>
+                                <option selected>Perempuan</option>
+                            </select>
+                            <input type="hidden" name="gender" value="P">
+                        <?php else: ?>
+                            <select name="gender" class="form-control form-control-sm" required>
+                                <option value="L" <?= old('gender', $pemuda['gender'] ?? '') === 'L' ? 'selected' : '' ?>>Laki-laki</option>
+                                <option value="P" <?= old('gender', $pemuda['gender'] ?? '') === 'P' ? 'selected' : '' ?>>Perempuan</option>
+                            </select>
+                        <?php endif; ?>
                     </div>
 
                     <div class="col-12 col-sm-6 col-md-3 form-group mb-2">
@@ -188,6 +201,18 @@
                                name="email" 
                                value="<?= old('email', $pemuda['email'] ?? '') ?>" 
                                placeholder="nama@email.com">
+                    </div>
+
+                    <div class="col-12 col-md-6 form-group mb-2">
+                        <label for="foto" class="text-xs text-muted font-weight-bold">Foto Profil (JPG, JPEG, PNG, WEBP — Maks. 2MB)</label>
+                        <div class="d-flex align-items-center">
+                            <?php if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])): ?>
+                                <img src="<?= base_url('uploads/pemuda/' . $pemuda['foto']) ?>" alt="Foto" class="rounded-circle mr-2 border shadow-sm" style="width: 38px; height: 38px; object-fit: cover;">
+                            <?php elseif (!empty($pemuda['mta_foto_url'])): ?>
+                                <img src="<?= esc($pemuda['mta_foto_url']) ?>" alt="Foto" class="rounded-circle mr-2 border shadow-sm" style="width: 38px; height: 38px; object-fit: cover;">
+                            <?php endif; ?>
+                            <input type="file" class="form-control-file form-control-sm" id="foto" name="foto" accept="image/jpeg,image/png,image/jpg,image/webp">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -391,11 +416,11 @@
                 </div>
             </div>
 
-            <!-- 5. KEIKUTSERTAAN ORGANISASI -->
+            <!-- 5. KEIKUTSERTAAN ELEMENT DAKWAH -->
             <div class="mb-4">
                 <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                     <span class="badge badge-primary mr-2" style="font-size: 0.9rem; border-radius: 50%; width: 26px; height: 26px; line-height: 18px; text-align: center;">5</span>
-                    <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Keikutsertaan Organisasi / Unit Tugas</h6>
+                    <h6 class="font-weight-bold text-dark mb-0 text-uppercase text-xs">Keikutsertaan Element Dakwah / Unit Tugas</h6>
                 </div>
 
                 <div class="row mb-3">
@@ -428,7 +453,7 @@
 
                 <div class="form-group mb-2">
                     <label class="text-xs text-muted font-weight-bold">
-                        <i class="fas fa-plus-circle mr-1"></i> Organisasi / Komunitas Lainnya:
+                        <i class="fas fa-plus-circle mr-1"></i> Element Dakwah / Komunitas Lainnya:
                     </label>
                     <input type="text" class="form-control form-control-sm" 
                            name="other_organization" 
@@ -672,6 +697,13 @@
         $(document).on('click', '.btn-apply-warga', function() {
             const data = $(this).data('warga');
             if (!data) return;
+
+            // Check gender restriction if applicable
+            const lockedGender = $('input[name="gender"]').val();
+            if (lockedGender && data.kelamin && lockedGender !== data.kelamin) {
+                alert('Peringatan: Data warga yang dipilih berjenis kelamin ' + (data.kelamin === 'L' ? 'Laki-laki' : 'Perempuan') + ', sedangkan akun Anda hanya memiliki hak akses untuk data pemuda ' + (lockedGender === 'L' ? 'Laki-laki' : 'Perempuan') + '.');
+                return;
+            }
 
             // Isi form otomatis
             if (data.uuid) $('#mta_warga_uuid').val(data.uuid);

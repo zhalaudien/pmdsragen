@@ -63,22 +63,27 @@ class Users extends BaseController
         $wilayahId = $this->request->getPost('wilayah_id') ? (int) $this->request->getPost('wilayah_id') : null;
         $cabangId  = $this->request->getPost('cabang_id') ? (int) $this->request->getPost('cabang_id') : null;
 
+        $targetRole = $this->userRoleModel->find($roleId);
+        $roleName   = $targetRole['name'] ?? '';
+
         // Scope validation per role
-        if ($roleId === 1) { // superadmin
+        if ($roleName === 'superadmin' || $roleId === 1) {
             $wilayahId = null;
             $cabangId  = null;
-        } elseif ($roleId === 2) { // admin_wilayah
+        } elseif ($roleName === 'admin_wilayah' || $roleName === 'admin_wilayah_pemuda' || $roleId === 2 || $roleId === 6) {
+            $roleLabel = ($roleName === 'admin_wilayah_pemuda' || $roleId === 6) ? 'Admin Wilayah Pemuda' : 'Admin Wilayah';
             if (empty($wilayahId)) {
-                return redirect()->back()->withInput()->with('error', 'Admin Wilayah wajib memilih Wilayah yang dikelola.');
+                return redirect()->back()->withInput()->with('error', "{$roleLabel} wajib memilih Wilayah yang dikelola.");
             }
             $targetWilayah = $this->wilayahModel->find($wilayahId);
             if (!$targetWilayah) {
                 return redirect()->back()->withInput()->with('error', 'Wilayah yang dipilih tidak valid.');
             }
             $cabangId = null;
-        } elseif ($roleId === 3) { // admin_cabang
+        } elseif (in_array($roleName, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) || in_array($roleId, [3, 4, 5], true)) {
+            $roleLabel = ($roleName === 'admin_pemuda' || $roleId === 4) ? 'Admin Pemuda' : (($roleName === 'admin_pemudi' || $roleId === 5) ? 'Admin Pemudi' : 'Admin Cabang');
             if (empty($cabangId)) {
-                return redirect()->back()->withInput()->with('error', 'Admin Cabang wajib memilih Cabang yang dikelola.');
+                return redirect()->back()->withInput()->with('error', "{$roleLabel} wajib memilih Cabang yang dikelola.");
             }
             $targetCabang = $this->cabangModel->find($cabangId);
             if (!$targetCabang) {
@@ -146,22 +151,27 @@ class Users extends BaseController
             }
         }
 
+        $targetRole = $this->userRoleModel->find($roleId);
+        $roleName   = $targetRole['name'] ?? '';
+
         // Scope validation per role
-        if ($roleId === 1) { // superadmin
+        if ($roleName === 'superadmin' || $roleId === 1) {
             $wilayahId = null;
             $cabangId  = null;
-        } elseif ($roleId === 2) { // admin_wilayah
+        } elseif ($roleName === 'admin_wilayah' || $roleName === 'admin_wilayah_pemuda' || $roleId === 2 || $roleId === 6) {
+            $roleLabel = ($roleName === 'admin_wilayah_pemuda' || $roleId === 6) ? 'Admin Wilayah Pemuda' : 'Admin Wilayah';
             if (empty($wilayahId)) {
-                return redirect()->back()->withInput()->with('error', 'Admin Wilayah wajib memilih Wilayah yang dikelola.');
+                return redirect()->back()->withInput()->with('error', "{$roleLabel} wajib memilih Wilayah yang dikelola.");
             }
             $targetWilayah = $this->wilayahModel->find($wilayahId);
             if (!$targetWilayah) {
                 return redirect()->back()->withInput()->with('error', 'Wilayah yang dipilih tidak valid.');
             }
             $cabangId = null;
-        } elseif ($roleId === 3) { // admin_cabang
+        } elseif (in_array($roleName, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) || in_array($roleId, [3, 4, 5], true)) {
+            $roleLabel = ($roleName === 'admin_pemuda' || $roleId === 4) ? 'Admin Pemuda' : (($roleName === 'admin_pemudi' || $roleId === 5) ? 'Admin Pemudi' : 'Admin Cabang');
             if (empty($cabangId)) {
-                return redirect()->back()->withInput()->with('error', 'Admin Cabang wajib memilih Cabang yang dikelola.');
+                return redirect()->back()->withInput()->with('error', "{$roleLabel} wajib memilih Cabang yang dikelola.");
             }
             $targetCabang = $this->cabangModel->find($cabangId);
             if (!$targetCabang) {

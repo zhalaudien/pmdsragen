@@ -264,7 +264,7 @@ class HomepageSettingModel extends Model
                 'value' => json_encode([
                     ['step' => 1, 'title' => 'Akses Formulir', 'desc' => 'Klik tombol "Form Pendataan" pada menu navigasi atau halaman ini untuk membuka form registrasi.'],
                     ['step' => 2, 'title' => 'Pilih Wilayah & Cabang', 'desc' => 'Tentukan cabang asal Anda (terintegrasi otomatis dengan 4 Wilayah di Sragen) dan isi identitas pribadi.'],
-                    ['step' => 3, 'title' => 'Lengkapi Profil & Minat', 'desc' => 'Isi riwayat pendidikan, status pekerjaan, keahlian yang dikuasai, serta pilihan organisasi (Satgas, Bankom, dll).'],
+                    ['step' => 3, 'title' => 'Lengkapi Profil & Minat', 'desc' => 'Isi riwayat pendidikan, status pekerjaan, keahlian yang dikuasai, serta pilihan element dakwah (Satgas, Bankom, dll).'],
                     ['step' => 4, 'title' => 'Terima No. Registrasi', 'desc' => 'Dapatkan Nomor Registrasi resmi pemuda yang dapat dicetak sebagai bukti telah terdaftar di database perwakilan.'],
                 ], JSON_UNESCAPED_UNICODE),
             ],

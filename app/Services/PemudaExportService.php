@@ -83,10 +83,10 @@ class PemudaExportService
             ],
         ],
         'organisasi_potensi' => [
-            'category_name' => 'Organisasi, Bakat & Minat',
+            'category_name' => 'Element Dakwah, Bakat & Minat',
             'category_icon' => 'fas fa-star',
             'columns' => [
-                'organizations' => 'Organisasi Yang Diikuti',
+                'organizations' => 'Element Dakwah Yang Diikuti',
                 'skills'        => 'Bakat / Keahlian',
                 'interests'     => 'Minat',
             ],

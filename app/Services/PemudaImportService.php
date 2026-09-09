@@ -91,7 +91,7 @@ class PemudaImportService
             'V1' => 'Profesi / Jabatan (Opsional)',
             'W1' => 'Nama Perusahaan / Tempat Usaha (Opsional)',
             'X1' => 'Bidang Usaha (Opsional)',
-            'Y1' => 'Organisasi (Opsional)',
+            'Y1' => 'Element Dakwah (Opsional)',
             'Z1' => 'Keahlian (Opsional: Pisahkan Koma)',
             'AA1' => 'Minat (Opsional: Pisahkan Koma)',
             'AB1' => 'Status Verifikasi (Opsional: verified/pending)',
@@ -209,7 +209,7 @@ class PemudaImportService
                 '', // Profesi
                 '', // Nama Perusahaan
                 '', // Bidang Usaha
-                '', // Organisasi
+                '', // Element Dakwah
                 '', // Keahlian
                 '', // Minat
                 '', // Status Verifikasi
@@ -812,7 +812,7 @@ class PemudaImportService
                 $map['birth_place'] = $index;
             } elseif (str_contains($clean, 'tanggal lahir') || str_contains($clean, 'tgl lahir') || $clean === 'birth date') {
                 $map['birth_date'] = $index;
-            } elseif (str_contains($clean, 'telepon') || str_contains($clean, 'no hp') || str_contains($clean, 'nomor hp') || str_contains($clean, 'wa') || str_contains($clean, 'phone')) {
+            } elseif (str_contains($clean, 'telepon') || str_contains($clean, 'no hp') || str_contains($clean, 'nomor hp') || str_contains($clean, 'whatsapp') || preg_match('/\bwa\b/', $clean) || str_contains($clean, 'phone')) {
                 $map['phone'] = $index;
             } elseif (str_contains($clean, 'email') || str_contains($clean, 'surel')) {
                 $map['email'] = $index;
@@ -846,7 +846,7 @@ class PemudaImportService
                 $map['company_name'] = $index;
             } elseif (str_contains($clean, 'bidang usaha') || str_contains($clean, 'business field')) {
                 $map['business_field'] = $index;
-            } elseif (str_contains($clean, 'organisasi') || str_contains($clean, 'organization')) {
+            } elseif (str_contains($clean, 'organisasi') || str_contains($clean, 'organization') || str_contains($clean, 'element dakwah') || str_contains($clean, 'elemen dakwah')) {
                 $map['organisasi'] = $index;
             } elseif (str_contains($clean, 'keahlian') || str_contains($clean, 'skill')) {
                 $map['skills'] = $index;
@@ -1343,7 +1343,7 @@ class PemudaImportService
         $data['company_name']   = isset($map['company_name']) ? toLowerTrim((string) ($row[$map['company_name']] ?? '')) : null;
         $data['business_field'] = isset($map['business_field']) ? toLowerTrim((string) ($row[$map['business_field']] ?? '')) : null;
 
-        // 20. Organisasi
+        // 20. Element Dakwah
         $rawOrg = isset($map['organisasi']) ? trim((string) ($row[$map['organisasi']] ?? '')) : '';
         $orgList = [];
         if (!empty($rawOrg)) {

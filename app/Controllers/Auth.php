@@ -72,8 +72,8 @@ class Auth extends BaseController
             $cabangId    = $user['cabang_id'] ? (int) $user['cabang_id'] : null;
             $cabangName  = $user['cabang_name'] ?? null;
 
-            // If user is admin_cabang and wilayah is not directly linked in users table, lookup from cabang
-            if ($user['role_name'] === 'admin_cabang' && $cabangId && !$wilayahId) {
+            // If user is admin_cabang, admin_pemuda, or admin_pemudi and wilayah is not directly linked in users table, lookup from cabang
+            if (in_array($user['role_name'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && $cabangId && !$wilayahId) {
                 $cabangModel = new \App\Models\CabangModel();
                 $cabangData  = $cabangModel->select('cabang.*, wilayah.name as wilayah_name')
                                           ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')

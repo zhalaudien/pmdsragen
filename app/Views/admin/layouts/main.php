@@ -73,6 +73,25 @@
                 $currRole    = session()->get('role');
                 $currWilayah = session()->get('wilayah_name') ?? ('Wilayah ' . session()->get('wilayah_id'));
                 $currCabang  = session()->get('cabang_name') ?? ('Cabang ' . session()->get('cabang_id'));
+
+                $roleTitles = [
+                    'superadmin'           => 'Super Administrator',
+                    'admin_wilayah'        => 'Admin Wilayah',
+                    'admin_wilayah_pemuda' => 'Admin Wilayah Pemuda (L)',
+                    'admin_pemuda'         => 'Admin Pemuda (L)',
+                    'admin_pemudi'         => 'Admin Pemudi (P)',
+                    'admin_cabang'         => 'Admin Cabang',
+                ];
+                $roleBadges = [
+                    'superadmin'           => 'badge-danger',
+                    'admin_wilayah'        => 'badge-info',
+                    'admin_wilayah_pemuda' => 'badge-primary',
+                    'admin_pemuda'         => 'badge-success',
+                    'admin_pemudi'         => 'badge-warning',
+                    'admin_cabang'         => 'badge-secondary',
+                ];
+                $displayRoleTitle = $roleTitles[$currRole] ?? 'Admin';
+                $displayRoleBadge = $roleBadges[$currRole] ?? 'badge-secondary';
             ?>
             <li class="nav-item mr-2 d-none d-md-block">
                 <?php if ($currRole === 'superadmin'): ?>
@@ -82,6 +101,18 @@
                 <?php elseif ($currRole === 'admin_wilayah'): ?>
                     <span class="badge badge-primary px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
                         <i class="fas fa-map-marker-alt mr-1"></i> Scope: <strong><?= esc($currWilayah) ?></strong>
+                    </span>
+                <?php elseif ($currRole === 'admin_wilayah_pemuda'): ?>
+                    <span class="badge badge-primary px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
+                        <i class="fas fa-map-marker-alt mr-1"></i> Scope: <strong><?= esc($currWilayah) ?></strong> <span class="badge badge-light text-primary ml-1 font-weight-bold"><i class="fas fa-mars mr-1"></i>Laki-laki</span>
+                    </span>
+                <?php elseif ($currRole === 'admin_pemuda'): ?>
+                    <span class="badge badge-success px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
+                        <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong> <span class="badge badge-light text-success ml-1 font-weight-bold"><i class="fas fa-mars mr-1"></i>Laki-laki</span>
+                    </span>
+                <?php elseif ($currRole === 'admin_pemudi'): ?>
+                    <span class="badge badge-warning px-3 py-2 font-weight-normal text-white" style="font-size: 0.8rem; background-color: #e83e8c;">
+                        <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong> <span class="badge badge-light text-dark ml-1 font-weight-bold"><i class="fas fa-venus mr-1"></i>Perempuan</span>
                     </span>
                 <?php else: ?>
                     <span class="badge badge-success px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
@@ -96,13 +127,13 @@
                     <span class="badge badge-dark px-2 py-1 font-weight-normal" style="font-size: 0.72rem;" title="Scope: Seluruh Sistem">
                         <i class="fas fa-globe text-info"></i> Superadmin
                     </span>
-                <?php elseif ($currRole === 'admin_wilayah'): ?>
-                    <span class="badge badge-primary px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 110px;" title="Scope: <?= esc($currWilayah) ?>">
-                        <i class="fas fa-map-marker-alt"></i> <?= esc($currWilayah) ?>
+                <?php elseif ($currRole === 'admin_wilayah' || $currRole === 'admin_wilayah_pemuda'): ?>
+                    <span class="badge badge-primary px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 120px;" title="Scope: <?= esc($currWilayah) ?>">
+                        <i class="fas fa-map-marker-alt"></i> <?= esc($currWilayah) ?><?= ($currRole === 'admin_wilayah_pemuda') ? ' (L)' : '' ?>
                     </span>
                 <?php else: ?>
-                    <span class="badge badge-success px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 110px;" title="Scope: <?= esc($currCabang) ?>">
-                        <i class="fas fa-sitemap"></i> <?= esc($currCabang) ?>
+                    <span class="badge badge-success px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 120px;" title="Scope: <?= esc($currCabang) ?>">
+                        <i class="fas fa-sitemap"></i> <?= esc($currCabang) ?><?= ($currRole === 'admin_pemuda') ? ' (L)' : (($currRole === 'admin_pemudi') ? ' (P)' : '') ?>
                     </span>
                 <?php endif; ?>
             </li>
@@ -136,7 +167,7 @@
                             <small class="d-block text-white-50"><?= esc(session()->get('email')) ?></small>
                         </p>
                         <span class="badge badge-light text-primary mt-1 font-weight-bold">
-                            <?= ($currRole === 'superadmin') ? 'Super Administrator' : (($currRole === 'admin_wilayah') ? 'Admin Wilayah' : 'Admin Cabang') ?>
+                            <?= esc($displayRoleTitle) ?>
                         </span>
                     </li>
                     <!-- Menu Body -->
@@ -190,8 +221,8 @@
                     <a href="<?= base_url('admin/dashboard') ?>" class="d-block font-weight-bold text-truncate" style="max-width: 150px;">
                         <?= esc(session()->get('name')) ?>
                     </a>
-                    <span class="badge badge-pill <?= ($currRole === 'superadmin') ? 'badge-danger' : (($currRole === 'admin_wilayah') ? 'badge-info' : 'badge-success') ?>" style="font-size: 0.68rem;">
-                        <?= ($currRole === 'superadmin') ? 'Super Admin' : (($currRole === 'admin_wilayah') ? 'Admin Wilayah' : 'Admin Cabang') ?>
+                    <span class="badge badge-pill <?= esc($displayRoleBadge) ?>" style="font-size: 0.68rem;<?= ($currRole === 'admin_pemudi') ? ' background-color: #e83e8c; color: #fff;' : '' ?>">
+                        <?= esc($displayRoleTitle) ?>
                     </span>
                 </div>
             </div>

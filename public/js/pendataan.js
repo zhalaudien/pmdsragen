@@ -212,7 +212,7 @@ const stepNames = [
     'Alamat Domisili',
     'Riwayat Pendidikan',
     'Status Pekerjaan & Karir',
-    'Organisasi & Penugasan',
+    'Element Dakwah & Penugasan',
     'Keahlian & Keterampilan',
     'Minat & Pengembangan Diri',
     'Konfirmasi & Ringkasan Data'
@@ -458,7 +458,7 @@ function populateExistingData(pemuda) {
     const bizSocialEl = document.getElementById('business_social');
     if (bizSocialEl) bizSocialEl.value = pemuda.business_social || '';
 
-    // 6. Organisasi
+    // 6. Element Dakwah
     document.querySelectorAll('.org-toggle-check').forEach(chk => {
         chk.checked = false;
         const key = chk.getAttribute('data-key');
@@ -534,6 +534,32 @@ function populateExistingData(pemuda) {
             }
         });
     }
+
+    // 9. Foto Profil
+    const existingInfoBox = document.getElementById('existing-foto-info');
+    const previewImg      = document.getElementById('foto-preview-img');
+    const placeholder     = document.getElementById('foto-preview-placeholder');
+
+    if (pemuda.foto) {
+        const base = (typeof PENDATAAN_CONFIG !== 'undefined' && PENDATAAN_CONFIG.baseUrl) ? PENDATAAN_CONFIG.baseUrl : '';
+        existingFotoUrl = base + '/uploads/pemuda/' + pemuda.foto;
+    } else if (pemuda.mta_foto_url) {
+        existingFotoUrl = pemuda.mta_foto_url;
+    } else {
+        existingFotoUrl = null;
+    }
+
+    if (existingFotoUrl) {
+        if (previewImg) {
+            previewImg.src = existingFotoUrl;
+            previewImg.style.display = 'block';
+        }
+        if (placeholder) placeholder.style.display = 'none';
+        if (existingInfoBox) existingInfoBox.style.display = 'block';
+    } else {
+        if (existingInfoBox) existingInfoBox.style.display = 'none';
+    }
+    updateFotoRequirement();
 }
 
 /**
@@ -836,6 +862,12 @@ function validateStep(step) {
         }
     });
 
+    if (step === 8) {
+        if (!validateFotoProfile()) {
+            isValid = false;
+        }
+    }
+
     return isValid;
 }
 
@@ -1046,6 +1078,23 @@ function prepareReview() {
         }
     }
 
+    // Foto Profil Review
+    const revFotoStatus = document.getElementById('rev_foto_status');
+    if (revFotoStatus) {
+        const fotoInput = document.getElementById('foto');
+        const isMale = document.getElementById('gender_l')?.checked;
+        if (fotoInput && fotoInput.files && fotoInput.files.length > 0) {
+            revFotoStatus.innerHTML = '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle"><i class="bi bi-image me-1"></i>' + escapeHtml(fotoInput.files[0].name) + '</span>';
+        } else if (existingFotoUrl) {
+            revFotoStatus.innerHTML = '<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle"><i class="bi bi-cloud-check me-1"></i>Tercatat di sistem</span>';
+        } else if (isMale) {
+            revFotoStatus.innerHTML = '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle"><i class="bi bi-asterisk me-1"></i>Wajib diunggah</span>';
+        } else {
+            revFotoStatus.innerHTML = '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle"><i class="bi bi-dash-circle me-1"></i>Tidak diunggah (Opsional)</span>';
+        }
+    }
+    updateFotoRequirement();
+
     // Alamat text from TomSelect or native options
     const kecEl = document.getElementById('district_id');
     const desEl = document.getElementById('village_id');
@@ -1116,7 +1165,7 @@ function prepareReview() {
         }
     }
 
-    // Organisasi / Divisi
+    // Element Dakwah / Divisi
     const checkedOrgs = [];
     document.querySelectorAll('.org-toggle-check:checked').forEach(chk => {
         const title = chk.getAttribute('data-title') || chk.value;
@@ -1235,6 +1284,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formPendataanPemuda');
     if (form) {
         form.addEventListener('submit', function(e) {
+            if (!validateFotoProfile()) {
+                e.preventDefault();
+                return false;
+            }
+
             const agreement = document.getElementById('agreement_check');
             if (agreement && !agreement.checked) {
                 e.preventDefault();
@@ -1254,7 +1308,173 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize Warga MTA Autocomplete on Cabang & Name
     initWargaMtaAutocomplete();
+
+    // Initialize Photo Upload logic
+    initFotoUpload();
 });
+
+/**
+ * =========================================================================
+ * Foto Profil Upload & Dynamic Validation
+ * =========================================================================
+ */
+let existingFotoUrl = null;
+
+function updateFotoRequirement() {
+    const genderEl = document.querySelector('input[name="gender"]:checked');
+    const isMale = genderEl ? (genderEl.value === 'L') : true;
+
+    const reqStar = document.getElementById('foto-required-star');
+    const labelStar = document.getElementById('foto-label-star');
+    const badge = document.getElementById('foto-requirement-badge');
+    const instruction = document.getElementById('foto-instruction-text');
+    const fotoInput = document.getElementById('foto');
+
+    if (isMale) {
+        if (reqStar) reqStar.style.display = 'inline';
+        if (labelStar) labelStar.style.display = 'inline';
+        if (badge) {
+            badge.className = 'badge bg-danger rounded-pill px-3 py-2';
+            badge.innerHTML = '<i class="bi bi-asterisk me-1"></i> Wajib untuk Laki-laki';
+        }
+        if (instruction) {
+            instruction.innerHTML = '<i class="bi bi-info-circle text-danger me-1"></i> <strong>Ketentuan:</strong> Pendaftar <strong>Laki-laki wajib</strong> mengunggah pas foto formal / setengah badan tampak depan.';
+        }
+        if (fotoInput && !existingFotoUrl) {
+            fotoInput.setAttribute('required', 'required');
+        }
+    } else {
+        if (reqStar) reqStar.style.display = 'none';
+        if (labelStar) labelStar.style.display = 'none';
+        if (badge) {
+            badge.className = 'badge bg-secondary rounded-pill px-3 py-2';
+            badge.innerHTML = '<i class="bi bi-info-circle me-1"></i> Opsional untuk Perempuan';
+        }
+        if (instruction) {
+            instruction.innerHTML = '<i class="bi bi-info-circle text-primary me-1"></i> <strong>Ketentuan:</strong> Pendaftar <strong>Perempuan tidak diwajibkan</strong> mengunggah foto profil (opsional).';
+        }
+        if (fotoInput) {
+            fotoInput.removeAttribute('required');
+            fotoInput.classList.remove('is-invalid');
+            const errEl = document.getElementById('foto-error-msg');
+            if (errEl) errEl.style.display = 'none';
+        }
+    }
+}
+
+function validateFotoProfile() {
+    const genderEl = document.querySelector('input[name="gender"]:checked');
+    const isMale = genderEl ? (genderEl.value === 'L') : false;
+    const fotoInput = document.getElementById('foto');
+    const errEl = document.getElementById('foto-error-msg');
+
+    if (!isMale) {
+        // Female: optional
+        if (fotoInput) fotoInput.classList.remove('is-invalid');
+        if (errEl) errEl.style.display = 'none';
+        return true;
+    }
+
+    // Male: required unless a file is selected or already exists
+    const hasFile = fotoInput && fotoInput.files && fotoInput.files.length > 0;
+    const hasExisting = Boolean(existingFotoUrl);
+
+    if (!hasFile && !hasExisting) {
+        if (fotoInput) fotoInput.classList.add('is-invalid');
+        if (errEl) {
+            errEl.innerText = 'Foto profil wajib diunggah untuk pendaftar laki-laki.';
+            errEl.style.display = 'block';
+        }
+        const section = document.getElementById('section-foto-profil');
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    if (fotoInput) fotoInput.classList.remove('is-invalid');
+    if (errEl) errEl.style.display = 'none';
+    return true;
+}
+
+function initFotoUpload() {
+    const fotoInput   = document.getElementById('foto');
+    const previewImg  = document.getElementById('foto-preview-img');
+    const placeholder = document.getElementById('foto-preview-placeholder');
+    const btnRemove   = document.getElementById('btn-remove-foto');
+    const errEl       = document.getElementById('foto-error-msg');
+
+    if (!fotoInput) return;
+
+    // Listen to gender changes to dynamically update required indicators
+    const genderRadios = document.querySelectorAll('input[name="gender"]');
+    genderRadios.forEach(radio => {
+        radio.addEventListener('change', updateFotoRequirement);
+    });
+
+    fotoInput.addEventListener('change', function() {
+        if (!this.files || !this.files[0]) {
+            return;
+        }
+
+        const file = this.files[0];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        const maxBytes = 2 * 1024 * 1024; // 2MB
+
+        if (!allowedTypes.includes(file.type.toLowerCase())) {
+            alert('Format berkas tidak didukung! Mohon pilih foto dengan format JPG, JPEG, PNG, atau WEBP.');
+            this.value = '';
+            return;
+        }
+
+        if (file.size > maxBytes) {
+            alert('Ukuran berkas foto terlalu besar (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB). Maksimal ukuran file adalah 2 MB.');
+            this.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (previewImg) {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+            if (btnRemove) btnRemove.style.display = 'block';
+            fotoInput.classList.remove('is-invalid');
+            if (errEl) errEl.style.display = 'none';
+
+            const revStatus = document.getElementById('rev_foto_status');
+            if (revStatus) {
+                revStatus.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>Foto dipilih (' + escapeHtml(file.name) + ')</span>';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    if (btnRemove) {
+        btnRemove.addEventListener('click', function() {
+            fotoInput.value = '';
+            btnRemove.style.display = 'none';
+
+            if (existingFotoUrl) {
+                if (previewImg) {
+                    previewImg.src = existingFotoUrl;
+                    previewImg.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                if (previewImg) {
+                    previewImg.src = '';
+                    previewImg.style.display = 'none';
+                }
+                if (placeholder) placeholder.style.display = 'block';
+            }
+
+            updateFotoRequirement();
+        });
+    }
+
+    updateFotoRequirement();
+}
 
 /**
  * =========================================================================
@@ -1931,4 +2151,20 @@ function resetWargaMtaSelection() {
     if (btnSubmitText) {
         btnSubmitText.innerText = 'Kirim Data Pendataan';
     }
+
+    existingFotoUrl = null;
+    const existingInfoBox = document.getElementById('existing-foto-info');
+    if (existingInfoBox) existingInfoBox.style.display = 'none';
+    const previewImg = document.getElementById('foto-preview-img');
+    if (previewImg) {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+    }
+    const placeholder = document.getElementById('foto-preview-placeholder');
+    if (placeholder) placeholder.style.display = 'block';
+    const btnRemove = document.getElementById('btn-remove-foto');
+    if (btnRemove) btnRemove.style.display = 'none';
+    const fotoInput = document.getElementById('foto');
+    if (fotoInput) fotoInput.value = '';
+    updateFotoRequirement();
 }

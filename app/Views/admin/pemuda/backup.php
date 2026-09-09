@@ -107,7 +107,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted mb-3">
-            Pilih format cadangan yang Anda butuhkan. Setiap berkas memuat seluruh atribut data pemuda beserta seluruh data relasi (alamat, riwayat pendidikan, profil pekerjaan &amp; wirausaha, keaktifan organisasi, bakat keahlian, dan minat).
+            Pilih format cadangan yang Anda butuhkan. Setiap berkas memuat seluruh atribut data pemuda beserta seluruh data relasi (alamat, riwayat pendidikan, profil pekerjaan &amp; wirausaha, keaktifan element dakwah, bakat keahlian, dan minat).
         </p>
 
         <div class="row">
@@ -125,7 +125,7 @@
                             </div>
                         </div>
                         <p class="text-muted text-xs flex-grow-1 mt-2">
-                            File dump SQL standar berisi perintah <code>INSERT</code> untuk seluruh tabel data pemuda (pemuda, alamat, pendidikan, pekerjaan, organisasi, keahlian, minat). Sangat ideal untuk restorasi cepat ke MySQL / phpMyAdmin.
+                            File dump SQL standar berisi perintah <code>INSERT</code> untuk seluruh tabel data pemuda (pemuda, alamat, pendidikan, pekerjaan, element dakwah, keahlian, minat). Sangat ideal untuk restorasi cepat ke MySQL / phpMyAdmin.
                         </p>
                         <div class="d-flex flex-column gap-2 mt-2">
                             <form action="<?= base_url('admin/pemuda/backup/generate') ?>" method="POST" class="mb-2">
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                         <p class="text-muted text-xs flex-grow-1 mt-2">
-                            Dokumen Microsoft Excel lengkap berisi seluruh kolom (biodata, alamat, sekolah, pekerjaan wirausaha, organisasi, keahlian, minat, dan status MTA) dengan layout rapi dan siap olah.
+                            Dokumen Microsoft Excel lengkap berisi seluruh kolom (biodata, alamat, sekolah, pekerjaan wirausaha, element dakwah, keahlian, minat, dan status MTA) dengan layout rapi dan siap olah.
                         </p>
                         <div class="d-flex flex-column gap-2 mt-2">
                             <form action="<?= base_url('admin/pemuda/backup/generate') ?>" method="POST" class="mb-2">
@@ -342,7 +342,7 @@
             <li>Alamat lengkap &amp; domisili (<code>alamat</code>)</li>
             <li>Riwayat dan jenjang pendidikan (<code>pendidikan</code>)</li>
             <li>Data profesi, pekerjaan, dan usaha wirausaha (<code>pekerjaan</code>)</li>
-            <li>Data keikutsertaan organisasi (<code>organisasi</code>)</li>
+            <li>Data keikutsertaan element dakwah (<code>organisasi</code>)</li>
             <li>Bakat &amp; keahlian pemuda (<code>pemuda_skills</code>)</li>
             <li>Minat kepemudaan (<code>pemuda_interests</code>)</li>
             <li>Antrian sinkronisasi MTA Pusat (<code>mta_sync_queue</code>)</li>

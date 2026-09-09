@@ -90,14 +90,20 @@
                                         <span class="badge badge-danger px-2 py-1">Superadmin</span>
                                     <?php elseif ($u['role_name'] === 'admin_wilayah'): ?>
                                         <span class="badge badge-info px-2 py-1">Admin Wilayah</span>
+                                    <?php elseif ($u['role_name'] === 'admin_wilayah_pemuda'): ?>
+                                        <span class="badge badge-primary px-2 py-1"><i class="fas fa-mars mr-1"></i>Admin Wilayah Pemuda</span>
+                                    <?php elseif ($u['role_name'] === 'admin_pemuda'): ?>
+                                        <span class="badge badge-success px-2 py-1"><i class="fas fa-mars mr-1"></i>Admin Pemuda</span>
+                                    <?php elseif ($u['role_name'] === 'admin_pemudi'): ?>
+                                        <span class="badge badge-warning px-2 py-1" style="background-color: #e83e8c; color: #fff;"><i class="fas fa-venus mr-1"></i>Admin Pemudi</span>
                                     <?php else: ?>
-                                        <span class="badge badge-success px-2 py-1">Admin Cabang</span>
+                                        <span class="badge badge-secondary px-2 py-1">Admin Cabang</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($u['role_name'] === 'superadmin'): ?>
                                         <span class="text-muted text-xs"><i class="fas fa-globe text-purple mr-1"></i> Akses Global</span>
-                                    <?php elseif ($u['role_name'] === 'admin_wilayah'): ?>
+                                    <?php elseif ($u['role_name'] === 'admin_wilayah' || $u['role_name'] === 'admin_wilayah_pemuda'): ?>
                                         <span class="font-weight-semibold text-primary text-xs"><i class="fas fa-map-marker-alt mr-1"></i> <?= esc($u['wilayah_name'] ?: 'Wilayah ' . $u['wilayah_id']) ?></span>
                                     <?php else: ?>
                                         <span class="font-weight-semibold text-success text-xs"><i class="fas fa-sitemap mr-1"></i> <?= esc($u['cabang_name'] ?: 'Cabang ' . $u['cabang_id']) ?> (<?= esc($u['wilayah_name'] ?? '') ?>)</span>
@@ -344,27 +350,49 @@
 <?= $this->section('scripts') ?>
 <script>
     $(document).ready(function () {
-        function toggleAddScope(roleVal) {
+        function toggleScope(prefix, roleVal) {
+            roleVal = String(roleVal);
             if (roleVal === '1' || !roleVal) { // superadmin
-                $('#addWilayahGroup').addClass('d-none');
-                $('#addCabangGroup').addClass('d-none');
-            } else if (roleVal === '2') { // admin_wilayah
-                $('#addWilayahGroup').removeClass('d-none');
-                $('#addCabangGroup').addClass('d-none');
-            } else if (roleVal === '3') { // admin_cabang
-                $('#addWilayahGroup').removeClass('d-none');
-                $('#addCabangGroup').removeClass('d-none');
+                $('#' + prefix + 'WilayahGroup').addClass('d-none');
+                $('#' + prefix + 'CabangGroup').addClass('d-none');
+            } else if (roleVal === '2' || roleVal === '6') { // admin_wilayah, admin_wilayah_pemuda
+                $('#' + prefix + 'WilayahGroup').removeClass('d-none');
+                $('#' + prefix + 'CabangGroup').addClass('d-none');
+            } else if (roleVal === '3' || roleVal === '4' || roleVal === '5') { // admin_cabang, admin_pemuda, admin_pemudi
+                $('#' + prefix + 'WilayahGroup').removeClass('d-none');
+                $('#' + prefix + 'CabangGroup').removeClass('d-none');
             }
         }
 
         $('#addRoleSelect').on('change', function () {
-            toggleAddScope($(this).val());
+            toggleScope('add', $(this).val());
+        });
+
+        $('#editRoleSelect').on('change', function () {
+            toggleScope('edit', $(this).val());
         });
 
         // Dynamic cabang in Add User
         $('#addWilayahSelect').on('change', function () {
             const wid = $(this).val();
             const $cabangSelect = $('#addCabangSelect');
+            if (!wid) {
+                $cabangSelect.html('<option value="">-- Pilih Cabang --</option>');
+                return;
+            }
+            $.getJSON('<?= base_url('admin/ajax/cabang/') ?>/' + wid, function (data) {
+                let opts = '<option value="">-- Pilih Cabang --</option>';
+                $.each(data, function (i, c) {
+                    opts += '<option value="' + c.id + '">' + c.name + '</option>';
+                });
+                $cabangSelect.html(opts);
+            });
+        });
+
+        // Dynamic cabang in Edit User
+        $('#editWilayahSelect').on('change', function () {
+            const wid = $(this).val();
+            const $cabangSelect = $('#editCabangSelect');
             if (!wid) {
                 $cabangSelect.html('<option value="">-- Pilih Cabang --</option>');
                 return;
@@ -396,6 +424,8 @@
             $('#editWilayahSelect').val(wilayah);
             $('#editUserStatus').val(status);
             $('#editUserForm').attr('action', '<?= base_url('admin/users/update/') ?>/' + id);
+
+            toggleScope('edit', role);
 
             if (wilayah) {
                 $.getJSON('<?= base_url('admin/ajax/cabang/') ?>/' + wilayah, function (data) {

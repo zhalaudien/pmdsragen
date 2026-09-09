@@ -30,6 +30,7 @@ class PemudaModel extends Model
         'mta_ayah_uuid',
         'mta_ibu_uuid',
         'mta_foto_url',
+        'foto',
         'mta_synced_at',
         'created_by',
     ];
@@ -220,15 +221,25 @@ class PemudaModel extends Model
     }
 
     /**
-     * Apply Scope based on User Role (Superadmin, Admin Wilayah, Admin Cabang)
+     * Apply Scope based on User Role (Superadmin, Admin Wilayah, Admin Wilayah Pemuda, Admin Cabang, Admin Pemuda, Admin Pemudi)
      */
     public function applyScope($builder, array $scope = [])
     {
         if (isset($scope['role'])) {
-            if ($scope['role'] === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
+            $role = $scope['role'];
+            if ($role === 'admin_wilayah' && !empty($scope['wilayah_id'])) {
                 $builder->where('cabang.wilayah_id', (int) $scope['wilayah_id']);
-            } elseif ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
+            } elseif ($role === 'admin_wilayah_pemuda' && !empty($scope['wilayah_id'])) {
+                $builder->where('cabang.wilayah_id', (int) $scope['wilayah_id'])
+                        ->where('pemuda.gender', 'L');
+            } elseif ($role === 'admin_cabang' && !empty($scope['cabang_id'])) {
                 $builder->where('pemuda.cabang_id', (int) $scope['cabang_id']);
+            } elseif ($role === 'admin_pemuda' && !empty($scope['cabang_id'])) {
+                $builder->where('pemuda.cabang_id', (int) $scope['cabang_id'])
+                        ->where('pemuda.gender', 'L');
+            } elseif ($role === 'admin_pemudi' && !empty($scope['cabang_id'])) {
+                $builder->where('pemuda.cabang_id', (int) $scope['cabang_id'])
+                        ->where('pemuda.gender', 'P');
             }
         }
         return $builder;
@@ -293,9 +304,17 @@ class PemudaModel extends Model
             $builder->where('cabang.wilayah_id', (int) $filters['wilayah_id']);
         }
 
-        // Admin cabang is strictly bound to their own cabang_id; superadmin/admin_wilayah can filter by cabang
-        if ($role !== 'admin_cabang' && !empty($filters['cabang_id'])) {
+        // Cabang-level admins are strictly bound to their own cabang_id; others can filter by cabang
+        $cabangRoles = ['admin_cabang', 'admin_pemuda', 'admin_pemudi'];
+        if (!in_array($role, $cabangRoles, true) && !empty($filters['cabang_id'])) {
             $builder->where('pemuda.cabang_id', (int) $filters['cabang_id']);
+        }
+
+        // Enforce strict gender filter based on role scope
+        if (in_array($role, ['admin_wilayah_pemuda', 'admin_pemuda'], true)) {
+            $filters['gender'] = 'L';
+        } elseif ($role === 'admin_pemudi') {
+            $filters['gender'] = 'P';
         }
 
         if (!empty($filters['gender'])) {
@@ -509,11 +528,11 @@ class PemudaModel extends Model
             $totalWilayah = $db->table('wilayah')->countAll();
             $totalCabang  = $db->table('cabang')->countAll();
             $totalUsers   = $db->table('users')->where('status', 1)->countAllResults();
-        } elseif ($role === 'admin_wilayah') {
+        } elseif (in_array($role, ['admin_wilayah', 'admin_wilayah_pemuda'], true)) {
             $totalWilayah = 1;
             $totalCabang  = $db->table('cabang')->where('wilayah_id', $wilayahId)->countAllResults();
             $totalUsers   = $db->table('users')->where('status', 1)->where('wilayah_id', $wilayahId)->countAllResults();
-        } else { // admin_cabang
+        } else { // admin_cabang, admin_pemuda, admin_pemudi
             $totalWilayah = 1;
             $totalCabang  = 1;
             $totalUsers   = $db->table('users')->where('status', 1)->where('cabang_id', $cabangId)->countAllResults();
@@ -549,16 +568,23 @@ class PemudaModel extends Model
             $maritalData[$key] = (int) $row['total'];
         }
 
+        $genderJoinClause = '';
+        if (in_array($role, ['admin_wilayah_pemuda', 'admin_pemuda'], true)) {
+            $genderJoinClause = " AND pemuda.gender = 'L'";
+        } elseif ($role === 'admin_pemudi') {
+            $genderJoinClause = " AND pemuda.gender = 'P'";
+        }
+
         // 4. Wilayah Statistics (Pemuda per Wilayah)
         $builderWilayah = $db->table('wilayah')
                              ->select('wilayah.id, wilayah.code, wilayah.name, COUNT(pemuda.id) as total')
                              ->join('cabang', 'cabang.wilayah_id = wilayah.id', 'left')
-                             ->join('pemuda', 'pemuda.cabang_id = cabang.id', 'left')
+                             ->join('pemuda', "pemuda.cabang_id = cabang.id{$genderJoinClause}", 'left')
                              ->groupBy('wilayah.id, wilayah.code, wilayah.name')
                              ->orderBy('wilayah.id', 'ASC');
-        if ($role === 'admin_wilayah' && $wilayahId) {
+        if (in_array($role, ['admin_wilayah', 'admin_wilayah_pemuda'], true) && $wilayahId) {
             $builderWilayah->where('wilayah.id', $wilayahId);
-        } elseif ($role === 'admin_cabang') {
+        } elseif (in_array($role, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)) {
             if ($wilayahId) {
                 $builderWilayah->where('wilayah.id', $wilayahId);
             }
@@ -572,13 +598,13 @@ class PemudaModel extends Model
         $builderCabang = $db->table('cabang')
                             ->select('cabang.id, cabang.name, wilayah.name as wilayah_name, COUNT(pemuda.id) as total')
                             ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')
-                            ->join('pemuda', 'pemuda.cabang_id = cabang.id', 'left')
+                            ->join('pemuda', "pemuda.cabang_id = cabang.id{$genderJoinClause}", 'left')
                             ->groupBy('cabang.id, cabang.name, wilayah.name')
                             ->orderBy('total', 'DESC')
                             ->limit(10);
-        if ($role === 'admin_wilayah' && $wilayahId) {
+        if (in_array($role, ['admin_wilayah', 'admin_wilayah_pemuda'], true) && $wilayahId) {
             $builderCabang->where('cabang.wilayah_id', $wilayahId);
-        } elseif ($role === 'admin_cabang' && $cabangId) {
+        } elseif (in_array($role, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && $cabangId) {
             $builderCabang->where('cabang.id', $cabangId);
         }
         $topCabangStats = $builderCabang->get()->getResultArray();
