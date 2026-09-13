@@ -38,6 +38,7 @@ class Persebaran extends BaseController
             'wilayah_id'  => $this->request->getGet('wilayah_id'),
             'cabang_id'   => $this->request->getGet('cabang_id'),
             'gender'      => $this->request->getGet('gender'),
+            'blood_type'  => $this->request->getGet('blood_type'),
             'status_data' => $this->request->getGet('status_data') ?? 'active',
         ];
 

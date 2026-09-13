@@ -9,61 +9,95 @@
     </a>
 </div>
 
+<?php
+    $isMale   = ($pemuda['gender'] ?? 'L') === 'L';
+    $photoUrl = null;
+    if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])) {
+        $photoUrl = base_url('uploads/pemuda/' . $pemuda['foto']);
+    } elseif (!empty($pemuda['mta_foto_url'])) {
+        $photoUrl = esc($pemuda['mta_foto_url']);
+    }
+?>
+
 <!-- PROFILE HERO CARD -->
 <div class="card card-primary card-outline shadow-sm mb-3">
-    <div class="card-body p-3">
+    <div class="card-body p-3 p-md-4">
         <div class="row align-items-center">
-            <div class="col-auto">
-                <?php if (!empty($pemuda['foto']) && file_exists(FCPATH . 'uploads/pemuda/' . $pemuda['foto'])): ?>
-                    <img src="<?= base_url('uploads/pemuda/' . $pemuda['foto']) ?>" alt="<?= esc($pemuda['name']) ?>" class="rounded-circle elevation-2" style="width: 70px; height: 70px; object-fit: cover;">
-                <?php elseif (!empty($pemuda['mta_foto_url'])): ?>
-                    <img src="<?= esc($pemuda['mta_foto_url']) ?>" alt="<?= esc($pemuda['name']) ?>" class="rounded-circle elevation-2" style="width: 70px; height: 70px; object-fit: cover;">
-                <?php else: ?>
-                    <div class="user-avatar user-avatar-lg">
-                        <?= strtoupper(substr($pemuda['name'], 0, 1)) ?>
-                    </div>
-                <?php endif; ?>
+            <!-- FOTO PROFILE DIPERBESAR -->
+            <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
+                <div class="detail-avatar-container">
+                    <?php if (!empty($photoUrl)): ?>
+                        <a href="javascript:void(0);" data-toggle="modal" data-target="#modalFotoPreview" class="d-block position-relative" title="Klik untuk memperbesar foto profil">
+                            <img src="<?= $photoUrl ?>" 
+                                 alt="<?= esc($pemuda['name']) ?>" 
+                                 class="rounded-circle shadow detail-profile-img border border-3 <?= $isMale ? 'border-primary' : 'border-danger' ?>" 
+                                 style="width: 130px; height: 130px; object-fit: cover;">
+                            <span class="detail-avatar-zoom-badge shadow-sm" title="Perbesar Foto">
+                                <i class="fas fa-search-plus"></i>
+                            </span>
+                        </a>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2 shadow-2xs" data-toggle="modal" data-target="#modalFotoPreview">
+                                <i class="fas fa-expand-alt mr-1 text-primary"></i> Perbesar Foto
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <div class="rounded-circle shadow d-inline-flex align-items-center justify-content-center text-white font-weight-bold border border-3 border-light" 
+                             style="width: 130px; height: 130px; font-size: 3.2rem; background: <?= $isMale ? 'linear-gradient(135deg, #007bff, #0056b3)' : 'linear-gradient(135deg, #e83e8c, #c2185b)' ?>;">
+                            <?= strtoupper(substr($pemuda['name'], 0, 1)) ?>
+                        </div>
+                        <div class="mt-2 text-muted text-xs">
+                            <i class="fas fa-user mr-1"></i> Tanpa Foto Profil
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
-            <div class="col">
-                <div class="d-flex flex-wrap align-items-center mb-1">
-                    <h4 class="font-weight-bold text-dark mb-0 mr-2"><?= esc($pemuda['name']) ?></h4>
+
+            <!-- INFO UTAMA -->
+            <div class="col-12 col-md text-center text-md-left">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start mb-2">
+                    <h3 class="font-weight-bold text-dark mb-1 mr-2"><?= esc($pemuda['name']) ?></h3>
                     
                     <!-- Verif badge -->
                     <?php if ($pemuda['status_verifikasi'] === 'verified'): ?>
-                        <span class="badge badge-success px-2 py-1 font-weight-bold mr-1" title="Data Sinkron dengan MTA Pusat"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
+                        <span class="badge badge-success px-2 py-1 font-weight-bold mr-1 mb-1" title="Data Sinkron dengan MTA Pusat"><i class="fas fa-check-circle mr-1"></i> Terverifikasi</span>
                     <?php else: ?>
-                        <span class="badge badge-secondary px-2 py-1 font-weight-bold mr-1" title="Data Belum Sinkron dengan MTA Pusat"><i class="fas fa-clock mr-1"></i> Belum Terverifikasi</span>
+                        <span class="badge badge-secondary px-2 py-1 font-weight-bold mr-1 mb-1" title="Data Belum Sinkron dengan MTA Pusat"><i class="fas fa-clock mr-1"></i> Belum Terverifikasi</span>
                     <?php endif; ?>
 
                     <!-- Active / Archived badge -->
                     <?php if ($pemuda['status_data'] === 'archived'): ?>
-                        <span class="badge badge-secondary px-2 py-1 font-weight-bold"><i class="fas fa-archive mr-1"></i> Data Arsip</span>
+                        <span class="badge badge-secondary px-2 py-1 font-weight-bold mr-1 mb-1"><i class="fas fa-archive mr-1"></i> Data Arsip</span>
                     <?php else: ?>
-                        <span class="badge badge-primary px-2 py-1 font-weight-bold">Aktif</span>
+                        <span class="badge badge-primary px-2 py-1 font-weight-bold mr-1 mb-1">Aktif</span>
                     <?php endif; ?>
+
+                    <!-- Gender badge -->
+                    <span class="badge <?= $isMale ? 'badge-info' : 'badge-danger' ?> px-2 py-1 font-weight-bold mb-1">
+                        <i class="fas <?= $isMale ? 'fa-mars' : 'fa-venus' ?> mr-1"></i> <?= $isMale ? 'Laki-laki' : 'Perempuan' ?>
+                    </span>
                 </div>
 
-                <div class="text-muted d-flex flex-wrap align-items-center text-xs mt-2">
-                    <div class="mr-3"><i class="fas fa-id-card text-primary mr-1"></i> No. Reg: <strong class="text-dark"><?= esc($pemuda['registration_number']) ?></strong></div>
-                    <div class="mr-3"><i class="fas fa-sitemap text-success mr-1"></i> Cabang: <strong class="text-dark"><?= esc($pemuda['cabang_name']) ?></strong> (<?= esc($pemuda['wilayah_name']) ?>)</div>
-                    <div><i class="fas fa-calendar-alt text-secondary mr-1"></i> Terdaftar: <?= date('d F Y, H:i', strtotime($pemuda['created_at'])) ?> WIB</div>
+                <div class="text-muted d-flex flex-wrap align-items-center justify-content-center justify-content-md-start text-xs mt-2">
+                    <div class="mr-3 mb-1"><i class="fas fa-id-card text-primary mr-1"></i> No. Reg: <strong class="text-dark"><?= esc($pemuda['registration_number']) ?></strong></div>
+                    <div class="mr-3 mb-1"><i class="fas fa-sitemap text-success mr-1"></i> Cabang: <strong class="text-dark"><?= esc($pemuda['cabang_name']) ?></strong> (<?= esc($pemuda['wilayah_name']) ?>)</div>
+                    <div class="mb-1"><i class="fas fa-calendar-alt text-secondary mr-1"></i> Terdaftar: <?= date('d F Y, H:i', strtotime($pemuda['created_at'])) ?> WIB</div>
                 </div>
             </div>
 
-            <!-- Action buttons -->
-            <div class="col-12 col-xl-auto text-xl-right mt-3 mt-xl-0">
-                    <button type="button" class="btn btn-outline-info btn-sm" id="btnLiveSyncMta" title="Sinkronkan dengan Database Warga MTA">
-                        <i class="fas fa-sync-alt mr-1" id="iconSyncMta"></i> Sinkronkan MTA
-                    </button>
+            <!-- ACTION BUTTONS -->
+            <div class="col-12 col-xl-auto text-center text-xl-right mt-3 mt-xl-0">
+                <button type="button" class="btn btn-outline-info btn-sm mb-1 shadow-sm" id="btnLiveSyncMta" title="Sinkronkan dengan Database Warga MTA">
+                    <i class="fas fa-sync-alt mr-1" id="iconSyncMta"></i> Sinkronkan MTA
+                </button>
 
-                    <a href="<?= base_url('admin/pemuda/cetak/' . $pemuda['id']) ?>" target="_blank" class="btn btn-default btn-sm">
-                        <i class="fas fa-print mr-1"></i> Cetak Dokumen
-                    </a>
+                <a href="<?= base_url('admin/pemuda/cetak/' . $pemuda['id']) ?>" target="_blank" class="btn btn-default btn-sm mb-1 shadow-sm">
+                    <i class="fas fa-print mr-1"></i> Cetak Dokumen
+                </a>
 
-                    <a href="<?= base_url('admin/pemuda/edit/' . $pemuda['id']) ?>" class="btn btn-primary btn-sm">
-                        <i class="fas fa-edit mr-1"></i> Edit Data
-                    </a>
-                </div>
+                <a href="<?= base_url('admin/pemuda/edit/' . $pemuda['id']) ?>" class="btn btn-primary btn-sm mb-1 shadow-sm">
+                    <i class="fas fa-edit mr-1"></i> Edit Data
+                </a>
             </div>
         </div>
     </div>
@@ -380,6 +414,77 @@
 
     </div>
 </div>
+
+<!-- MODAL PREVIEW FOTO PROFIL -->
+<?php if (!empty($photoUrl)): ?>
+<div class="modal fade" id="modalFotoPreview" tabindex="-1" role="dialog" aria-labelledby="modalFotoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header <?= $isMale ? 'bg-primary' : 'bg-danger' ?> text-white py-2">
+                <h6 class="modal-title font-weight-bold" id="modalFotoLabel">
+                    <i class="fas fa-image mr-1"></i> Foto Profil &bull; <?= esc($pemuda['name']) ?>
+                </h6>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2 text-center bg-dark">
+                <img src="<?= $photoUrl ?>" alt="<?= esc($pemuda['name']) ?>" class="img-fluid rounded shadow" style="max-height: 75vh; width: auto; object-fit: contain;">
+            </div>
+            <div class="modal-footer py-2 justify-content-between bg-light">
+                <span class="text-xs text-muted">
+                    <i class="fas fa-id-badge mr-1"></i> No. Reg: <strong><?= esc($pemuda['registration_number']) ?></strong>
+                </span>
+                <div>
+                    <a href="<?= $photoUrl ?>" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm" download>
+                        <i class="fas fa-download mr-1"></i> Unduh Foto
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<style>
+.detail-avatar-container {
+    position: relative;
+    display: inline-block;
+}
+.detail-profile-img {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+}
+.detail-profile-img:hover {
+    transform: scale(1.04);
+    box-shadow: 0 8px 22px rgba(0, 123, 255, 0.28) !important;
+}
+.detail-avatar-zoom-badge {
+    position: absolute;
+    bottom: 30px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    background: #007bff;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.detail-avatar-zoom-badge:hover {
+    background: #0056b3;
+    transform: scale(1.12);
+}
+.shadow-2xs {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+</style>
 
 <?= $this->endSection() ?>
 

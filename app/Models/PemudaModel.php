@@ -693,6 +693,19 @@ class PemudaModel extends Model
             $builder->where('pemuda.status_data', $statusData);
         }
 
+        // Filter golongan darah
+        if (!empty($filters['blood_type'])) {
+            if ($filters['blood_type'] === 'unknown') {
+                $builder->groupStart()
+                        ->where('pemuda.blood_type IS NULL')
+                        ->orWhere('pemuda.blood_type', '')
+                        ->orWhere('pemuda.blood_type', 'tidak_tahu')
+                        ->groupEnd();
+            } else {
+                $builder->where('pemuda.blood_type', $filters['blood_type']);
+            }
+        }
+
         return $builder;
     }
 
@@ -1018,6 +1031,42 @@ class PemudaModel extends Model
                                         ->limit(10)
                                         ->get()->getResultArray();
 
+        // 10. Golongan Darah (Blood Type Statistics)
+        $builderBlood = $db->table('pemuda')
+                           ->select('
+                               CASE 
+                                   WHEN UPPER(TRIM(pemuda.blood_type)) = "A" THEN "A"
+                                   WHEN UPPER(TRIM(pemuda.blood_type)) = "B" THEN "B"
+                                   WHEN UPPER(TRIM(pemuda.blood_type)) = "AB" THEN "AB"
+                                   WHEN UPPER(TRIM(pemuda.blood_type)) = "O" THEN "O"
+                                   ELSE "unknown"
+                               END as blood_group,
+                               COUNT(pemuda.id) as total
+                           ')
+                           ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderBlood, $scope, $filters);
+        $bloodRows = $builderBlood->groupBy('blood_group')->get()->getResultArray();
+
+        $bloodData = [
+            'A'       => ['label' => 'Golongan A',  'code' => 'A',  'total' => 0, 'color' => '#dc3545', 'badge' => 'badge-danger',  'desc' => 'Dapat mendonor ke: A, AB', 'recipient' => 'Menerima dari: A, O'],
+            'B'       => ['label' => 'Golongan B',  'code' => 'B',  'total' => 0, 'color' => '#007bff', 'badge' => 'badge-primary', 'desc' => 'Dapat mendonor ke: B, AB', 'recipient' => 'Menerima dari: B, O'],
+            'AB'      => ['label' => 'Golongan AB', 'code' => 'AB', 'total' => 0, 'color' => '#6f42c1', 'badge' => 'badge-purple',  'desc' => 'Dapat mendonor ke: AB',    'recipient' => 'Resipien Universal (A, B, AB, O)'],
+            'O'       => ['label' => 'Golongan O',  'code' => 'O',  'total' => 0, 'color' => '#28a745', 'badge' => 'badge-success', 'desc' => 'Donor Universal (ke semua)', 'recipient' => 'Menerima dari: O'],
+            'unknown' => ['label' => 'Belum Tercatat / Tidak Tahu', 'code' => 'unknown', 'total' => 0, 'color' => '#adb5bd', 'badge' => 'badge-secondary', 'desc' => 'Perlu skrining/tes darah', 'recipient' => 'Belum ada data'],
+        ];
+        foreach ($bloodRows as $r) {
+            $grp = $r['blood_group'];
+            if (isset($bloodData[$grp])) {
+                $bloodData[$grp]['total'] = (int) $r['total'];
+            } else {
+                $bloodData['unknown']['total'] += (int) $r['total'];
+            }
+        }
+
+        $totalWithBlood    = $bloodData['A']['total'] + $bloodData['B']['total'] + $bloodData['AB']['total'] + $bloodData['O']['total'];
+        $totalUnknownBlood = $bloodData['unknown']['total'];
+        $percentWithBlood  = $totalYouth > 0 ? round(($totalWithBlood / $totalYouth) * 100, 1) : 0;
+
         return [
             'totalYouth'         => $totalYouth,
             'genderData'         => $genderData,
@@ -1041,6 +1090,10 @@ class PemudaModel extends Model
             'districtStats'      => $districtStats,
             'wilayahStats'       => $wilayahStats,
             'topCabangStats'     => $topCabangStats,
+            'bloodData'          => $bloodData,
+            'totalWithBlood'     => $totalWithBlood,
+            'totalUnknownBlood'  => $totalUnknownBlood,
+            'percentWithBlood'   => $percentWithBlood,
         ];
     }
 }

@@ -42,7 +42,7 @@
                 </div>
                 <h2 class="font-weight-bold mb-2">Persebaran Data Pemuda MTA Sragen 📊</h2>
                 <p class="text-white-50 mb-0 font-weight-normal">
-                    Analisis mendalam sebaran keikutsertaan <strong>Element Dakwah</strong> (Satgas, Bankom, Parkir, dll), <strong>Pendidikan &amp; Sekolah</strong>, <strong>Bakat &amp; Keahlian</strong>, <strong>Minat</strong>, <strong>Ketenagakerjaan &amp; Wirausaha</strong>, serta <strong>Demografi Usia</strong>.
+                    Analisis mendalam sebaran keikutsertaan <strong>Element Dakwah</strong> (Satgas, Bankom, Parkir, dll), <strong>Pendidikan &amp; Sekolah</strong>, <strong>Bakat &amp; Keahlian</strong>, <strong>Minat</strong>, <strong>Ketenagakerjaan &amp; Wirausaha</strong>, <strong>Demografi Usia</strong>, serta <strong>Golongan Darah</strong>.
                 </p>
             </div>
             <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
@@ -68,7 +68,7 @@
         <h6 class="font-weight-bold text-dark mb-0 text-xs text-uppercase">
             <i class="fas fa-filter mr-1 text-primary"></i> Filter Interaktif Sebaran Data
         </h6>
-        <?php if (!empty($filters['wilayah_id']) || !empty($filters['cabang_id']) || (!empty($filters['gender']) && !in_array($userRole, ['admin_pemuda', 'admin_pemudi', 'admin_wilayah_pemuda'], true))): ?>
+        <?php if (!empty($filters['wilayah_id']) || !empty($filters['cabang_id']) || !empty($filters['blood_type']) || (!empty($filters['gender']) && !in_array($userRole, ['admin_pemuda', 'admin_pemudi', 'admin_wilayah_pemuda'], true))): ?>
             <span class="badge badge-primary px-2 py-1">Filter Aktif Diterapkan</span>
         <?php endif; ?>
     </div>
@@ -76,7 +76,7 @@
         <form method="GET" action="<?= base_url('admin/persebaran') ?>" id="filterForm">
             <div class="row align-items-end">
                 <!-- Wilayah Filter -->
-                <div class="col-12 col-sm-6 col-md-3 mb-2">
+                <div class="col-12 col-sm-6 col-md-2 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Wilayah</label>
                     <?php if (in_array($userRole, ['superadmin', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <select name="wilayah_id" id="filterWilayah" class="form-control form-control-sm">
@@ -93,7 +93,7 @@
                 </div>
 
                 <!-- Cabang Filter -->
-                <div class="col-12 col-sm-6 col-md-3 mb-2">
+                <div class="col-12 col-sm-6 col-md-2 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Cabang</label>
                     <?php if ($userRole === 'admin_cabang'): ?>
                         <input type="text" class="form-control form-control-sm bg-white" value="<?= esc($cabangName) ?>" readonly>
@@ -118,11 +118,24 @@
                         <input type="text" class="form-control form-control-sm bg-white text-danger font-weight-bold" value="Perempuan (P)" readonly>
                     <?php else: ?>
                         <select name="gender" class="form-control form-control-sm">
-                            <option value="">-- Semua --</option>
+                            <option value="">-- Semua Gender --</option>
                             <option value="L" <?= (($filters['gender'] ?? '') === 'L') ? 'selected' : '' ?>>Laki-laki (L)</option>
                             <option value="P" <?= (($filters['gender'] ?? '') === 'P') ? 'selected' : '' ?>>Perempuan (P)</option>
                         </select>
                     <?php endif; ?>
+                </div>
+
+                <!-- Golongan Darah Filter -->
+                <div class="col-6 col-md-2 mb-2">
+                    <label class="text-xs text-muted font-weight-bold mb-1">Golongan Darah</label>
+                    <select name="blood_type" class="form-control form-control-sm">
+                        <option value="">-- Semua Gol. Darah --</option>
+                        <option value="A" <?= (($filters['blood_type'] ?? '') === 'A') ? 'selected' : '' ?>>Golongan A</option>
+                        <option value="B" <?= (($filters['blood_type'] ?? '') === 'B') ? 'selected' : '' ?>>Golongan B</option>
+                        <option value="AB" <?= (($filters['blood_type'] ?? '') === 'AB') ? 'selected' : '' ?>>Golongan AB</option>
+                        <option value="O" <?= (($filters['blood_type'] ?? '') === 'O') ? 'selected' : '' ?>>Golongan O</option>
+                        <option value="unknown" <?= (($filters['blood_type'] ?? '') === 'unknown') ? 'selected' : '' ?>>Belum Tercatat</option>
+                    </select>
                 </div>
 
                 <!-- Status Data Filter -->
@@ -136,7 +149,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="col-12 col-md-2 mb-2">
+                <div class="col-6 col-md-2 mb-2">
                     <div class="btn-group w-100">
                         <button type="submit" class="btn btn-primary btn-sm font-weight-bold">
                             <i class="fas fa-search mr-1"></i> Filter
@@ -741,6 +754,177 @@
     </div>
 </div>
 
+<!-- ================================================================= -->
+<!-- SECTION 7: PERSEBARAN GOLONGAN DARAH & KESIAPSIAGAAN MEDIS -->
+<!-- ================================================================= -->
+<div class="row mt-4">
+    <div class="col-12 mb-2">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <h5 class="font-weight-bold text-dark mb-1">
+                <i class="fas fa-tint text-danger mr-2"></i> 7. Persebaran Golongan Darah &amp; Kesiapsiagaan Donor
+            </h5>
+            <span class="badge badge-danger px-3 py-1 text-xs mb-1">
+                <i class="fas fa-heartbeat mr-1"></i> Kesiapsiagaan Kemanusiaan &amp; Medis
+            </span>
+        </div>
+        <p class="text-muted text-xs mt-1 mb-3">
+            Pemetaan golongan darah pemuda untuk kebutuhan bank data kemanusiaan, aksi donor darah berkala PMI, dan respon cepat darurat medis di lingkungan jamaah.
+        </p>
+    </div>
+
+    <!-- Chart Visualisasi Golongan Darah -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="font-weight-bold mb-0 text-dark">
+                    <i class="fas fa-chart-pie text-danger mr-1"></i> Komposisi Golongan Darah
+                </h6>
+                <span class="badge badge-light border text-xs">
+                    Terdata: <strong><?= number_format($stats['totalWithBlood'] ?? 0) ?></strong> (<?= $stats['percentWithBlood'] ?? 0 ?>%)
+                </span>
+            </div>
+            <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div style="position: relative; height: 260px;">
+                    <canvas id="chartGolDarah"></canvas>
+                </div>
+                <div class="mt-3 pt-3 border-top">
+                    <div class="d-flex justify-content-between text-xs mb-1">
+                        <span class="text-muted font-weight-bold">Tingkat Kelengkapan Data:</span>
+                        <span class="font-weight-bold text-dark"><?= $stats['percentWithBlood'] ?? 0 ?>%</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 8px;">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: <?= $stats['percentWithBlood'] ?? 0 ?>%" aria-valuenow="<?= $stats['percentWithBlood'] ?? 0 ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-xs text-muted">
+                        <span><i class="fas fa-check-circle text-success mr-1"></i> Sudah Tahu: <strong><?= number_format($stats['totalWithBlood'] ?? 0) ?></strong></span>
+                        <span><i class="fas fa-question-circle text-secondary mr-1"></i> Belum Tercatat: <strong><?= number_format($stats['totalUnknownBlood'] ?? 0) ?></strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rincian Tiap Golongan Darah & Kompatibilitas Donor -->
+    <div class="col-lg-7 mb-4">
+        <div class="row">
+            <!-- Golongan A -->
+            <div class="col-sm-6 mb-3">
+                <div class="card shadow-sm border-0 h-100 border-left-danger">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge badge-danger font-weight-bold px-2 py-1">Golongan Darah A</span>
+                                <div class="h3 font-weight-bold text-dark mb-0 mt-1">
+                                    <?= number_format($stats['bloodData']['A']['total'] ?? 0) ?>
+                                    <span class="text-xs font-weight-normal text-muted">orang</span>
+                                </div>
+                            </div>
+                            <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-weight: 900; font-size: 1.25rem; background-color: #dc3545;">
+                                A
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted border-top pt-2">
+                            <div><i class="fas fa-arrow-circle-right text-success mr-1"></i> Donor untuk: <strong>A, AB</strong></div>
+                            <div><i class="fas fa-arrow-circle-left text-primary mr-1"></i> Menerima dari: <strong>A, O</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Golongan B -->
+            <div class="col-sm-6 mb-3">
+                <div class="card shadow-sm border-0 h-100 border-left-primary">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge badge-primary font-weight-bold px-2 py-1">Golongan Darah B</span>
+                                <div class="h3 font-weight-bold text-dark mb-0 mt-1">
+                                    <?= number_format($stats['bloodData']['B']['total'] ?? 0) ?>
+                                    <span class="text-xs font-weight-normal text-muted">orang</span>
+                                </div>
+                            </div>
+                            <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-weight: 900; font-size: 1.25rem; background-color: #007bff;">
+                                B
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted border-top pt-2">
+                            <div><i class="fas fa-arrow-circle-right text-success mr-1"></i> Donor untuk: <strong>B, AB</strong></div>
+                            <div><i class="fas fa-arrow-circle-left text-primary mr-1"></i> Menerima dari: <strong>B, O</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Golongan AB -->
+            <div class="col-sm-6 mb-3">
+                <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #6f42c1 !important;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge badge-purple font-weight-bold px-2 py-1">Golongan Darah AB</span>
+                                <div class="h3 font-weight-bold text-dark mb-0 mt-1">
+                                    <?= number_format($stats['bloodData']['AB']['total'] ?? 0) ?>
+                                    <span class="text-xs font-weight-normal text-muted">orang</span>
+                                </div>
+                            </div>
+                            <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-weight: 900; font-size: 1.15rem; background-color: #6f42c1;">
+                                AB
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted border-top pt-2">
+                            <div><i class="fas fa-arrow-circle-right text-success mr-1"></i> Donor untuk: <strong>AB</strong></div>
+                            <div><i class="fas fa-star text-warning mr-1"></i> <strong>Resipien Universal</strong> (Semua gol.)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Golongan O -->
+            <div class="col-sm-6 mb-3">
+                <div class="card shadow-sm border-0 h-100 border-left-success">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge badge-success font-weight-bold px-2 py-1">Golongan Darah O</span>
+                                <div class="h3 font-weight-bold text-dark mb-0 mt-1">
+                                    <?= number_format($stats['bloodData']['O']['total'] ?? 0) ?>
+                                    <span class="text-xs font-weight-normal text-muted">orang</span>
+                                </div>
+                            </div>
+                            <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-weight: 900; font-size: 1.25rem; background-color: #28a745;">
+                                O
+                            </div>
+                        </div>
+                        <div class="text-xs text-muted border-top pt-2">
+                            <div><i class="fas fa-star text-warning mr-1"></i> <strong>Donor Universal</strong> (Ke semua gol.)</div>
+                            <div><i class="fas fa-arrow-circle-left text-primary mr-1"></i> Menerima dari: <strong>O</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Belum Tercatat / Info Action Card -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-light">
+                    <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2 mb-sm-0">
+                            <h6 class="font-weight-bold mb-1 text-dark text-sm">
+                                <i class="fas fa-info-circle text-info mr-1"></i> Belum Tercatat: <strong><?= number_format($stats['totalUnknownBlood'] ?? 0) ?></strong> Pemuda
+                            </h6>
+                            <p class="text-muted text-xs mb-0">
+                                Disarankan menyelenggarakan cek golongan darah bersamaan dengan kegiatan gelombang pemuda atau donor darah PMI.
+                            </p>
+                        </div>
+                        <a href="<?= base_url('admin/pemuda?blood_type=unknown') ?>" class="btn btn-sm btn-outline-secondary font-weight-bold">
+                            <i class="fas fa-filter mr-1"></i> Lihat Data Belum Cek
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -1073,6 +1257,48 @@ $(document).ready(function() {
         });
     }
     <?php endif; ?>
+
+    // ==========================================
+    // 9. Chart Golongan Darah (Doughnut)
+    // ==========================================
+    const ctxBlood = document.getElementById('chartGolDarah');
+    if (ctxBlood) {
+        new Chart(ctxBlood, {
+            type: 'doughnut',
+            data: {
+                labels: <?= json_encode(array_column($stats['bloodData'], 'label')) ?>,
+                datasets: [{
+                    data: <?= json_encode(array_map('intval', array_column($stats['bloodData'], 'total'))) ?>,
+                    backgroundColor: <?= json_encode(array_column($stats['bloodData'], 'color')) ?>,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ' ' + context.label + ': ' + val.toLocaleString() + ' orang (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
 <style>

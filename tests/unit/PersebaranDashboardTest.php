@@ -43,6 +43,10 @@ final class PersebaranDashboardTest extends CIUnitTestCase
             'districtStats',
             'wilayahStats',
             'topCabangStats',
+            'bloodData',
+            'totalWithBlood',
+            'totalUnknownBlood',
+            'percentWithBlood',
         ];
 
         foreach ($expectedKeys as $key) {
@@ -60,6 +64,12 @@ final class PersebaranDashboardTest extends CIUnitTestCase
         $this->assertIsArray($stats['topInterests']);
         $this->assertIsArray($stats['jobStats']);
         $this->assertIsArray($stats['ageData']);
+        $this->assertIsArray($stats['bloodData']);
+        $this->assertArrayHasKey('A', $stats['bloodData']);
+        $this->assertArrayHasKey('B', $stats['bloodData']);
+        $this->assertArrayHasKey('AB', $stats['bloodData']);
+        $this->assertArrayHasKey('O', $stats['bloodData']);
+        $this->assertArrayHasKey('unknown', $stats['bloodData']);
         $this->assertIsFloat($stats['avgAge']);
     }
 
@@ -136,5 +146,51 @@ final class PersebaranDashboardTest extends CIUnitTestCase
         $this->assertSame(0, $statsMale['genderData']['P']);
         $this->assertSame(0, $statsFemale['genderData']['L']);
         $this->assertSame($statsAll['totalYouth'], $statsMale['totalYouth'] + $statsFemale['totalYouth']);
+    }
+
+    public function testPemudaDetailPhotoDisplay(): void
+    {
+        $detailViewPath = APPPATH . 'Views/admin/pemuda/detail.php';
+        $this->assertFileExists($detailViewPath);
+        $content = file_get_contents($detailViewPath);
+
+        // Photo size enlarged to 130px
+        $this->assertStringContainsString('width: 130px; height: 130px;', $content);
+        // Modal zoom preview feature present
+        $this->assertStringContainsString('modalFotoPreview', $content);
+        $this->assertStringContainsString('detail-profile-img', $content);
+        $this->assertStringContainsString('Perbesar Foto', $content);
+    }
+
+    public function testGolonganDarahStatsAndFilter(): void
+    {
+        $db = Database::connect('default');
+        $pemudaModel = new PemudaModel($db);
+
+        $stats = $pemudaModel->getPersebaranStats(['role' => 'superadmin']);
+
+        // Sum of all blood groups must equal totalYouth
+        $sumBlood = $stats['bloodData']['A']['total']
+                  + $stats['bloodData']['B']['total']
+                  + $stats['bloodData']['AB']['total']
+                  + $stats['bloodData']['O']['total']
+                  + $stats['bloodData']['unknown']['total'];
+        $this->assertSame($stats['totalYouth'], $sumBlood);
+        $this->assertSame($stats['totalWithBlood'] + $stats['totalUnknownBlood'], $stats['totalYouth']);
+
+        // Test filtering by specific blood type
+        $statsO = $pemudaModel->getPersebaranStats(['role' => 'superadmin'], ['blood_type' => 'O']);
+        $this->assertSame(0, $statsO['bloodData']['A']['total']);
+        $this->assertSame(0, $statsO['bloodData']['B']['total']);
+        $this->assertSame(0, $statsO['bloodData']['AB']['total']);
+        $this->assertSame($statsO['totalYouth'], $statsO['bloodData']['O']['total']);
+
+        // Test persebaran view contains Golongan Darah markup and chart
+        $viewPath = APPPATH . 'Views/admin/persebaran/index.php';
+        $this->assertFileExists($viewPath);
+        $viewContent = file_get_contents($viewPath);
+        $this->assertStringContainsString('7. Persebaran Golongan Darah', $viewContent);
+        $this->assertStringContainsString('chartGolDarah', $viewContent);
+        $this->assertStringContainsString('name="blood_type"', $viewContent);
     }
 }

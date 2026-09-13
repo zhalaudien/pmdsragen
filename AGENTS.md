@@ -2101,4 +2101,27 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Didaftarkan route `admin/persebaran` dan `admin/dashboard/persebaran` pada `app/Config/Routes.php`.
   - Ditambahkan menu navigasi "Persebaran Data" pada sidebar `app/Views/admin/layouts/main.php` dan tombol pintasan di Dashboard Admin `app/Views/admin/dashboard/index.php`.
 - **Pengujian Unit (`tests/unit/PersebaranDashboardTest.php`):**
-  - Dibuat 5 test case unit pengujian struktur return data `getPersebaranStats()`, isolasi scope `admin_pemuda` (hanya L), `admin_pemudi` (hanya P), `admin_cabang` (terkunci ke cabang bersangkutan), dan fungsionalitas parameter filter multi-kriteria.
+  - Dibuat 6 test case unit pengujian struktur return data `getPersebaranStats()`, isolasi scope `admin_pemuda` (hanya L), `admin_pemudi` (hanya P), `admin_cabang` (terkunci ke cabang bersangkutan), fungsionalitas parameter filter multi-kriteria, dan verifikasi tampilan foto profil diperbesar pada detail pemuda.
+
+### 2026-09-13 — Peningkatan Tampilan Foto Profil pada Detail Data Pemuda
+
+- **Pembaruan Tampilan Foto Profil (`app/Views/admin/pemuda/detail.php`):**
+  - Ukuran foto profil diperbesar secara signifikan dari 70px menjadi **130px × 130px** (`width: 130px; height: 130px; object-fit: cover;`) dengan border tematik gender (`border-primary` untuk pemuda laki-laki, `border-danger` untuk pemudi perempuan) dan efek bayangan lembut (`shadow`).
+  - Ditambahkan efek hover interaktif (`scale(1.04)` dan elevasi bayangan) dengan badge zoom icon `fas fa-search-plus`.
+  - Ditambahkan tombol pintas *"Perbesar Foto"* di bawah foto profil.
+  - Ditambahkan **Modal Lightbox Preview** (`#modalFotoPreview`): Saat foto profil diklik, sistem membuka modal popup beresolusi penuh dalam aspek rasio aslinya yang dilengkapi tombol *"Unduh Foto"* untuk keperluan arsip/administrasi.
+  - Avatar placeholder tanpa foto diperbesar menjadi 130px dengan inisial bergradien dan icon penanda status foto.
+
+### 2026-09-13 — Penambahan Persebaran Data Golongan Darah & Kesiapsiagaan Donor
+
+- **Integrasi Golongan Darah pada Dashboard Persebaran (`/admin/persebaran`):**
+  - Ditambahkan **Section 7: Persebaran Golongan Darah & Kesiapsiagaan Donor**:
+    - **Chart Donut (`chartGolDarah`):** Komposisi pemuda berdasarkan golongan darah (A, B, AB, O, dan Belum Tercatat) dengan persentase kelengkapan data.
+    - **Kartu Ringkasan Tiap Golongan Darah:** Rincian jumlah pemuda per golongan darah, kode badge tematik, peruntukan donor (`Donor untuk`), dan kompatibilitas penerimaan (`Menerima dari`), termasuk label Resipien Universal (AB) dan Donor Universal (O).
+    - **Kartu Tindakan Data Belum Tercatat:** Ringkasan pemuda yang belum mengetahui/mencatatkan golongan darah beserta tautan cepat untuk memfilter data.
+  - Ditambahkan filter interaktif **Golongan Darah** pada form filter atas (`A`, `B`, `AB`, `O`, `Belum Tercatat`).
+- **Backend & Model (`app/Models/PemudaModel.php` & `app/Controllers/Admin/Persebaran.php`):**
+  - Ditambahkan kalkulasi `bloodData`, `totalWithBlood`, `totalUnknownBlood`, dan `percentWithBlood` pada method `getPersebaranStats()`.
+  - Ditambahkan filter `blood_type` pada `applyScopeAndCustomFilters()`.
+- **Pengujian Unit (`tests/unit/PersebaranDashboardTest.php`):**
+  - Ditambahkan unit test `testGolonganDarahStatsAndFilter()` yang memvalidasi integritas data golongan darah terhadap total pemuda, fungsionalitas filtering golongan darah O, dan kehadiran elemen UI serta Chart.js golongan darah pada view.
