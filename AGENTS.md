@@ -109,18 +109,18 @@ Pemuda
 
 Role utama:
 
-| Role                   | Scope               | Gender Filter          |
-| ---------------------- | ------------------- | ---------------------- |
+| Role                   | Scope               | Gender Filter                 |
+| ---------------------- | ------------------- | ----------------------------- |
 | `superadmin`           | Seluruh sistem      | Semua (Laki-laki & Perempuan) |
+| `admin_pemuda`         | Seluruh Sragen      | Khusus Laki-laki (`L`)        |
+| `admin_pemudi`         | Seluruh Sragen      | Khusus Perempuan (`P`)        |
 | `admin_wilayah`        | Satu wilayah        | Semua (Laki-laki & Perempuan) |
-| `admin_wilayah_pemuda` | Satu wilayah        | Khusus Laki-laki (`L`) |
+| `admin_wilayah_pemuda` | Satu wilayah        | Khusus Laki-laki (`L`)        |
 | `admin_cabang`         | Satu cabang         | Semua (Laki-laki & Perempuan) |
-| `admin_pemuda`         | Satu cabang         | Khusus Laki-laki (`L`) |
-| `admin_pemudi`         | Satu cabang         | Khusus Perempuan (`P`) |
 
 ## 4.1 Superadmin
 
-Superadmin dapat:
+Superadmin mengelola seluruh sistem dan data:
 
 - Mengelola seluruh wilayah.
 - Mengelola seluruh cabang.
@@ -128,19 +128,42 @@ Superadmin dapat:
 - Mengelola user/admin.
 - Mengelola form.
 - Melihat seluruh statistik.
-- Import Data Pemuda dari exel
+- Import Data Pemuda dari excel.
 - Export seluruh data.
 - Mengubah konfigurasi sistem.
 
 Pada tabel `users`:
 
 ```text
-role_id    -> role superadmin
+role_id    -> role superadmin (1)
 wilayah_id -> NULL
 cabang_id  -> NULL
 ```
 
-## 4.2 Admin Wilayah & Admin Wilayah Pemuda
+## 4.2 Admin Pemuda & Admin Pemudi (Tingkat Kabupaten / Seluruh Sragen)
+
+- **`admin_pemuda`**: Administrator seluruh Sragen yang mengelola/menghandle data pemuda (Laki-laki / `gender = 'L'`).
+- **`admin_pemudi`**: Administrator seluruh Sragen yang mengelola/menghandle data pemudi (Perempuan / `gender = 'P'`).
+
+Pada tabel `users`:
+
+```text
+role_id    -> admin_pemuda (4) / admin_pemudi (5)
+wilayah_id -> NULL
+cabang_id  -> NULL
+```
+
+Scope data:
+
+```text
+users (admin_pemuda / admin_pemudi)
+    |
+    +-- Seluruh Wilayah & Cabang di Sragen (bisa filter cabang & wilayah manapun)
+          |
+          +-- pemuda (filtered by gender: 'L' untuk admin_pemuda, 'P' untuk admin_pemudi)
+```
+
+## 4.3 Admin Wilayah & Admin Wilayah Pemuda
 
 - **`admin_wilayah`**: mengelola seluruh data pemuda (Laki-laki & Perempuan) pada wilayahnya.
 - **`admin_wilayah_pemuda`**: mengelola hanya data pemuda berjenis kelamin Laki-laki (`gender = 'L'`) pada wilayahnya.
@@ -148,7 +171,7 @@ cabang_id  -> NULL
 Pada tabel `users`:
 
 ```text
-role_id    -> admin_wilayah / admin_wilayah_pemuda
+role_id    -> admin_wilayah (2) / admin_wilayah_pemuda (6)
 wilayah_id -> wilayah yang dikelola
 cabang_id  -> NULL
 ```
@@ -163,16 +186,14 @@ users.wilayah_id
           +-- pemuda (filtered by gender for admin_wilayah_pemuda)
 ```
 
-## 4.3 Admin Cabang, Admin Pemuda, & Admin Pemudi
+## 4.4 Admin Cabang
 
-- **`admin_cabang`**: mengelola seluruh data pemuda (Laki-laki & Perempuan) pada cabangnya.
-- **`admin_pemuda`**: mengelola hanya data pemuda berjenis kelamin Laki-laki (`gender = 'L'`) pada cabangnya.
-- **`admin_pemudi`**: mengelola hanya data pemuda berjenis kelamin Perempuan (`gender = 'P'`) pada cabangnya.
+- **`admin_cabang`**: manajemen data pada cabang tersebut (mengelola seluruh data pemuda & pemudi berjenis kelamin Laki-laki maupun Perempuan pada cabang yang dikelolanya).
 
 Pada tabel `users`:
 
 ```text
-role_id    -> admin_cabang / admin_pemuda / admin_pemudi
+role_id    -> admin_cabang (3)
 wilayah_id -> wilayah cabang tersebut
 cabang_id  -> cabang yang dikelola
 ```
@@ -182,7 +203,7 @@ Scope data:
 ```text
 users.cabang_id
     |
-    +-- pemuda (filtered by gender for admin_pemuda & admin_pemudi)
+    +-- pemuda (seluruh pemuda & pemudi pada cabang tersebut)
 ```
 
 ## 4.4 Authorization wajib dilakukan di server
@@ -2036,7 +2057,48 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Diperbarui `PemudaExportTest.php` untuk memvalidasi nama kategori dan label kolom "Element Dakwah".
   - Diperbarui `PemudaImportTest.php` untuk memverifikasi pemetaan kolom "Element Dakwah (Opsional)" dan "Elemen Dakwah" secara akurat.
 
+### 2026-09-13 — Penyempurnaan Definisi & Lingkup Role (Superadmin, Admin Pemudi, Admin Pemuda, Admin Wilayah Pemuda, Admin Cabang)
 
+- **Perubahan Spesifikasi Lingkup Role:**
+  1. `superadmin`: Mengelola seluruh sistem dan data (seluruh wilayah, seluruh cabang MTA di Sragen, semua gender pemuda & pemudi).
+  2. `admin_pemudi`: Administrator tingkat Kabupaten (seluruh Sragen) yang mengelola/menghandle seluruh data pemudi berjenis kelamin Perempuan (`gender = 'P'`). Memiliki akses lintas seluruh wilayah dan cabang di Sragen tanpa terikat pada cabang/wilayah tertentu (`wilayah_id = NULL`, `cabang_id = NULL`).
+  3. `admin_pemuda`: Administrator tingkat Kabupaten (seluruh Sragen) yang mengelola/menghandle seluruh data pemuda berjenis kelamin Laki-laki (`gender = 'L'`). Memiliki akses lintas seluruh wilayah dan cabang di Sragen tanpa terikat pada cabang/wilayah tertentu (`wilayah_id = NULL`, `cabang_id = NULL`).
+  4. `admin_wilayah_pemuda`: Administrator tingkat Wilayah yang mengelola data pemuda berjenis kelamin Laki-laki (`gender = 'L'`) pada cabang-cabang dalam wilayah yang dinaunginya (`wilayah_id = [id]`, `cabang_id = NULL`).
+  5. `admin_cabang`: Manajemen data pada cabang tersebut (mengelola seluruh data pemuda & pemudi, Laki-laki & Perempuan pada cabang yang dinaunginya) (`cabang_id = [id]`, `wilayah_id = [cabang.wilayah_id]`).
+- **Database & Seeder:**
+  - Migration `2026-09-12-223000_UpdateRoleDefinitionsAndScopes.php` dan `UserRoleSeeder.php` menyinkronkan deskripsi role resmi.
+  - `UserSeeder.php` diperbarui dengan akun contoh untuk semua 6 role.
+- **Backend & Controller Logic:**
+  - `app/Controllers/Admin/Users.php`: Validasi create/update user tidak lagi mewajibkan cabang untuk `admin_pemuda` dan `admin_pemudi` (keduanya kini global se-Sragen dengan `wilayah_id = null` dan `cabang_id = null`).
+  - `app/Controllers/Auth.php`: Normalisasi session data saat login untuk role se-Sragen (`superadmin`, `admin_pemuda`, `admin_pemudi`).
+  - `app/Controllers/Admin/Ajax.php`: `getCabangByWilayah` mengizinkan `admin_pemuda` dan `admin_pemudi` mengambil cabang dari wilayah mana pun di Sragen (hanya `admin_cabang` yang dibatasi ke cabangnya sendiri).
+  - `app/Controllers/Admin/Pemuda.php` & `app/Models/PemudaModel.php`:
+    - Enforce server-side gender lock: `admin_pemuda` (`gender = 'L'`), `admin_pemudi` (`gender = 'P'`).
+    - Filter wilayah & cabang: `admin_pemuda` dan `admin_pemudi` dapat memfilter wilayah dan cabang mana pun di Sragen.
+- **UI & Views:**
+  - `app/Views/admin/users/index.php`: Tabel menampilkan label scope "Seluruh Sragen (L)" / "Seluruh Sragen (P)", dan modal form otomatis menyembunyikan input Wilayah & Cabang untuk `admin_pemuda` & `admin_pemudi`.
+  - `app/Views/admin/layouts/main.php`: Badge navbar desktop dan mobile menampilkan badge "Scope: Seluruh Sragen" dengan penanda gender L/P.
+  - `app/Views/admin/dashboard/index.php`: Banner selamat datang dan kartu 10 Cabang Terbanyak disesuaikan untuk `admin_pemuda` (Pemuda L) dan `admin_pemudi` (Pemudi P).
+  - `app/Views/admin/pemuda/index.php`, `form.php`, `export.php`: Dropdown wilayah dan cabang terbuka untuk `admin_pemuda` dan `admin_pemudi`, sedangkan filter gender terkunci sesuai gender yang diizinkan.
+- **Testing:**
+  - Unit test `PemudaManagementTest.php` dan `PemudaExportTest.php` memvalidasi fungsionalitas dan otorisasi seluruh role.
 
+### 2026-09-13 — Penambahan Dashboard Persebaran Data Pemuda & Visualisasi Multidimensi
 
-
+- **Dashboard Persebaran Data Pemuda (`/admin/persebaran`):**
+  - Dibuat fitur analisis persebaran data pemuda komprehensif yang memetakan seluruh dimensi data:
+    1. **Element Dakwah / Unit Tugas:** Distribusi penugasan pemuda dalam Satgas, Bankom, Tim Parkir, Pengurus Pemuda, Tim Ikhrom, serta rasio keikutsertaan unit tugas.
+    2. **Pendidikan & Sekolah:** Jenjang pendidikan terakhir, status pendidikan (Aktif menempuh, Lulus, Putus sekolah), Top 10 Sekolah/Kampus, dan Top 10 Jurusan/Prodi.
+    3. **Bakat & Keahlian (Skills):** Top 10 keahlian terbanyak, distribusi tingkat kemahiran (Pemula, Menengah, Mahir), dan persentase pemuda yang memiliki keahlian tercatat.
+    4. **Minat & Hobi (Interests):** Top 10 minat terbanyak yang digemari pemuda untuk pemetaan program kerja dan pembinaan.
+    5. **Ketenagakerjaan & Wirausaha:** Distribusi status pekerjaan, jumlah pelaku usaha/wirausaha mandiri, dan Top bidang usaha/bisnis yang digeluti.
+    6. **Demografi Usia & Wilayah:** Rentang usia (<17, 17-21, 22-25, 26-30, >30 tahun), rata-rata usia pemuda, sebaran kecamatan di Kabupaten Sragen, serta sebaran wilayah dan Top cabang.
+- **Backend & Model:**
+  - Ditambahkan method `getPersebaranStats(array $scope, array $filters)` dan `applyScopeAndCustomFilters()` pada `app/Models/PemudaModel.php` dengan query builder native CodeIgniter 4 yang aman dan efisien.
+  - Memperbaiki pemanggilan Query Builder agar murni menggunakan agregasi native CI4 (`COUNT(DISTINCT ...)`) menggantikan fungsi non-eksisten `whereExists()` pada driver MySQLi CodeIgniter 4.
+  - Dibuat controller `app/Controllers/Admin/Persebaran.php` dengan penegakan scope RBAC ketat (Superadmin, Admin Pemuda, Admin Pemudi, Admin Wilayah, Admin Cabang).
+- **Rute & Navigasi:**
+  - Didaftarkan route `admin/persebaran` dan `admin/dashboard/persebaran` pada `app/Config/Routes.php`.
+  - Ditambahkan menu navigasi "Persebaran Data" pada sidebar `app/Views/admin/layouts/main.php` dan tombol pintasan di Dashboard Admin `app/Views/admin/dashboard/index.php`.
+- **Pengujian Unit (`tests/unit/PersebaranDashboardTest.php`):**
+  - Dibuat 5 test case unit pengujian struktur return data `getPersebaranStats()`, isolasi scope `admin_pemuda` (hanya L), `admin_pemudi` (hanya P), `admin_cabang` (terkunci ke cabang bersangkutan), dan fungsionalitas parameter filter multi-kriteria.

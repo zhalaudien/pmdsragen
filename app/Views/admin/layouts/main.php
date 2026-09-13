@@ -108,14 +108,14 @@
                     </span>
                 <?php elseif ($currRole === 'admin_pemuda'): ?>
                     <span class="badge badge-success px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
-                        <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong> <span class="badge badge-light text-success ml-1 font-weight-bold"><i class="fas fa-mars mr-1"></i>Laki-laki</span>
+                        <i class="fas fa-globe mr-1"></i> Scope: <strong>Seluruh Sragen</strong> <span class="badge badge-light text-success ml-1 font-weight-bold"><i class="fas fa-mars mr-1"></i>Laki-laki</span>
                     </span>
                 <?php elseif ($currRole === 'admin_pemudi'): ?>
                     <span class="badge badge-warning px-3 py-2 font-weight-normal text-white" style="font-size: 0.8rem; background-color: #e83e8c;">
-                        <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong> <span class="badge badge-light text-dark ml-1 font-weight-bold"><i class="fas fa-venus mr-1"></i>Perempuan</span>
+                        <i class="fas fa-globe mr-1"></i> Scope: <strong>Seluruh Sragen</strong> <span class="badge badge-light text-dark ml-1 font-weight-bold"><i class="fas fa-venus mr-1"></i>Perempuan</span>
                     </span>
                 <?php else: ?>
-                    <span class="badge badge-success px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
+                    <span class="badge badge-secondary px-3 py-2 font-weight-normal" style="font-size: 0.8rem;">
                         <i class="fas fa-sitemap mr-1"></i> Scope: <strong><?= esc($currCabang) ?></strong>
                     </span>
                 <?php endif; ?>
@@ -127,13 +127,21 @@
                     <span class="badge badge-dark px-2 py-1 font-weight-normal" style="font-size: 0.72rem;" title="Scope: Seluruh Sistem">
                         <i class="fas fa-globe text-info"></i> Superadmin
                     </span>
+                <?php elseif ($currRole === 'admin_pemuda'): ?>
+                    <span class="badge badge-success px-2 py-1 font-weight-normal" style="font-size: 0.72rem;" title="Scope: Seluruh Sragen (L)">
+                        <i class="fas fa-mars"></i> Admin Pemuda
+                    </span>
+                <?php elseif ($currRole === 'admin_pemudi'): ?>
+                    <span class="badge px-2 py-1 font-weight-normal text-white" style="font-size: 0.72rem; background-color: #e83e8c;" title="Scope: Seluruh Sragen (P)">
+                        <i class="fas fa-venus"></i> Admin Pemudi
+                    </span>
                 <?php elseif ($currRole === 'admin_wilayah' || $currRole === 'admin_wilayah_pemuda'): ?>
                     <span class="badge badge-primary px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 120px;" title="Scope: <?= esc($currWilayah) ?>">
                         <i class="fas fa-map-marker-alt"></i> <?= esc($currWilayah) ?><?= ($currRole === 'admin_wilayah_pemuda') ? ' (L)' : '' ?>
                     </span>
                 <?php else: ?>
-                    <span class="badge badge-success px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 120px;" title="Scope: <?= esc($currCabang) ?>">
-                        <i class="fas fa-sitemap"></i> <?= esc($currCabang) ?><?= ($currRole === 'admin_pemuda') ? ' (L)' : (($currRole === 'admin_pemudi') ? ' (P)' : '') ?>
+                    <span class="badge badge-secondary px-2 py-1 font-weight-normal text-truncate" style="font-size: 0.72rem; max-width: 120px;" title="Scope: <?= esc($currCabang) ?>">
+                        <i class="fas fa-sitemap"></i> <?= esc($currCabang) ?>
                     </span>
                 <?php endif; ?>
             </li>
@@ -235,9 +243,20 @@
                     
                     <li class="nav-item">
                         <a href="<?= base_url('admin/dashboard') ?>" 
-                           class="nav-link <?= (url_is('admin/dashboard') || url_is('admin')) ? 'active' : '' ?>">
+                           class="nav-link <?= ((url_is('admin/dashboard') || url_is('admin')) && !url_is('admin/persebaran*') && !url_is('admin/dashboard/persebaran*')) ? 'active' : '' ?>">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Dashboard</p>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="<?= base_url('admin/persebaran') ?>" 
+                           class="nav-link <?= (url_is('admin/persebaran*') || url_is('admin/dashboard/persebaran*')) ? 'active' : '' ?>">
+                            <i class="nav-icon fas fa-chart-pie text-warning"></i>
+                            <p>
+                                Persebaran Data
+                                <span class="badge badge-info right">Baru</span>
+                            </p>
                         </a>
                     </li>
 

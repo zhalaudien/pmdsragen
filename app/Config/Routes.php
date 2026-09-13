@@ -35,6 +35,8 @@ $routes->group('admin', ['filter' => 'auth'], function ($routes) {
     // Dashboard
     $routes->get('/', 'Admin\Dashboard::index');
     $routes->get('dashboard', 'Admin\Dashboard::index');
+    $routes->get('persebaran', 'Admin\Persebaran::index');
+    $routes->get('dashboard/persebaran', 'Admin\Persebaran::index');
 
     // Manajemen Data Pemuda
     $routes->group('pemuda', function ($routes) {

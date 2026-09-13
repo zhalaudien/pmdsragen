@@ -104,7 +104,7 @@
                 <!-- Wilayah -->
                 <div class="col-12 col-sm-6 col-md-4 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Wilayah</label>
-                    <?php if (session()->get('role') === 'superadmin'): ?>
+                    <?php if (in_array(session()->get('role'), ['superadmin', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <select name="wilayah_id" id="filterWilayah" class="form-control form-control-sm">
                             <option value="">-- Semua Wilayah --</option>
                             <?php foreach ($wilayahList as $w): ?>
@@ -126,7 +126,7 @@
                 <!-- Cabang -->
                 <div class="col-12 col-sm-6 col-md-4 mb-2">
                     <label class="text-xs text-muted font-weight-bold mb-1">Cabang</label>
-                    <?php if (in_array(session()->get('role'), ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
+                    <?php if (session()->get('role') === 'admin_cabang'): ?>
                         <select class="form-control form-control-sm bg-light" disabled>
                             <?php foreach ($cabangList as $c): ?>
                                 <option selected><?= esc($c['name']) ?></option>

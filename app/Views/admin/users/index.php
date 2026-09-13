@@ -103,6 +103,10 @@
                                 <td>
                                     <?php if ($u['role_name'] === 'superadmin'): ?>
                                         <span class="text-muted text-xs"><i class="fas fa-globe text-purple mr-1"></i> Akses Global</span>
+                                    <?php elseif ($u['role_name'] === 'admin_pemuda'): ?>
+                                        <span class="font-weight-semibold text-success text-xs"><i class="fas fa-globe mr-1"></i> Seluruh Sragen (L)</span>
+                                    <?php elseif ($u['role_name'] === 'admin_pemudi'): ?>
+                                        <span class="font-weight-semibold text-xs" style="color: #e83e8c;"><i class="fas fa-globe mr-1"></i> Seluruh Sragen (P)</span>
                                     <?php elseif ($u['role_name'] === 'admin_wilayah' || $u['role_name'] === 'admin_wilayah_pemuda'): ?>
                                         <span class="font-weight-semibold text-primary text-xs"><i class="fas fa-map-marker-alt mr-1"></i> <?= esc($u['wilayah_name'] ?: 'Wilayah ' . $u['wilayah_id']) ?></span>
                                     <?php else: ?>
@@ -352,13 +356,13 @@
     $(document).ready(function () {
         function toggleScope(prefix, roleVal) {
             roleVal = String(roleVal);
-            if (roleVal === '1' || !roleVal) { // superadmin
+            if (roleVal === '1' || roleVal === '4' || roleVal === '5' || !roleVal) { // superadmin, admin_pemuda, admin_pemudi (Akses Seluruh Sragen)
                 $('#' + prefix + 'WilayahGroup').addClass('d-none');
                 $('#' + prefix + 'CabangGroup').addClass('d-none');
             } else if (roleVal === '2' || roleVal === '6') { // admin_wilayah, admin_wilayah_pemuda
                 $('#' + prefix + 'WilayahGroup').removeClass('d-none');
                 $('#' + prefix + 'CabangGroup').addClass('d-none');
-            } else if (roleVal === '3' || roleVal === '4' || roleVal === '5') { // admin_cabang, admin_pemuda, admin_pemudi
+            } else if (roleVal === '3') { // admin_cabang
                 $('#' + prefix + 'WilayahGroup').removeClass('d-none');
                 $('#' + prefix + 'CabangGroup').removeClass('d-none');
             }

@@ -16,14 +16,14 @@
                     <i class="fas fa-shield-alt text-info mr-1"></i>
                     <?php if ($userRole === 'superadmin'): ?>
                         Dashboard Super Administrator
+                    <?php elseif ($userRole === 'admin_pemuda'): ?>
+                        Dashboard Admin Pemuda (L) &bull; Seluruh Sragen
+                    <?php elseif ($userRole === 'admin_pemudi'): ?>
+                        Dashboard Admin Pemudi (P) &bull; Seluruh Sragen
                     <?php elseif ($userRole === 'admin_wilayah'): ?>
                         Dashboard Admin Wilayah: <?= esc($wilayahName) ?>
                     <?php elseif ($userRole === 'admin_wilayah_pemuda'): ?>
                         Dashboard Admin Wilayah Pemuda (L): <?= esc($wilayahName) ?>
-                    <?php elseif ($userRole === 'admin_pemuda'): ?>
-                        Dashboard Admin Pemuda (L): <?= esc($cabangName) ?>
-                    <?php elseif ($userRole === 'admin_pemudi'): ?>
-                        Dashboard Admin Pemudi (P): <?= esc($cabangName) ?>
                     <?php else: ?>
                         Dashboard Admin Cabang: <?= esc($cabangName) ?>
                     <?php endif; ?>
@@ -32,14 +32,14 @@
                 <p class="text-white-50 mb-0 font-weight-normal">
                     <?php if ($userRole === 'superadmin'): ?>
                         Pantau seluruh data pemuda, distribusi wilayah &amp; cabang, jenjang pendidikan, pekerjaan, serta verifikasi pendaftaran di Kabupaten Sragen.
+                    <?php elseif ($userRole === 'admin_pemuda'): ?>
+                        Kelola, analisis, dan verifikasi seluruh data pemuda berjenis kelamin <strong>Laki-laki</strong> di seluruh wilayah &amp; cabang Kabupaten Sragen.
+                    <?php elseif ($userRole === 'admin_pemudi'): ?>
+                        Kelola, analisis, dan verifikasi seluruh data pemudi berjenis kelamin <strong>Perempuan</strong> di seluruh wilayah &amp; cabang Kabupaten Sragen.
                     <?php elseif ($userRole === 'admin_wilayah'): ?>
                         Pantau dan analisis sebaran data pemuda pada seluruh cabang dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
                     <?php elseif ($userRole === 'admin_wilayah_pemuda'): ?>
                         Pantau dan analisis sebaran data pemuda laki-laki pada seluruh cabang dalam lingkup <strong><?= esc($wilayahName) ?></strong>.
-                    <?php elseif ($userRole === 'admin_pemuda'): ?>
-                        Kelola, input, dan verifikasi data pemuda laki-laki khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
-                    <?php elseif ($userRole === 'admin_pemudi'): ?>
-                        Kelola, input, dan verifikasi data pemuda perempuan (pemudi) khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
                     <?php else: ?>
                         Kelola, input, dan verifikasi data pemuda khusus pada lingkup <strong><?= esc($cabangName) ?></strong>.
                     <?php endif; ?>
@@ -47,6 +47,9 @@
             </div>
             <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
                 <div class="btn-group">
+                    <a href="<?= base_url('admin/persebaran') ?>" class="btn btn-warning btn-sm shadow-sm font-weight-bold text-dark">
+                        <i class="fas fa-chart-pie mr-1"></i> Persebaran Data
+                    </a>
                     <a href="<?= base_url('admin/pemuda/tambah') ?>" class="btn btn-primary btn-sm shadow-sm">
                         <i class="fas fa-user-plus mr-1"></i> Tambah Pemuda
                     </a>
@@ -312,6 +315,10 @@
                     <i class="fas fa-trophy mr-1 text-warning"></i>
                     <?php if ($userRole === 'superadmin'): ?>
                         10 Cabang Terbanyak
+                    <?php elseif ($userRole === 'admin_pemuda'): ?>
+                        10 Cabang Terbanyak (Pemuda Laki-laki)
+                    <?php elseif ($userRole === 'admin_pemudi'): ?>
+                        10 Cabang Terbanyak (Pemudi Perempuan)
                     <?php elseif ($userRole === 'admin_wilayah' || $userRole === 'admin_wilayah_pemuda'): ?>
                         Cabang Terbanyak di <?= esc($wilayahName) ?>
                     <?php else: ?>

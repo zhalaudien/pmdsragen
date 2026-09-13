@@ -274,7 +274,7 @@
                 <!-- WILAYAH -->
                 <div class="col-md-3 col-sm-6 mb-3">
                     <label class="form-label text-xs font-weight-bold text-muted mb-1">Wilayah</label>
-                    <?php if ($scope['role'] === 'superadmin'): ?>
+                    <?php if (in_array($scope['role'], ['superadmin', 'admin_pemuda', 'admin_pemudi'], true)): ?>
                         <select class="form-control form-control-sm filter-input" id="filter_wilayah_id" name="wilayah_id">
                             <option value="">Semua Wilayah</option>
                             <?php foreach ($wilayahList as $w): ?>
@@ -292,7 +292,7 @@
                 <!-- CABANG -->
                 <div class="col-md-3 col-sm-6 mb-3">
                     <label class="form-label text-xs font-weight-bold text-muted mb-1">Cabang Pemuda</label>
-                    <?php if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
+                    <?php if ($scope['role'] === 'admin_cabang'): ?>
                         <input type="text" class="form-control form-control-sm bg-light" value="<?= esc($cabangList[0]['name'] ?? 'Cabang Anda') ?>" readonly>
                         <input type="hidden" name="cabang_id" value="<?= esc($scope['cabang_id']) ?>">
                     <?php else: ?>

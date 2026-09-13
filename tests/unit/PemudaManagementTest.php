@@ -68,6 +68,30 @@ final class PemudaManagementTest extends CIUnitTestCase
         $this->assertStringContainsString('cabang', $sql);
     }
 
+    public function testSuperadminScopeFiltering(): void
+    {
+        $db = Database::connect('default');
+        $pemudaModel = new PemudaModel($db);
+
+        $scope = [
+            'role'       => 'superadmin',
+            'wilayah_id' => null,
+            'cabang_id'  => null,
+        ];
+
+        // Superadmin has full access across entire system without default gender or branch restrictions
+        $pemudaModel->getFilteredQuery([], $scope);
+        $sql = $pemudaModel->builder()->getCompiledSelect(false);
+
+        $this->assertStringNotContainsString("`pemuda`.`cabang_id` =", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`gender` =", $sql);
+
+        // Superadmin can choose to filter by any gender
+        $pemudaModel->getFilteredQuery(['gender' => 'P'], $scope);
+        $sqlP = $pemudaModel->builder()->getCompiledSelect(false);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'P'", $sqlP);
+    }
+
     public function testScopeFilteringForAdminCabang(): void
     {
         $db = Database::connect('default');
@@ -75,13 +99,22 @@ final class PemudaManagementTest extends CIUnitTestCase
 
         $scope = [
             'role'      => 'admin_cabang',
-            'cabang_id' => 1,
+            'cabang_id' => 3,
         ];
 
+        // Admin cabang is strictly scoped to its branch but manages both male and female youth
         $pemudaModel->getFilteredQuery([], $scope);
         $sql = $pemudaModel->builder()->getCompiledSelect(false);
 
-        $this->assertStringContainsString('pemuda', $sql);
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 3", $sql);
+        // By default, no gender filter is forced on admin_cabang
+        $this->assertStringNotContainsString("`pemuda`.`gender` =", $sql);
+
+        // Admin cabang can filter male or female within their branch
+        $pemudaModel->getFilteredQuery(['gender' => 'L'], $scope);
+        $sqlL = $pemudaModel->builder()->getCompiledSelect(false);
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 3", $sqlL);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'L'", $sqlL);
     }
 
     public function testScopeFilteringForAdminPemuda(): void
@@ -90,17 +123,25 @@ final class PemudaManagementTest extends CIUnitTestCase
         $pemudaModel = new PemudaModel($db);
 
         $scope = [
-            'role'      => 'admin_pemuda',
-            'cabang_id' => 2,
+            'role'       => 'admin_pemuda',
+            'wilayah_id' => null,
+            'cabang_id'  => null,
         ];
 
         // Even if client attempts to pass gender P, it should enforce L
         $pemudaModel->getFilteredQuery(['gender' => 'P'], $scope);
         $sql = $pemudaModel->builder()->getCompiledSelect(false);
 
-        $this->assertStringContainsString("`pemuda`.`cabang_id` = 2", $sql);
+        // admin_pemuda manages male youth across entire Sragen (not locked to a single cabang)
         $this->assertStringContainsString("`pemuda`.`gender` = 'L'", $sql);
         $this->assertStringNotContainsString("`pemuda`.`gender` = 'P'", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`cabang_id` =", $sql);
+
+        // However, admin_pemuda CAN filter by specific cabang if desired
+        $pemudaModel->getFilteredQuery(['cabang_id' => 5], $scope);
+        $sqlFiltered = $pemudaModel->builder()->getCompiledSelect(false);
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 5", $sqlFiltered);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'L'", $sqlFiltered);
     }
 
     public function testScopeFilteringForAdminPemudi(): void
@@ -109,17 +150,25 @@ final class PemudaManagementTest extends CIUnitTestCase
         $pemudaModel = new PemudaModel($db);
 
         $scope = [
-            'role'      => 'admin_pemudi',
-            'cabang_id' => 3,
+            'role'       => 'admin_pemudi',
+            'wilayah_id' => null,
+            'cabang_id'  => null,
         ];
 
         // Even if client attempts to pass gender L, it should enforce P
         $pemudaModel->getFilteredQuery(['gender' => 'L'], $scope);
         $sql = $pemudaModel->builder()->getCompiledSelect(false);
 
-        $this->assertStringContainsString("`pemuda`.`cabang_id` = 3", $sql);
+        // admin_pemudi manages female youth across entire Sragen (not locked to a single cabang)
         $this->assertStringContainsString("`pemuda`.`gender` = 'P'", $sql);
         $this->assertStringNotContainsString("`pemuda`.`gender` = 'L'", $sql);
+        $this->assertStringNotContainsString("`pemuda`.`cabang_id` =", $sql);
+
+        // However, admin_pemudi CAN filter by specific cabang if desired
+        $pemudaModel->getFilteredQuery(['cabang_id' => 7], $scope);
+        $sqlFiltered = $pemudaModel->builder()->getCompiledSelect(false);
+        $this->assertStringContainsString("`pemuda`.`cabang_id` = 7", $sqlFiltered);
+        $this->assertStringContainsString("`pemuda`.`gender` = 'P'", $sqlFiltered);
     }
 
     public function testScopeFilteringForAdminWilayahPemuda(): void

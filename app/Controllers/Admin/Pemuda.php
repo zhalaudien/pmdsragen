@@ -83,7 +83,7 @@ class Pemuda extends BaseController
         // Enforce scope on filters
         if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda'], true)) {
             $filters['wilayah_id'] = $scope['wilayah_id'];
-        } elseif (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)) {
+        } elseif ($scope['role'] === 'admin_cabang') {
             $filters['wilayah_id'] = $scope['wilayah_id'];
             $filters['cabang_id']  = $scope['cabang_id'];
         }
@@ -117,13 +117,13 @@ class Pemuda extends BaseController
 
         // 4. Reference Data untuk dropdown filter (disesuaikan scope)
         $wilayahBuilder = $this->wilayahModel->orderBy('id', 'ASC');
-        if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && !empty($scope['wilayah_id'])) {
+        if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang'], true) && !empty($scope['wilayah_id'])) {
             $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
         }
         $wilayahList = $wilayahBuilder->findAll();
         
         $cabangBuilder = $this->cabangModel->orderBy('name', 'ASC');
-        if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && !empty($scope['cabang_id'])) {
+        if ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
             $cabangBuilder->where('id', (int) $scope['cabang_id']);
         } elseif (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda'], true) && !empty($scope['wilayah_id'])) {
             $cabangBuilder->where('wilayah_id', (int) $scope['wilayah_id']);
@@ -196,8 +196,8 @@ class Pemuda extends BaseController
         $interestModel       = new InterestModel();
         $districtModel       = new DistrictModel();
 
-        $filterWilayahId = in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) ? (int) $scope['wilayah_id'] : null;
-        $filterCabangId  = in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) ? (int) $scope['cabang_id'] : null;
+        $filterWilayahId = in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang'], true) ? (int) $scope['wilayah_id'] : null;
+        $filterCabangId  = ($scope['role'] === 'admin_cabang') ? (int) $scope['cabang_id'] : null;
 
         $wilayahWithCabang = $this->wilayahModel->getWithCabang($filterWilayahId, $filterCabangId);
         $districts         = $districtModel->where('regency_id', 3314)->orderBy('name', 'ASC')->findAll();
@@ -300,7 +300,7 @@ class Pemuda extends BaseController
         $cabangId = (int) $this->request->getPost('cabang_id');
 
         // Scope check for cabang-level or wilayah-level roles
-        if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && $cabangId !== (int) $scope['cabang_id']) {
+        if ($scope['role'] === 'admin_cabang' && $cabangId !== (int) $scope['cabang_id']) {
             return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mendaftarkan pemuda pada cabang Anda sendiri.');
         }
 
@@ -545,8 +545,8 @@ class Pemuda extends BaseController
         $districtModel       = new DistrictModel();
         $villageModel        = new VillageModel();
 
-        $filterWilayahId = in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) ? (int) $scope['wilayah_id'] : null;
-        $filterCabangId  = in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) ? (int) $scope['cabang_id'] : null;
+        $filterWilayahId = in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang'], true) ? (int) $scope['wilayah_id'] : null;
+        $filterCabangId  = ($scope['role'] === 'admin_cabang') ? (int) $scope['cabang_id'] : null;
 
         $wilayahWithCabang = $this->wilayahModel->getWithCabang($filterWilayahId, $filterCabangId);
         $districts         = $districtModel->where('regency_id', 3314)->orderBy('name', 'ASC')->findAll();
@@ -708,7 +708,7 @@ class Pemuda extends BaseController
 
         $cabangId = (int) $this->request->getPost('cabang_id');
 
-        if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && $cabangId !== (int) $scope['cabang_id']) {
+        if ($scope['role'] === 'admin_cabang' && $cabangId !== (int) $scope['cabang_id']) {
             return redirect()->back()->withInput()->with('error', 'Anda hanya dapat mengelola pemuda pada cabang Anda sendiri.');
         }
 
@@ -1132,7 +1132,7 @@ class Pemuda extends BaseController
         // Enforce scope on export filters
         if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda'], true)) {
             $filters['wilayah_id'] = (int) $scope['wilayah_id'];
-        } elseif (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)) {
+        } elseif ($scope['role'] === 'admin_cabang') {
             $filters['wilayah_id'] = (int) $scope['wilayah_id'];
             $filters['cabang_id']  = (int) $scope['cabang_id'];
         }
@@ -1168,14 +1168,14 @@ class Pemuda extends BaseController
 
         // Wilayah list (disesuaikan dengan scope)
         $wilayahBuilder = $this->wilayahModel->orderBy('code', 'ASC');
-        if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && !empty($scope['wilayah_id'])) {
+        if (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda', 'admin_cabang'], true) && !empty($scope['wilayah_id'])) {
             $wilayahBuilder->where('id', (int) $scope['wilayah_id']);
         }
         $wilayahList = $wilayahBuilder->findAll();
 
         // Cabang list (disesuaikan dengan scope)
         $cabangBuilder = $this->cabangModel->orderBy('name', 'ASC');
-        if (in_array($scope['role'], ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && !empty($scope['cabang_id'])) {
+        if ($scope['role'] === 'admin_cabang' && !empty($scope['cabang_id'])) {
             $cabangBuilder->where('id', (int) $scope['cabang_id']);
         } elseif (in_array($scope['role'], ['admin_wilayah', 'admin_wilayah_pemuda'], true) && !empty($scope['wilayah_id'])) {
             $cabangBuilder->where('wilayah_id', (int) $scope['wilayah_id']);

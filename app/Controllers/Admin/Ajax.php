@@ -20,7 +20,7 @@ class Ajax extends BaseController
 
         if (in_array($scopeRole, ['admin_wilayah', 'admin_wilayah_pemuda'], true) && !empty($scopeWilayahId)) {
             $builder->where('wilayah_id', (int) $scopeWilayahId);
-        } elseif (in_array($scopeRole, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && !empty($scopeCabangId)) {
+        } elseif ($scopeRole === 'admin_cabang' && !empty($scopeCabangId)) {
             $builder->where('id', (int) $scopeCabangId);
         } else {
             $builder->where('wilayah_id', $wilayahId);

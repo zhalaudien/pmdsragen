@@ -38,7 +38,7 @@
                         $userCabangId = session()->get('cabang_id');
                     ?>
 
-                    <?php if (in_array($userRole, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)): ?>
+                    <?php if ($userRole === 'admin_cabang'): ?>
                         <div class="col-12 col-md-6 form-group mb-2">
                             <label class="text-xs text-muted font-weight-bold">Wilayah</label>
                             <input type="text" class="form-control form-control-sm bg-light" value="<?= esc(session()->get('wilayah_name') ?? ('Wilayah ' . $userWilayahId)) ?>" readonly>

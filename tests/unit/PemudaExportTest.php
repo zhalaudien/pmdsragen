@@ -153,6 +153,24 @@ final class PemudaExportTest extends CIUnitTestCase
         ];
         $countCabang = $this->exportService->countFiltered([], $cabangScope);
         $this->assertIsInt($countCabang);
+
+        // Admin Pemuda scope (seluruh Sragen, L)
+        $pemudaScope = [
+            'role'       => 'admin_pemuda',
+            'wilayah_id' => null,
+            'cabang_id'  => null,
+        ];
+        $countPemuda = $this->exportService->countFiltered([], $pemudaScope);
+        $this->assertIsInt($countPemuda);
+
+        // Admin Pemudi scope (seluruh Sragen, P)
+        $pemudiScope = [
+            'role'       => 'admin_pemudi',
+            'wilayah_id' => null,
+            'cabang_id'  => null,
+        ];
+        $countPemudi = $this->exportService->countFiltered([], $pemudiScope);
+        $this->assertIsInt($countPemudi);
     }
 
     public function testReferenceDataQueriesUsedInExportView(): void

@@ -234,12 +234,10 @@ class PemudaModel extends Model
                         ->where('pemuda.gender', 'L');
             } elseif ($role === 'admin_cabang' && !empty($scope['cabang_id'])) {
                 $builder->where('pemuda.cabang_id', (int) $scope['cabang_id']);
-            } elseif ($role === 'admin_pemuda' && !empty($scope['cabang_id'])) {
-                $builder->where('pemuda.cabang_id', (int) $scope['cabang_id'])
-                        ->where('pemuda.gender', 'L');
-            } elseif ($role === 'admin_pemudi' && !empty($scope['cabang_id'])) {
-                $builder->where('pemuda.cabang_id', (int) $scope['cabang_id'])
-                        ->where('pemuda.gender', 'P');
+            } elseif ($role === 'admin_pemuda') {
+                $builder->where('pemuda.gender', 'L');
+            } elseif ($role === 'admin_pemudi') {
+                $builder->where('pemuda.gender', 'P');
             }
         }
         return $builder;
@@ -298,15 +296,14 @@ class PemudaModel extends Model
                     ->groupEnd();
         }
 
-        // Only superadmin can filter across different wilayah
+        // Wilayah filter: superadmin, admin_pemuda, and admin_pemudi can filter across all wilayah in Sragen
         $role = $scope['role'] ?? 'superadmin';
-        if ($role === 'superadmin' && !empty($filters['wilayah_id'])) {
+        if (in_array($role, ['superadmin', 'admin_pemuda', 'admin_pemudi'], true) && !empty($filters['wilayah_id'])) {
             $builder->where('cabang.wilayah_id', (int) $filters['wilayah_id']);
         }
 
-        // Cabang-level admins are strictly bound to their own cabang_id; others can filter by cabang
-        $cabangRoles = ['admin_cabang', 'admin_pemuda', 'admin_pemudi'];
-        if (!in_array($role, $cabangRoles, true) && !empty($filters['cabang_id'])) {
+        // Cabang filter: admin_cabang is strictly locked to its own cabang_id; others can filter by cabang
+        if ($role !== 'admin_cabang' && !empty($filters['cabang_id'])) {
             $builder->where('pemuda.cabang_id', (int) $filters['cabang_id']);
         }
 
@@ -524,7 +521,7 @@ class PemudaModel extends Model
         $cabangId  = !empty($scope['cabang_id']) ? (int) $scope['cabang_id'] : null;
 
         // Total Wilayah, Cabang & Users based on Scope
-        if ($role === 'superadmin') {
+        if (in_array($role, ['superadmin', 'admin_pemuda', 'admin_pemudi'], true)) {
             $totalWilayah = $db->table('wilayah')->countAll();
             $totalCabang  = $db->table('cabang')->countAll();
             $totalUsers   = $db->table('users')->where('status', 1)->countAllResults();
@@ -532,7 +529,7 @@ class PemudaModel extends Model
             $totalWilayah = 1;
             $totalCabang  = $db->table('cabang')->where('wilayah_id', $wilayahId)->countAllResults();
             $totalUsers   = $db->table('users')->where('status', 1)->where('wilayah_id', $wilayahId)->countAllResults();
-        } else { // admin_cabang, admin_pemuda, admin_pemudi
+        } else { // admin_cabang
             $totalWilayah = 1;
             $totalCabang  = 1;
             $totalUsers   = $db->table('users')->where('status', 1)->where('cabang_id', $cabangId)->countAllResults();
@@ -584,7 +581,7 @@ class PemudaModel extends Model
                              ->orderBy('wilayah.id', 'ASC');
         if (in_array($role, ['admin_wilayah', 'admin_wilayah_pemuda'], true) && $wilayahId) {
             $builderWilayah->where('wilayah.id', $wilayahId);
-        } elseif (in_array($role, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true)) {
+        } elseif ($role === 'admin_cabang') {
             if ($wilayahId) {
                 $builderWilayah->where('wilayah.id', $wilayahId);
             }
@@ -604,7 +601,7 @@ class PemudaModel extends Model
                             ->limit(10);
         if (in_array($role, ['admin_wilayah', 'admin_wilayah_pemuda'], true) && $wilayahId) {
             $builderCabang->where('cabang.wilayah_id', $wilayahId);
-        } elseif (in_array($role, ['admin_cabang', 'admin_pemuda', 'admin_pemudi'], true) && $cabangId) {
+        } elseif ($role === 'admin_cabang' && $cabangId) {
             $builderCabang->where('cabang.id', $cabangId);
         }
         $topCabangStats = $builderCabang->get()->getResultArray();
@@ -663,6 +660,387 @@ class PemudaModel extends Model
             'jobStats'            => $jobStats,
             'bloodStats'          => $bloodStats,
             'recentRegistrations' => $recentRegistrations,
+        ];
+    }
+
+    /**
+     * Terapkan scope role dan filter kustom persebaran (wilayah, cabang, gender, status_data)
+     */
+    public function applyScopeAndCustomFilters($builder, array $scope = [], array $filters = [])
+    {
+        $this->applyScope($builder, $scope);
+
+        $role = $scope['role'] ?? 'superadmin';
+
+        // Filter wilayah (jika role diizinkan)
+        if (in_array($role, ['superadmin', 'admin_pemuda', 'admin_pemudi'], true) && !empty($filters['wilayah_id'])) {
+            $builder->where('cabang.wilayah_id', (int) $filters['wilayah_id']);
+        }
+
+        // Filter cabang (jika role bukan admin_cabang)
+        if ($role !== 'admin_cabang' && !empty($filters['cabang_id'])) {
+            $builder->where('pemuda.cabang_id', (int) $filters['cabang_id']);
+        }
+
+        // Filter gender (jika belum dikunci oleh scope role)
+        if (!in_array($role, ['admin_pemuda', 'admin_pemudi', 'admin_wilayah_pemuda'], true) && !empty($filters['gender'])) {
+            $builder->where('pemuda.gender', $filters['gender']);
+        }
+
+        // Filter status_data (default active)
+        $statusData = $filters['status_data'] ?? 'active';
+        if ($statusData !== 'all') {
+            $builder->where('pemuda.status_data', $statusData);
+        }
+
+        return $builder;
+    }
+
+    /**
+     * Data statistik persebaran komprehensif untuk Dashboard Persebaran Data Pemuda
+     * (Element Dakwah, Sekolah/Pendidikan, Bakat/Skills, Minat/Interests, Ketenagakerjaan, Usia, Domisili)
+     */
+    public function getPersebaranStats(array $scope = [], array $filters = []): array
+    {
+        $db = $this->db;
+
+        // 1. Total Pemuda dalam lingkup & filter
+        $builderTotal = $db->table('pemuda')->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderTotal, $scope, $filters);
+        $totalYouth = $builderTotal->countAllResults();
+
+        // Gender breakdown
+        $builderGender = $db->table('pemuda')
+                            ->select('pemuda.gender, COUNT(pemuda.id) as total')
+                            ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderGender, $scope, $filters);
+        $genderStatsRaw = $builderGender->groupBy('pemuda.gender')->get()->getResultArray();
+        $genderData = ['L' => 0, 'P' => 0];
+        foreach ($genderStatsRaw as $row) {
+            $genderData[$row['gender']] = (int) $row['total'];
+        }
+
+        // 2. Element Dakwah (Organisasi)
+        $builderOrg = $db->table('organisasi')
+                         ->select('organisasi.organization_name, COUNT(DISTINCT organisasi.pemuda_id) as total')
+                         ->join('pemuda', 'pemuda.id = organisasi.pemuda_id')
+                         ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderOrg, $scope, $filters);
+        $orgRows = $builderOrg->groupBy('organisasi.organization_name')
+                              ->orderBy('total', 'DESC')
+                              ->get()->getResultArray();
+
+        $orgMaster = [
+            'satgas'     => ['name' => 'Satgas (Satuan Tugas)', 'badge' => 'Satgas', 'icon' => 'fas fa-shield-alt text-danger', 'color' => '#dc3545'],
+            'bankom'     => ['name' => 'Bankom (Bantuan Komunikasi)', 'badge' => 'Bankom', 'icon' => 'fas fa-broadcast-tower text-primary', 'color' => '#007bff'],
+            'parkir'     => ['name' => 'Tim Parkir', 'badge' => 'Parkir', 'icon' => 'fas fa-parking text-warning', 'color' => '#ffc107'],
+            'pemuda'     => ['name' => 'Kepengurusan Pemuda', 'badge' => 'Pengurus Pemuda', 'icon' => 'fas fa-users text-success', 'color' => '#28a745'],
+            'tim_ikhrom' => ['name' => 'Tim Ikhrom', 'badge' => 'Tim Ikhrom', 'icon' => 'fas fa-hands-helping text-purple', 'color' => '#6f42c1'],
+            'tim ikhrom' => ['name' => 'Tim Ikhrom', 'badge' => 'Tim Ikhrom', 'icon' => 'fas fa-hands-helping text-purple', 'color' => '#6f42c1'],
+        ];
+
+        $palette = ['#e83e8c', '#20c997', '#fd7e14', '#17a2b8', '#6610f2', '#6c757d'];
+        $pIdx = 0;
+        $orgStats = [];
+        foreach ($orgRows as $r) {
+            $cleanKey = strtolower(trim($r['organization_name']));
+            if (isset($orgMaster[$cleanKey])) {
+                $item = $orgMaster[$cleanKey];
+                $name = $item['name'];
+                if (isset($orgStats[$name])) {
+                    $orgStats[$name]['total'] += (int) $r['total'];
+                } else {
+                    $orgStats[$name] = [
+                        'name'  => $name,
+                        'badge' => $item['badge'],
+                        'icon'  => $item['icon'],
+                        'color' => $item['color'],
+                        'total' => (int) $r['total'],
+                    ];
+                }
+            } else {
+                $name = ucwords($cleanKey);
+                $color = $palette[$pIdx % count($palette)];
+                $pIdx++;
+                if (isset($orgStats[$name])) {
+                    $orgStats[$name]['total'] += (int) $r['total'];
+                } else {
+                    $orgStats[$name] = [
+                        'name'  => $name,
+                        'badge' => 'Unit Khusus',
+                        'icon'  => 'fas fa-flag text-info',
+                        'color' => $color,
+                        'total' => (int) $r['total'],
+                    ];
+                }
+            }
+        }
+        $orgStats = array_values($orgStats);
+
+        // Youth with at least one element dakwah vs none
+        $builderWithOrg = $db->table('organisasi')
+                             ->select('COUNT(DISTINCT organisasi.pemuda_id) as total')
+                             ->join('pemuda', 'pemuda.id = organisasi.pemuda_id')
+                             ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderWithOrg, $scope, $filters);
+        $rowWithOrg = $builderWithOrg->get()->getRowArray();
+        $totalWithOrg = (int) ($rowWithOrg['total'] ?? 0);
+        $totalWithoutOrg = max(0, $totalYouth - $totalWithOrg);
+
+        // 3. Sekolah & Pendidikan
+        // Jenjang Pendidikan
+        $builderEduLevel = $db->table('education_levels')
+                              ->select('education_levels.id, education_levels.name, COUNT(DISTINCT pemuda.id) as total')
+                              ->join('pendidikan', 'pendidikan.education_level_id = education_levels.id', 'left')
+                              ->join('pemuda', 'pemuda.id = pendidikan.pemuda_id', 'left')
+                              ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderEduLevel, $scope, $filters);
+        $eduLevelStats = $builderEduLevel->groupBy('education_levels.id, education_levels.name')
+                                         ->orderBy('education_levels.id', 'ASC')
+                                         ->get()->getResultArray();
+
+        // Status Pendidikan (Sedang Menempuh / Lulus / Putus Sekolah)
+        $builderEduStatus = $db->table('pendidikan')
+                               ->select('COALESCE(NULLIF(pendidikan.education_status, ""), "belum_diisi") as status, COUNT(DISTINCT pendidikan.pemuda_id) as total')
+                               ->join('pemuda', 'pemuda.id = pendidikan.pemuda_id')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderEduStatus, $scope, $filters);
+        $eduStatusRaw = $builderEduStatus->groupBy('status')->get()->getResultArray();
+
+        $eduStatusData = [
+            'sedang_menempuh' => ['label' => 'Sedang Menempuh (Aktif)', 'total' => 0, 'color' => '#17a2b8'],
+            'lulus'           => ['label' => 'Sudah Lulus / Tamat', 'total' => 0, 'color' => '#28a745'],
+            'putus_sekolah'   => ['label' => 'Putus Sekolah / Belum Lulus', 'total' => 0, 'color' => '#dc3545'],
+            'belum_diisi'     => ['label' => 'Belum Tercatat', 'total' => 0, 'color' => '#6c757d'],
+        ];
+        foreach ($eduStatusRaw as $r) {
+            $key = $r['status'];
+            if ($key === 'belum_lulus') {
+                $key = 'putus_sekolah';
+            }
+            if (isset($eduStatusData[$key])) {
+                $eduStatusData[$key]['total'] += (int) $r['total'];
+            } else {
+                $eduStatusData['belum_diisi']['total'] += (int) $r['total'];
+            }
+        }
+
+        // Top 10 Sekolah / Kampus
+        $builderSchools = $db->table('pendidikan')
+                             ->select('TRIM(pendidikan.school_name) as school_name, COUNT(DISTINCT pendidikan.pemuda_id) as total')
+                             ->join('pemuda', 'pemuda.id = pendidikan.pemuda_id')
+                             ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
+                             ->where('pendidikan.school_name IS NOT NULL')
+                             ->where('TRIM(pendidikan.school_name) !=', '');
+        $this->applyScopeAndCustomFilters($builderSchools, $scope, $filters);
+        $topSchools = $builderSchools->groupBy('TRIM(pendidikan.school_name)')
+                                     ->orderBy('total', 'DESC')
+                                     ->limit(10)
+                                     ->get()->getResultArray();
+
+        // Top 10 Jurusan / Program Studi
+        $builderMajors = $db->table('pendidikan')
+                            ->select('TRIM(pendidikan.major) as major_name, COUNT(DISTINCT pendidikan.pemuda_id) as total')
+                            ->join('pemuda', 'pemuda.id = pendidikan.pemuda_id')
+                            ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
+                            ->where('pendidikan.major IS NOT NULL')
+                            ->where('TRIM(pendidikan.major) !=', '');
+        $this->applyScopeAndCustomFilters($builderMajors, $scope, $filters);
+        $topMajors = $builderMajors->groupBy('TRIM(pendidikan.major)')
+                                   ->orderBy('total', 'DESC')
+                                   ->limit(10)
+                                   ->get()->getResultArray();
+
+        // 4. Bakat & Keahlian (Skills)
+        $builderSkills = $db->table('skills')
+                            ->select('skills.id, skills.name, COUNT(DISTINCT pemuda_skills.pemuda_id) as total')
+                            ->join('pemuda_skills', 'pemuda_skills.skill_id = skills.id')
+                            ->join('pemuda', 'pemuda.id = pemuda_skills.pemuda_id')
+                            ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderSkills, $scope, $filters);
+        $topSkills = $builderSkills->groupBy('skills.id, skills.name')
+                                   ->orderBy('total', 'DESC')
+                                   ->limit(10)
+                                   ->get()->getResultArray();
+
+        // Tingkat Kemahiran Keahlian
+        $builderSkillLevel = $db->table('pemuda_skills')
+                                ->select('COALESCE(NULLIF(pemuda_skills.level, ""), "pemula") as level, COUNT(pemuda_skills.pemuda_id) as total')
+                                ->join('pemuda', 'pemuda.id = pemuda_skills.pemuda_id')
+                                ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderSkillLevel, $scope, $filters);
+        $skillLevelRaw = $builderSkillLevel->groupBy('level')->get()->getResultArray();
+
+        $skillLevelData = [
+            'pemula'   => ['label' => 'Pemula (Basic)', 'total' => 0, 'color' => '#ffc107'],
+            'menengah' => ['label' => 'Menengah (Intermediate)', 'total' => 0, 'color' => '#17a2b8'],
+            'mahir'    => ['label' => 'Mahir (Advanced)', 'total' => 0, 'color' => '#28a745'],
+        ];
+        foreach ($skillLevelRaw as $r) {
+            $lvl = strtolower($r['level']);
+            if (isset($skillLevelData[$lvl])) {
+                $skillLevelData[$lvl]['total'] += (int) $r['total'];
+            }
+        }
+
+        // Total pemuda yang memiliki keahlian tercatat
+        $builderWithSkill = $db->table('pemuda_skills')
+                               ->select('COUNT(DISTINCT pemuda_skills.pemuda_id) as total')
+                               ->join('pemuda', 'pemuda.id = pemuda_skills.pemuda_id')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderWithSkill, $scope, $filters);
+        $rowWithSkill = $builderWithSkill->get()->getRowArray();
+        $totalWithSkill = (int) ($rowWithSkill['total'] ?? 0);
+        $totalWithoutSkill = max(0, $totalYouth - $totalWithSkill);
+
+        // 5. Minat (Interests)
+        $builderInterests = $db->table('interests')
+                               ->select('interests.id, interests.name, COUNT(DISTINCT pemuda_interests.pemuda_id) as total')
+                               ->join('pemuda_interests', 'pemuda_interests.interest_id = interests.id')
+                               ->join('pemuda', 'pemuda.id = pemuda_interests.pemuda_id')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderInterests, $scope, $filters);
+        $topInterests = $builderInterests->groupBy('interests.id, interests.name')
+                                         ->orderBy('total', 'DESC')
+                                         ->limit(10)
+                                         ->get()->getResultArray();
+
+        // 6. Ketenagakerjaan & Wirausaha
+        $builderJobs = $db->table('job_statuses')
+                          ->select('job_statuses.id, job_statuses.name, COUNT(DISTINCT pemuda.id) as total')
+                          ->join('pekerjaan', 'pekerjaan.job_status_id = job_statuses.id', 'left')
+                          ->join('pemuda', 'pemuda.id = pekerjaan.pemuda_id', 'left')
+                          ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderJobs, $scope, $filters);
+        $jobStats = $builderJobs->groupBy('job_statuses.id, job_statuses.name')
+                                ->orderBy('job_statuses.id', 'ASC')
+                                ->get()->getResultArray();
+
+        // Pelaku Usaha / Wirausaha
+        $builderWirausaha = $db->table('pekerjaan')
+                               ->select('COUNT(DISTINCT pekerjaan.pemuda_id) as total')
+                               ->join('pemuda', 'pemuda.id = pekerjaan.pemuda_id')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
+                               ->groupStart()
+                                   ->where('pekerjaan.business_name IS NOT NULL')
+                                   ->where('TRIM(pekerjaan.business_name) !=', '')
+                                   ->orWhere('pekerjaan.business_field IS NOT NULL')
+                                   ->where('TRIM(pekerjaan.business_field) !=', '')
+                               ->groupEnd();
+        $this->applyScopeAndCustomFilters($builderWirausaha, $scope, $filters);
+        $rowWirausaha = $builderWirausaha->get()->getRowArray();
+        $totalWirausaha = (int) ($rowWirausaha['total'] ?? 0);
+
+        // Top Bidang Usaha
+        $builderBizFields = $db->table('pekerjaan')
+                               ->select('TRIM(pekerjaan.business_field) as name, COUNT(DISTINCT pekerjaan.pemuda_id) as total')
+                               ->join('pemuda', 'pemuda.id = pekerjaan.pemuda_id')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
+                               ->where('pekerjaan.business_field IS NOT NULL')
+                               ->where('TRIM(pekerjaan.business_field) !=', '');
+        $this->applyScopeAndCustomFilters($builderBizFields, $scope, $filters);
+        $topBizFields = $builderBizFields->groupBy('TRIM(pekerjaan.business_field)')
+                                         ->orderBy('total', 'DESC')
+                                         ->limit(8)
+                                         ->get()->getResultArray();
+
+        // 7. Demografi Usia (Age Groups)
+        $builderAge = $db->table('pemuda')
+                         ->select('
+                             CASE 
+                                 WHEN pemuda.birth_date IS NULL OR pemuda.birth_date = "0000-00-00" THEN "unknown"
+                                 WHEN TIMESTAMPDIFF(YEAR, pemuda.birth_date, CURDATE()) < 17 THEN "under_17"
+                                 WHEN TIMESTAMPDIFF(YEAR, pemuda.birth_date, CURDATE()) BETWEEN 17 AND 21 THEN "17_21"
+                                 WHEN TIMESTAMPDIFF(YEAR, pemuda.birth_date, CURDATE()) BETWEEN 22 AND 25 THEN "22_25"
+                                 WHEN TIMESTAMPDIFF(YEAR, pemuda.birth_date, CURDATE()) BETWEEN 26 AND 30 THEN "26_30"
+                                 ELSE "over_30"
+                             END as age_group,
+                             COUNT(pemuda.id) as total
+                         ')
+                         ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderAge, $scope, $filters);
+        $ageStatsRaw = $builderAge->groupBy('age_group')->get()->getResultArray();
+
+        $ageData = [
+            'under_17' => ['label' => '< 17 Tahun (Remaja)', 'total' => 0, 'color' => '#17a2b8'],
+            '17_21'    => ['label' => '17 - 21 Tahun (Pemuda Awal)', 'total' => 0, 'color' => '#28a745'],
+            '22_25'    => ['label' => '22 - 25 Tahun (Pemuda Produktif)', 'total' => 0, 'color' => '#007bff'],
+            '26_30'    => ['label' => '26 - 30 Tahun (Pemuda Dewasa)', 'total' => 0, 'color' => '#ffc107'],
+            'over_30'  => ['label' => '> 30 Tahun (Pemuda Senior)', 'total' => 0, 'color' => '#6c757d'],
+            'unknown'  => ['label' => 'Belum Tercatat', 'total' => 0, 'color' => '#adb5bd'],
+        ];
+        foreach ($ageStatsRaw as $r) {
+            if (isset($ageData[$r['age_group']])) {
+                $ageData[$r['age_group']]['total'] = (int) $r['total'];
+            }
+        }
+
+        // Rata-rata Usia
+        $builderAvgAge = $db->table('pemuda')
+                            ->select('ROUND(AVG(TIMESTAMPDIFF(YEAR, pemuda.birth_date, CURDATE())), 1) as avg_age')
+                            ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
+                            ->where('pemuda.birth_date IS NOT NULL')
+                            ->where('pemuda.birth_date !=', '0000-00-00');
+        $this->applyScopeAndCustomFilters($builderAvgAge, $scope, $filters);
+        $avgAgeRow = $builderAvgAge->get()->getRowArray();
+        $avgAge = !empty($avgAgeRow['avg_age']) ? (float) $avgAgeRow['avg_age'] : 0.0;
+
+        // 8. Sebaran Kecamatan di Kabupaten Sragen
+        $builderDistricts = $db->table('districts')
+                               ->select('districts.id, districts.name, COUNT(DISTINCT pemuda.id) as total')
+                               ->join('alamat', 'alamat.district_id = districts.id', 'left')
+                               ->join('pemuda', 'pemuda.id = alamat.pemuda_id', 'left')
+                               ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left');
+        $this->applyScopeAndCustomFilters($builderDistricts, $scope, $filters);
+        $districtStats = $builderDistricts->where('districts.regency_id', 3314)
+                                          ->groupBy('districts.id, districts.name')
+                                          ->orderBy('total', 'DESC')
+                                          ->limit(10)
+                                          ->get()->getResultArray();
+
+        // 9. Sebaran Wilayah & Top Cabang
+        $builderWilayah = $db->table('wilayah')
+                             ->select('wilayah.id, wilayah.code, wilayah.name, COUNT(DISTINCT pemuda.id) as total')
+                             ->join('cabang', 'cabang.wilayah_id = wilayah.id', 'left')
+                             ->join('pemuda', 'pemuda.cabang_id = cabang.id', 'left');
+        $this->applyScopeAndCustomFilters($builderWilayah, $scope, $filters);
+        $wilayahStats = $builderWilayah->groupBy('wilayah.id, wilayah.code, wilayah.name')
+                                       ->orderBy('wilayah.id', 'ASC')
+                                       ->get()->getResultArray();
+
+        $builderCabang = $db->table('cabang')
+                            ->select('cabang.id, cabang.name, wilayah.name as wilayah_name, COUNT(DISTINCT pemuda.id) as total')
+                            ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')
+                            ->join('pemuda', 'pemuda.cabang_id = cabang.id', 'left');
+        $this->applyScopeAndCustomFilters($builderCabang, $scope, $filters);
+        $topCabangStats = $builderCabang->groupBy('cabang.id, cabang.name, wilayah.name')
+                                        ->orderBy('total', 'DESC')
+                                        ->limit(10)
+                                        ->get()->getResultArray();
+
+        return [
+            'totalYouth'         => $totalYouth,
+            'genderData'         => $genderData,
+            'totalWithOrg'       => $totalWithOrg,
+            'totalWithoutOrg'    => $totalWithoutOrg,
+            'orgStats'           => $orgStats,
+            'eduLevelStats'      => $eduLevelStats,
+            'eduStatusData'      => $eduStatusData,
+            'topSchools'         => $topSchools,
+            'topMajors'          => $topMajors,
+            'topSkills'          => $topSkills,
+            'skillLevelData'     => $skillLevelData,
+            'totalWithSkill'     => $totalWithSkill,
+            'totalWithoutSkill'  => $totalWithoutSkill,
+            'topInterests'       => $topInterests,
+            'jobStats'           => $jobStats,
+            'totalWirausaha'     => $totalWirausaha,
+            'topBizFields'       => $topBizFields,
+            'ageData'            => $ageData,
+            'avgAge'             => $avgAge,
+            'districtStats'      => $districtStats,
+            'wilayahStats'       => $wilayahStats,
+            'topCabangStats'     => $topCabangStats,
         ];
     }
 }

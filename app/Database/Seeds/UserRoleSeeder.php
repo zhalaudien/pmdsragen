@@ -15,7 +15,7 @@ class UserRoleSeeder extends Seeder
             [
                 'id'          => 1,
                 'name'        => 'superadmin',
-                'description' => 'Super Administrator dengan akses penuh seluruh sistem',
+                'description' => 'Super Administrator yang mengelola seluruh sistem dan data',
             ],
             [
                 'id'          => 2,
@@ -25,22 +25,22 @@ class UserRoleSeeder extends Seeder
             [
                 'id'          => 3,
                 'name'        => 'admin_cabang',
-                'description' => 'Administrator tingkat Cabang',
+                'description' => 'Administrator tingkat Cabang untuk manajemen data pada cabang tersebut',
             ],
             [
                 'id'          => 4,
                 'name'        => 'admin_pemuda',
-                'description' => 'Administrator tingkat Cabang khusus pemuda Laki-laki',
+                'description' => 'Administrator seluruh Sragen yang mengelola data pemuda (Laki-laki)',
             ],
             [
                 'id'          => 5,
                 'name'        => 'admin_pemudi',
-                'description' => 'Administrator tingkat Cabang khusus pemuda Perempuan',
+                'description' => 'Administrator seluruh Sragen yang mengelola data pemudi (Perempuan)',
             ],
             [
                 'id'          => 6,
                 'name'        => 'admin_wilayah_pemuda',
-                'description' => 'Administrator tingkat Wilayah khusus pemuda Laki-laki',
+                'description' => 'Administrator tingkat Wilayah yang mengelola data pemuda (Laki-laki)',
             ],
         ];
 
