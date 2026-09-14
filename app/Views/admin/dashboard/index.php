@@ -368,12 +368,12 @@
         </div>
     </div>
 
-    <!-- Pendaftaran Pemuda Terbaru -->
+    <!-- Data Pemuda Terakhir Diedit (Last Edit) -->
     <div class="col-xl-8 col-12">
         <div class="card card-primary card-outline shadow-sm h-100">
             <div class="card-header border-0 d-flex justify-content-between align-items-center">
                 <h3 class="card-title font-weight-bold">
-                    <i class="fas fa-history mr-1 text-primary"></i> Pendaftaran Pemuda Terbaru
+                    <i class="fas fa-user-edit mr-1 text-primary"></i> Data Pemuda Terakhir Diedit (Last Edit)
                 </h3>
                 <div class="card-tools">
                     <a href="<?= base_url('admin/pemuda') ?>" class="btn btn-xs btn-outline-primary">
@@ -391,17 +391,20 @@
                                 <th>Nama Lengkap</th>
                                 <th>Cabang / Wilayah</th>
                                 <th>Status Verifikasi</th>
-                                <th>Tgl Daftar</th>
+                                <th>Terakhir Diedit</th>
                                 <th class="text-right pr-3">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($stats['recentRegistrations'])): ?>
+                            <?php 
+                            $recentList = $stats['recentUpdates'] ?? $stats['recentRegistrations'] ?? []; 
+                            ?>
+                            <?php if (empty($recentList)): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">Belum ada data pemuda terdaftar.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">Belum ada data pemuda yang diedit atau terdaftar.</td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($stats['recentRegistrations'] as $p): ?>
+                                <?php foreach ($recentList as $p): ?>
                                     <tr>
                                         <td class="pl-3">
                                             <a href="<?= base_url('admin/pemuda/detail/' . $p['id']) ?>" class="font-weight-bold text-primary">
@@ -429,7 +432,22 @@
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-muted text-xs">
-                                            <?= date('d/m/Y H:i', strtotime($p['created_at'])) ?>
+                                            <?php 
+                                                $lastEditTime = !empty($p['last_edited_at']) ? $p['last_edited_at'] : (!empty($p['updated_at']) ? $p['updated_at'] : $p['created_at']);
+                                                $isEdited = !empty($p['updated_at']) && $p['updated_at'] !== $p['created_at'];
+                                            ?>
+                                            <div class="font-weight-bold text-dark">
+                                                <i class="far fa-clock mr-1 text-muted"></i><?= date('d/m/Y H:i', strtotime($lastEditTime)) ?>
+                                            </div>
+                                            <?php if ($isEdited): ?>
+                                                <span class="badge badge-light border text-primary text-xs" title="Data telah diperbarui">
+                                                    <i class="fas fa-pen mr-1"></i>Diedit
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge badge-light border text-muted text-xs" title="Data baru terdaftar">
+                                                    <i class="fas fa-plus mr-1"></i>Baru
+                                                </span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-right pr-3">
                                             <div class="btn-group btn-group-sm">

@@ -2125,3 +2125,16 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Ditambahkan filter `blood_type` pada `applyScopeAndCustomFilters()`.
 - **Pengujian Unit (`tests/unit/PersebaranDashboardTest.php`):**
   - Ditambahkan unit test `testGolonganDarahStatsAndFilter()` yang memvalidasi integritas data golongan darah terhadap total pemuda, fungsionalitas filtering golongan darah O, dan kehadiran elemen UI serta Chart.js golongan darah pada view.
+
+### 2026-09-15 — Penyesuaian Tabel Pendaftaran Pemuda Terbaru Menjadi Last Edit pada Dashboard Admin
+
+- **Dashboard Utama Admin (`app/Views/admin/dashboard/index.php`):**
+  - Mengubah judul kartu dari *"Pendaftaran Pemuda Terbaru"* menjadi *"Data Pemuda Terakhir Diedit (Last Edit)"*.
+  - Mengubah kolom tabel dari *"Tgl Daftar"* menjadi *"Terakhir Diedit"*.
+  - Memperbarui tampilan waktu dengan menampilkan waktu terakhir pembaruan data (`last_edited_at` / `updated_at` / `created_at`) beserta label indikator status data (`Diedit` atau `Baru`).
+  - Menggunakan fallback list `recentUpdates ?? recentRegistrations` untuk kompatibilitas data.
+- **Backend & Model (`app/Models/PemudaModel.php`):**
+  - Memastikan query data dashboard mengurutkan 10 data pemuda aktif berdasarkan waktu terakhir pembaruan: `ORDER BY COALESCE(pemuda.updated_at, pemuda.created_at) DESC, pemuda.id DESC`.
+  - Menyediakan field alias `last_edited_at` dan key `recentUpdates` serta `recentRegistrations` pada array statistik dashboard.
+- **Pengujian Unit (`tests/unit/SuperAdminDashboardTest.php`):**
+  - Menambahkan assertion kunci `recentUpdates` dan `recentRegistrations` pada pengujian statistik dashboard.

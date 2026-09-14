@@ -637,15 +637,17 @@ class PemudaModel extends Model
                                    ->orderBy('total', 'DESC')
                                    ->get()->getResultArray();
 
-        // 9. Recent Registrations (10 Terbaru)
+        // 9. Data Pemuda Terakhir Diperbarui / Last Edit (10 Data Terbaru)
         $builderRecent = $db->table('pemuda')
-                            ->select('pemuda.*, cabang.name as cabang_name, wilayah.name as wilayah_name')
+                            ->select('pemuda.*, COALESCE(pemuda.updated_at, pemuda.created_at) as last_edited_at, cabang.name as cabang_name, wilayah.name as wilayah_name')
                             ->join('cabang', 'cabang.id = pemuda.cabang_id', 'left')
                             ->join('wilayah', 'wilayah.id = cabang.wilayah_id', 'left')
-                            ->orderBy('pemuda.created_at', 'DESC')
+                            ->where('pemuda.status_data', 'active')
+                            ->orderBy('COALESCE(pemuda.updated_at, pemuda.created_at)', 'DESC', false)
+                            ->orderBy('pemuda.id', 'DESC')
                             ->limit(10);
         $this->applyScope($builderRecent, $scope);
-        $recentRegistrations = $builderRecent->get()->getResultArray();
+        $recentUpdates = $builderRecent->get()->getResultArray();
 
         return [
             'summary'             => $summary,
@@ -659,7 +661,8 @@ class PemudaModel extends Model
             'educationStats'      => $educationStats,
             'jobStats'            => $jobStats,
             'bloodStats'          => $bloodStats,
-            'recentRegistrations' => $recentRegistrations,
+            'recentRegistrations' => $recentUpdates,
+            'recentUpdates'       => $recentUpdates,
         ];
     }
 

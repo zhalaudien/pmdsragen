@@ -43,5 +43,8 @@ final class SuperAdminDashboardTest extends CIUnitTestCase
         $this->assertArrayHasKey('topCabangStats', $stats);
         $this->assertArrayHasKey('educationStats', $stats);
         $this->assertArrayHasKey('jobStats', $stats);
+        $this->assertArrayHasKey('bloodStats', $stats);
+        $this->assertArrayHasKey('recentUpdates', $stats);
+        $this->assertArrayHasKey('recentRegistrations', $stats);
     }
 }
