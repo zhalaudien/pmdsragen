@@ -2138,3 +2138,15 @@ Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
   - Menyediakan field alias `last_edited_at` dan key `recentUpdates` serta `recentRegistrations` pada array statistik dashboard.
 - **Pengujian Unit (`tests/unit/SuperAdminDashboardTest.php`):**
   - Menambahkan assertion kunci `recentUpdates` dan `recentRegistrations` pada pengujian statistik dashboard.
+
+### 2026-09-15 — Koreksi Data Kelurahan/Desa pada Kecamatan Masaran (Pilangsari -> Pilang)
+
+- **Database Migration (`app/Database/Migrations/2026-09-15-070000_UpdateVillagePilangInMasaran.php`):**
+  - Mengoreksi record pada tabel `villages` untuk Kecamatan Masaran (`district_id = 7`), mengubah nama dari `Pilangsari` menjadi `Pilang`.
+  - Mempertahankan `Pilangsari` pada Kecamatan Ngrampal (`district_id = 12`).
+- **Seeder (`app/Database/Seeds/RegionalSeeder.php`):**
+  - Memperbarui daftar desa pada Kecamatan Masaran (`7 => [...]`) mengganti `"Pilangsari"` menjadi `"Pilang"`.
+- **Frontend JavaScript (`public/js/pendataan.js`):**
+  - Memperbarui dictionary desa dropdown publik pada key `"7"` (Masaran), mengubah `{ id: 75, name: "Pilangsari" }` menjadi `{ id: 75, name: "Pilang" }`.
+- **Pengujian Unit (`tests/unit/PendataanFormTest.php`):**
+  - Menambahkan unit test `testKecamatanMasaranDesaPilang()` untuk memastikan desa `Pilang` terdaftar di database, seeder, dan form JavaScript, serta memastikan `Pilangsari` tidak ada di Masaran namun tetap ada di Ngrampal.

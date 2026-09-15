@@ -45,7 +45,7 @@ const sragenVillages = {
     "7": [
         { id: 68, name: "Masaran" }, { id: 69, name: "Dawungan" }, { id: 70, name: "Gebang" },
         { id: 71, name: "Jati" }, { id: 72, name: "Karangmalang" }, { id: 73, name: "Kliwonan" },
-        { id: 74, name: "Krebet" }, { id: 75, name: "Pilangsari" }, { id: 76, name: "Pringanom" },
+        { id: 74, name: "Krebet" }, { id: 75, name: "Pilang" }, { id: 76, name: "Pringanom" },
         { id: 77, name: "Sepat" }, { id: 78, name: "Sidodadi" }
     ],
     "8": [

@@ -60,7 +60,7 @@ class RegionalSeeder extends Seeder
             4 => ["Gemolong", "Kwangen", "Ngembatpadas", "Kragilan", "Jenalas", "Kaloran", "Purworejo", "Peleman", "Brangkal", "Tlogotirto", "Jatibatur", "Nganti", "Kalenan"],
             5 => ["Kalijambe", "Banaran", "Donoyudan", "Krikilan", "Ngetal", "Saren", "Tegaldowo", "Trobayan", "Wonorejo", "Bukuran", "Karangjati"],
             6 => ["Plupuh", "Dari", "Gedongan", "Gentanbanaran", "Jabung", "Karanganyar", "Karangwaru", "Krikil", "Manyarejo", "Ngrombo", "Padas", "Sambirejo", "Somomorodukuh"],
-            7 => ["Masaran", "Dawungan", "Gebang", "Jati", "Karangmalang", "Kliwonan", "Krebet", "Pilangsari", "Pringanom", "Sepat", "Sidodadi"],
+            7 => ["Masaran", "Dawungan", "Gebang", "Jati", "Karangmalang", "Kliwonan", "Krebet", "Pilang", "Pringanom", "Sepat", "Sidodadi"],
             8 => ["Kedawung", "Bendungan", "Celep", "Jatimulyo", "Karangpelem", "Mojokerto", "Pengkok", "Wonokerso", "Wonorejo"],
             9 => ["Sambirejo", "Blimbing", "Dawung", "Jambeyan", "Jetis", "Musuk", "Sukorejo"],
             10 => ["Gondang", "Banyurip", "Glonggong", "Kaliwedi", "Plosorejo", "Tegalrejo", "Tunggul", "Wonotolo"],

@@ -173,4 +173,39 @@ final class PendataanFormTest extends CIUnitTestCase
         // Female with photo -> valid
         $this->assertTrue($isPhotoRequiredForMale('P', true, false));
     }
+
+    public function testKecamatanMasaranDesaPilang(): void
+    {
+        $db = \Config\Database::connect('default');
+
+        // 1. Validasi di database: Kecamatan Masaran (id=7) memiliki desa Pilang
+        $villageMasaran = $db->table('villages')
+            ->where('district_id', 7)
+            ->where('name', 'Pilang')
+            ->get()->getRowArray();
+        $this->assertNotEmpty($villageMasaran, 'Desa Pilang harus ada di Kecamatan Masaran (district_id = 7)');
+
+        // Pastikan tidak ada lagi Pilangsari di Kecamatan Masaran
+        $invalidPilangsari = $db->table('villages')
+            ->where('district_id', 7)
+            ->where('name', 'Pilangsari')
+            ->get()->getRowArray();
+        $this->assertNull($invalidPilangsari, 'Tidak boleh ada desa bernama Pilangsari di Kecamatan Masaran');
+
+        // Pastikan Pilangsari tetap ada di Kecamatan Ngrampal (district_id = 12)
+        $villageNgrampal = $db->table('villages')
+            ->where('district_id', 12)
+            ->where('name', 'Pilangsari')
+            ->get()->getRowArray();
+        $this->assertNotEmpty($villageNgrampal, 'Desa Pilangsari harus tetap ada di Kecamatan Ngrampal (district_id = 12)');
+
+        // 2. Validasi di public/js/pendataan.js
+        $jsContent = file_get_contents(FCPATH . 'js/pendataan.js');
+        $this->assertStringContainsString('{ id: 75, name: "Pilang" }', $jsContent);
+        $this->assertStringNotContainsString('{ id: 75, name: "Pilangsari" }', $jsContent);
+
+        // 3. Validasi di RegionalSeeder.php
+        $seederContent = file_get_contents(APPPATH . 'Database/Seeds/RegionalSeeder.php');
+        $this->assertStringContainsString('7 => ["Masaran", "Dawungan", "Gebang", "Jati", "Karangmalang", "Kliwonan", "Krebet", "Pilang", "Pringanom", "Sepat", "Sidodadi"]', $seederContent);
+    }
 }
