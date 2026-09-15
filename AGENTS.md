@@ -1316,6 +1316,46 @@ Saat mengerjakan project ini:
 
 Setiap penambahan atau pengurangan fitur wajib dicatat pada bagian ini.
 
+### 2026-09-15 — Penyederhanaan Halaman Utama (Clean & Minimalist Homepage)
+
+- **Konsep & Pendekatan:** Menata ulang halaman depan menjadi bersih, sederhana, dan fokus (*to-the-point*) pada tujuan utama pendataan pemuda tanpa membebani pengunjung dengan informasi yang terlalu padat.
+- **Komponen Inti yang Dipertahankan:**
+  - **Hero Minimalis:** Judul resmi sistem, ringkasan 1-2 kalimat, tombol aksi utama langsung ke formulir pendataan (`Isi Form Pendataan Pemuda`) dan tombol sekunder ke `Portal Admin`, serta chip ringkas (*4 Wilayah & 61 Cabang*, *Satgas*, *Bankom*, *Kajian & Tarbiyah*).
+  - **Statistik Inti:** Baris ringkas 4 angka (Wilayah Koordinasi, Cabang Binaan, Pemuda Terdata & Terverifikasi, serta Bidang Khidmah).
+  - **Alur 3 Langkah Sederhana:** Panduan singkat (*Buka Form Online*, *Lengkapi Data & Cabang*, *Terima Nomor Registrasi*).
+  - **Wilayah & Cabang:** Kartu ringkas 4 Wilayah Koordinasi dengan tombol langsung memilih cabang dan mendaftar.
+  - **Program Kerja Singkat:** Tampilan kartu ringkas bidang pengabdian pemuda.
+  - **Visi & Call-to-Action:** Kutipan visi organisasi dan tombol aksi cepat.
+  - **FAQ Ringkas & Kontak:** Akordeon tanya jawab ringkas dan tombol bantuan cepat WhatsApp Helpdesk.
+- **Navigasi Bersih:** Menyederhanakan menu navbar di `layouts/main.php` agar rapi dan tidak terlalu banyak menu.
+
+### 2026-09-15 — Perbaikan Kritis: Pencegahan Penghapusan Data Pemuda saat User/Admin Dihapus
+
+- **Akar Masalah (Root Cause):**
+  - Pada definisi `addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE')` di migration awal, urutan parameter CodeIgniter 4 adalah `($fieldName, $tableName, $tableField, $onUpdate, $onDelete)`.
+  - Akibat tertukarnya posisi parameter `'SET NULL'` dan `'CASCADE'`, MySQL mendefinisikan foreign key `pemuda_created_by_foreign` dengan `ON DELETE CASCADE` dan `ON UPDATE SET NULL`.
+  - Ketika sebuah akun admin/user dihapus, MySQL otomatis mengeksekusi cascading delete ke seluruh baris tabel `pemuda` yang dibuat atau diimpor oleh user tersebut, yang kemudian merembet menghapus tabel anak (`alamat`, `pendidikan`, `pekerjaan`, `organisasi`, `pemuda_skills`, `pemuda_interests`).
+- **Langkah Perbaikan (Fix & Hardening):**
+  - **Migration Baru (`2026-09-15-223000_FixCreatedByForeignKeyOnDeleteSetNull.php`):** Menghapus foreign key lama pada `pemuda`, `forms`, `mta_sync_logs`, dan `mta_sync_queue`, lalu merekonstruksinya dengan `ON UPDATE CASCADE ON DELETE SET NULL`.
+  - **Koreksi Migration Awal:** Memperbaiki urutan argumen `addForeignKey` pada migration `CreateYouthDataSystem`, `AddMtaSyncFields`, dan `CreateMtaSyncQueueTable` agar instalasi baru atau `migrate:refresh` tidak membawa bug tersebut.
+  - **Lapisan Pertahanan Aplikasi (`Admin\Users::delete`):** Menambahkan query eksplisit untuk mengosongkan referensi `created_by = NULL` di tabel `pemuda`, `forms`, `mta_sync_logs`, dan `mta_sync_queue` sebelum eksekusi penghapusan user, menjamin data pemuda 100% aman dan tidak tersentuh.
+  - **Unit Testing Otomatis (`UserDeleteProtectionTest.php`):** Menambahkan 2 pengujian otomatis yang menguji langsung penghapusan user di MySQL dan memastikan data pemuda tetap utuh dengan `created_by = NULL`.
+
+### 2026-09-15 — Redesain Halaman Utama (Homepage) Bergaya Portal Universitas (ums.ac.id) dengan Nuansa Tone Crimson
+
+- **Tata Letak & Arsitektur Homepage (Mengadopsi Elemen Unggulan ums.ac.id):**
+  - **Top Utility Bar:** Ditambahkan strip navigasi utilitas atas khas portal universitas pada template utama `layouts/main.php` (identitas resmi Perwakilan MTA Sragen, tautan cepat Berita & Kegiatan, Rubrik Khusus, Portal Admin, dan Helpdesk WA).
+  - **Hero Section Modern:** Tagline pill resmi, tipografi judul berdampak tinggi, ringkasan sistem, serta tombol aksi ganda (Form Pendataan & Eksplorasi Cabang).
+  - **Interactive Cabang Quick-Finder Widget:** Widget pencarian cepat cabang & wilayah terinspirasi dari fitur pencarian program studi UMS, dilengkapi filter wilayah dan pencarian instan nama cabang.
+  - **Statistik & Reputasi Strip:** Counter statistik bergaya reputasi UMS (Wilayah Koordinasi, Cabang Binaan, Pemuda Terdata & Terverifikasi, serta Bidang Khidmah).
+  - **Program Showcase Berfilter:** Filter pill dinamis (*Semua, Dakwah & Tarbiyah, Satgas & Kesiapsiagaan, Bankom Radio, Skill & Wirausaha, Tim Ikhrom*) dengan kartu modern.
+  - **Split Highlight Cards:** Dua kartu unggulan berskala besar bergaya beasiswa & riset UMS (Kaderisasi Berkelanjutan & Pemetaan Potensi/Kemandirian Pemuda).
+  - **Eksplorasi Wilayah & Cabang:** Navigasi tab 4 Wilayah dengan pencarian live filter nama cabang, status gelombang pemuda, jadwal, nama pimpinan, dan link pendaftaran per cabang.
+  - **Berita & Agenda Kegiatan (Hallmark Grid UMS):** Grid terintegrasi yang memadukan warta/berita kegiatan pemuda terkini dengan kalender agenda bertanggal khas UMS (kotak tanggal besar + bulan).
+  - **4 Rubrik Unggulan:** Mengadopsi 4 rubrik khas UMS (*Tarbiyah & Kajian, Kiprah Pemuda, Teropong Khidmah, Cerita Kader*).
+  - **Newsletter & Komunitas Pemuda:** Banner ajakan langganan informasi dan saluran resmi WhatsApp.
+  - **Tone Warna & Integrasi:** Mempertahankan palet warna crimson/maroon khas Pemuda MTA Sragen (`#700f2b`, `#991b1b`, `#dc2626`, aksen emas `#f59e0b`), tetap terhubung penuh dengan konfigurasi `HomepageSettingModel` serta lulus 100% seluruh unit test (116 tests).
+
 ### 2026-08-29 — Penambahan Detail Informasi Cabang & Gelombang Pemuda
 
 - **Penambahan Kolom Database pada Tabel `cabang`:**

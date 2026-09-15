@@ -82,7 +82,7 @@ class CreateMtaSyncQueueTable extends Migration
 
         $this->forge->addForeignKey('pemuda_id', 'pemuda', 'id', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('cabang_id', 'cabang', 'id', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('created_by', 'users', 'id', 'CASCADE', 'SET NULL');
 
         $this->forge->createTable('mta_sync_queue', true);
     }

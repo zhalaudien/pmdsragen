@@ -33,12 +33,15 @@ class Home extends BaseController
         $totalWilayah  = 4;
         $wilayahList   = [];
 
+        $allCabang     = [];
+
         try {
             $totalPemuda   = $this->pemudaModel->where('status_data', 'active')->countAllResults();
             $totalVerified = $this->pemudaModel->where('status_verifikasi', 'verified')->where('status_data', 'active')->countAllResults();
             $totalCabang   = $this->cabangModel->countAllResults();
             $wilayahList   = $this->wilayahModel->getWithCabang();
             $totalWilayah  = count($wilayahList) > 0 ? count($wilayahList) : 4;
+            $allCabang     = $this->cabangModel->getWithWilayah();
         } catch (\Throwable $e) {
             // Fallback gracefully jika database belum ter-seed
         }
@@ -61,6 +64,7 @@ class Home extends BaseController
             'totalCabang'   => $totalCabang > 0 ? $totalCabang : 61,
             'totalWilayah'  => $totalWilayah,
             'wilayahList'   => $wilayahList,
+            'allCabang'     => $allCabang,
             'settings'      => $settings,
             'heroChips'     => $heroChips,
             'heroFeatures'  => $heroFeatures,

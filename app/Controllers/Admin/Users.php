@@ -221,6 +221,20 @@ class Users extends BaseController
             }
         }
 
+        // Defensif: Pastikan referensi created_by di-set ke NULL sebelum user dihapus
+        // agar data pemuda, forms, dan log antrean tidak pernah terhapus
+        $db = \Config\Database::connect();
+        $db->table('pemuda')->where('created_by', $id)->update(['created_by' => null]);
+        if ($db->tableExists('forms')) {
+            $db->table('forms')->where('created_by', $id)->update(['created_by' => null]);
+        }
+        if ($db->tableExists('mta_sync_logs')) {
+            $db->table('mta_sync_logs')->where('created_by', $id)->update(['created_by' => null]);
+        }
+        if ($db->tableExists('mta_sync_queue')) {
+            $db->table('mta_sync_queue')->where('created_by', $id)->update(['created_by' => null]);
+        }
+
         $this->userModel->delete($id);
         return redirect()->to(base_url('admin/users'))->with('success', 'Pengguna berhasil dihapus.');
     }

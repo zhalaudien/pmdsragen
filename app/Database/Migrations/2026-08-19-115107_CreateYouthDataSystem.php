@@ -551,8 +551,8 @@ class CreateYouthDataSystem extends Migration
             'created_by',
             'users',
             'id',
-            'SET NULL',
-            'CASCADE'
+            'CASCADE',
+            'SET NULL'
         );
 
         $this->forge->createTable('pemuda', true);
@@ -996,8 +996,8 @@ class CreateYouthDataSystem extends Migration
             'created_by',
             'users',
             'id',
-            'SET NULL',
-            'CASCADE'
+            'CASCADE',
+            'SET NULL'
         );
 
         $this->forge->createTable('forms', true);

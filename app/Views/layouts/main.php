@@ -37,7 +37,23 @@
 
 <body>
 
-    <!-- Top Navigation -->
+    <!-- Top Utility Bar (Clean & Simple) -->
+    <div class="top-utility-bar d-none d-md-block">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3 top-utility-left">
+                <span><i class="bi bi-geo-alt-fill text-warning me-1"></i> Perwakilan MTA Sragen, Jawa Tengah</span>
+                <span class="opacity-50">|</span>
+                <span><i class="bi bi-patch-check-fill text-warning me-1"></i> Sistem Basis Data Resmi Pemuda</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 top-utility-right">
+                <a href="<?= base_url('admin/login') ?>" class="top-utility-link"><i class="bi bi-person-lock me-1"></i> Portal Admin</a>
+                <span class="opacity-50">|</span>
+                <a href="https://wa.me/6281234567890" target="_blank" class="top-utility-link"><i class="bi bi-whatsapp text-success me-1"></i> Bantuan WA</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation (Clean & Minimalist) -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-pmd sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="<?= base_url('/') ?>">
@@ -46,7 +62,7 @@
                 </div>
                 <div>
                     <span class="navbar-brand-title">Pemuda MTA Perwakilan Sragen</span>
-                    <span class="navbar-brand-subtitle">Sistem Informasi & Pendataan Pemuda</span>
+                    <span class="navbar-brand-subtitle">Sistem Informasi &amp; Pendataan Pemuda</span>
                 </div>
             </a>
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,13 +76,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= base_url('/#tentang') ?>">
-                            <i class="bi bi-info-circle me-1"></i> Profil
+                        <a class="nav-link" href="<?= base_url('/#alur') ?>">
+                            <i class="bi bi-ui-checks-grid me-1"></i> Alur
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?= base_url('/#wilayah') ?>">
-                            <i class="bi bi-diagram-3 me-1"></i> 4 Wilayah & Cabang
+                            <i class="bi bi-diagram-3 me-1"></i> 4 Wilayah &amp; Cabang
                         </a>
                     </li>
                     <li class="nav-item">
@@ -135,10 +151,10 @@
                     <h6 class="fw-bold text-dark mb-3">Navigasi</h6>
                     <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
                         <li><a href="<?= base_url('/') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Beranda</a></li>
-                        <li><a href="<?= base_url('/#tentang') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Profil & Visi</a></li>
-                        <li><a href="<?= base_url('/#wilayah') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> 4 Wilayah & Cabang</a></li>
+                        <li><a href="<?= base_url('/#alur') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Alur Pendataan</a></li>
+                        <li><a href="<?= base_url('/#wilayah') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> 4 Wilayah &amp; Cabang</a></li>
                         <li><a href="<?= base_url('/#program') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> Program Kerja</a></li>
-                        <li><a href="<?= base_url('/#faq') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> FAQ Pendataan</a></li>
+                        <li><a href="<?= base_url('/#faq') ?>" class="text-decoration-none text-muted hover-red"><i class="bi bi-chevron-right me-1 text-danger small"></i> FAQ</a></li>
                     </ul>
                 </div>
 

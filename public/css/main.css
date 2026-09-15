@@ -35,9 +35,29 @@ body {
     padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* Top Utility Bar (UMS Style) */
+.top-utility-bar {
+    background: #500718;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.4rem 0;
+    letter-spacing: 0.01em;
+}
+
+.top-utility-bar a {
+    color: rgba(255, 255, 255, 0.88);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.top-utility-bar a:hover {
+    color: #fef08a;
+}
+
 /* Navbar - Rich Crimson Gradient */
 .navbar-pmd {
-    background: linear-gradient(135deg, #881337 0%, #991b1b 45%, #dc2626 100%);
+    background: linear-gradient(135deg, #700f2b 0%, #991b1b 45%, #dc2626 100%);
     box-shadow: 0 4px 20px -2px rgba(185, 28, 28, 0.35);
     padding: 0.75rem 0;
 }

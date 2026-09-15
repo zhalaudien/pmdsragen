@@ -140,7 +140,7 @@ class AddMtaSyncFields extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('sync_type');
         $this->forge->addKey('status');
-        $this->forge->addForeignKey('created_by', 'users', 'id', 'SET NULL', 'CASCADE');
+        $this->forge->addForeignKey('created_by', 'users', 'id', 'CASCADE', 'SET NULL');
 
         $this->forge->createTable('mta_sync_logs', true);
     }
